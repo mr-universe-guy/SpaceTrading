@@ -1,0 +1,8 @@
+/lwjgl64.dll
+/OpenAL64.dll
+/.gradle/**
+/.idea/**
+/build/**
+/gradle/**
+/gradlew
+/gradlew.bat
