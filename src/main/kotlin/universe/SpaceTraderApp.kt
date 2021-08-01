@@ -6,14 +6,25 @@
 package universe
 
 import com.jme3.app.SimpleApplication
+import com.jme3.app.state.AppState
+import com.simsilica.sim.GameLoop
+import com.simsilica.sim.GameSystemManager
+import io.tlf.jme.jfx.JavaFxUI
 
-class SpaceTraderApp: SimpleApplication(){
+class SpaceTraderApp(_states: Array<AppState>): SimpleApplication(*_states){
+    lateinit var manager: GameSystemManager
+    lateinit var loop: GameLoop
+
     override fun simpleInitApp() {
-
+        //jfx initialization
+        JavaFxUI.initialize(this)
+        //Game Systems
+        manager = GameSystemManager()
+        loop = GameLoop(manager)
     }
 }
 
 fun main(){
     println("Space trading app")
-    SpaceTraderApp().start()
+    SpaceTraderApp(arrayOf()).start()
 }
