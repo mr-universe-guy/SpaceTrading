@@ -6,12 +6,11 @@
 package universe
 
 import com.jme3.app.SimpleApplication
-import com.jme3.app.state.AppState
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
 
-class SpaceTraderApp(_states: Array<AppState>): SimpleApplication(*_states){
+open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(null){
     lateinit var manager: GameSystemManager
     lateinit var loop: GameLoop
 
@@ -21,10 +20,19 @@ class SpaceTraderApp(_states: Array<AppState>): SimpleApplication(*_states){
         //Game Systems
         manager = GameSystemManager()
         loop = GameLoop(manager)
+        if(initSystems){
+            //Turn this off to test individual systems
+        }
+    }
+
+    //Cleanly destroy multi threading
+    override fun destroy() {
+        loop.stop()
+        super.destroy()
     }
 }
 
 fun main(){
     println("Space trading app")
-    SpaceTraderApp(arrayOf()).start()
+    SpaceTraderApp(true).start()
 }
