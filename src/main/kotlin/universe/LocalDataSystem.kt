@@ -21,8 +21,4 @@ class LocalDataSystem: AbstractGameSystem(), DataSystem {
     override fun getPhysicsData(): EntityData {
         return physData
     }
-
-    override fun getMarketData(): EntityData {
-        TODO("Not yet implemented")
-    }
 }
