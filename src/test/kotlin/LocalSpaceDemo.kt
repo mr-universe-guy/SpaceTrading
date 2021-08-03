@@ -13,20 +13,32 @@ class LocalSpaceDemo(): SpaceTraderApp(false) {
     override fun simpleInitApp() {
         super.simpleInitApp()
         println("Starting local space demo")
-        manager.register(DataSystem::class.java, LocalDataSystem())
+        val dataSystem = LocalDataSystem()
+        //create a list of test items purely for this demo
+        dataSystem.getItemDatabase().append(listOf(
+            Item("ORE", "Ore", 1.0),
+            Item("EN", "Energy", 0.1))
+        )
+        manager.register(DataSystem::class.java, dataSystem)
         manager.addSystem(LocalPhysicsSystem())
         //start the game stuff
         loop.start()
         //spawn a single entity to watch it's position change
         val data = manager.get(DataSystem::class.java).getPhysicsData()
         val id = data.createEntity()
-        data.setComponents(id, GridPosition(Vec3d(0.0,0.0,0.0)), Mass(1.0), Velocity(Vec3d(0.0,0.0,1.0)))
+        data.setComponents(id,
+            GridPosition(Vec3d(0.0,0.0,0.0)), Mass(1.0),
+            Velocity(Vec3d(0.0,0.0,1.0)),
+            CargoHold(10.0),
+            Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10)))
+        )
+        println("Cargo Data: %s".format(data.getComponent(id, Cargo::class.java)))
         watch = data.watchEntity(id, GridPosition::class.java)
     }
 
     override fun simpleUpdate(tpf: Float) {
         watch.applyChanges()
-        println("Position: %s".format(watch.get(GridPosition::class.java).position))
+        println("Position: %s".format(watch.get(GridPosition::class.java)))
     }
 }
 

@@ -7,4 +7,5 @@ import com.simsilica.es.EntityData
  */
 interface DataSystem {
     fun getPhysicsData():EntityData
+    fun getItemDatabase():ItemDatabase
 }

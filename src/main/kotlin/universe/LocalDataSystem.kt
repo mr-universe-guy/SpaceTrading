@@ -9,9 +9,9 @@ import com.simsilica.sim.AbstractGameSystem
  */
 class LocalDataSystem: AbstractGameSystem(), DataSystem {
     private val physData = DefaultEntityData()
+    private val itemData = ItemDatabase()
 
     override fun initialize() {
-
     }
 
     override fun terminate() {
@@ -20,5 +20,9 @@ class LocalDataSystem: AbstractGameSystem(), DataSystem {
 
     override fun getPhysicsData(): EntityData {
         return physData
+    }
+
+    override fun getItemDatabase(): ItemDatabase {
+        return itemData
     }
 }
