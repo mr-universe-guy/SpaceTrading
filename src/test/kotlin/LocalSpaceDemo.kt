@@ -1,4 +1,3 @@
-import com.jme3.app.state.AppState
 import com.simsilica.es.WatchedEntity
 import com.simsilica.mathd.Vec3d
 import universe.*
@@ -8,8 +7,8 @@ import universe.*
  * to test the local space physics systems and combat systems.
  */
 
-class LocalSpaceDemo(): SpaceTraderApp(false) {
-    lateinit var watch: WatchedEntity
+class LocalSpaceDemo: SpaceTraderApp(false) {
+    private lateinit var watch: WatchedEntity
     override fun simpleInitApp() {
         super.simpleInitApp()
         println("Starting local space demo")
@@ -23,7 +22,7 @@ class LocalSpaceDemo(): SpaceTraderApp(false) {
         manager.addSystem(LocalPhysicsSystem())
         //start the game stuff
         loop.start()
-        //spawn a single entity to watch it's position change
+        //spawn a single entity to watch its position change
         val data = manager.get(DataSystem::class.java).getPhysicsData()
         val id = data.createEntity()
         data.setComponents(id,
@@ -38,7 +37,6 @@ class LocalSpaceDemo(): SpaceTraderApp(false) {
 
     override fun simpleUpdate(tpf: Float) {
         watch.applyChanges()
-        println("Position: %s".format(watch.get(GridPosition::class.java)))
     }
 }
 

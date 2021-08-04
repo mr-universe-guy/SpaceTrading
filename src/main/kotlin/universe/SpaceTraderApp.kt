@@ -19,6 +19,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         JavaFxUI.initialize(this)
         //Game Systems
         manager = GameSystemManager()
+        manager.register(SimpleApplication::class.java, this)
         loop = GameLoop(manager)
         if(initSystems){
             //Turn this off to test individual systems
