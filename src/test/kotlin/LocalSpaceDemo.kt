@@ -26,13 +26,13 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         val data = manager.get(DataSystem::class.java).getPhysicsData()
         val id = data.createEntity()
         data.setComponents(id,
-            GridPosition(Vec3d(0.0,0.0,0.0)), Mass(1.0),
+            Position(Vec3d(0.0,0.0,0.0)), Mass(1.0),
             Velocity(Vec3d(0.0,0.0,1.0)),
             CargoHold(10.0),
             Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10)))
         )
         println("Cargo Data: %s".format(data.getComponent(id, Cargo::class.java)))
-        watch = data.watchEntity(id, GridPosition::class.java)
+        watch = data.watchEntity(id, Position::class.java)
     }
 
     override fun simpleUpdate(tpf: Float) {

@@ -11,7 +11,7 @@ data class Name(val name:String): EntityComponent
 /**
  * The grid-local 3d position of an entity
  */
-data class GridPosition(val position:Vec3d): EntityComponent
+data class Position(val position:Vec3d): EntityComponent
 
 /**
  * The entities current velocity in m/s
