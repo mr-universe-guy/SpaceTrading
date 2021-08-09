@@ -19,24 +19,30 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
             Item("EN", "Energy", 0.1))
         )
         manager.register(DataSystem::class.java, dataSystem)
-        manager.addSystem(LocalPhysicsSystem())
+        manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
+        manager.addSystem(EngineSystem())
         //start the game stuff
         loop.start()
         //spawn a single entity to watch its position change
         val data = manager.get(DataSystem::class.java).getPhysicsData()
         val id = data.createEntity()
         data.setComponents(id,
+            Name("Test Ship"),
             Position(Vec3d(0.0,0.0,0.0)), Mass(1.0),
-            Velocity(Vec3d(0.0,0.0,1.0)),
+            Velocity(Vec3d(0.0,0.0,10.0)),
             CargoHold(10.0),
-            Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10)))
+            Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10))),
+            Engine(100.0, 10.0),
+            EngineDriver(Vec3d(0.0,0.0,-1.0))
         )
         println("Cargo Data: %s".format(data.getComponent(id, Cargo::class.java)))
-        watch = data.watchEntity(id, Position::class.java)
+        watch = data.watchEntity(id, Velocity::class.java)
     }
 
     override fun simpleUpdate(tpf: Float) {
-        watch.applyChanges()
+        if(watch.applyChanges()) {
+            println("Vel: %s".format(watch.get(Velocity::class.java).velocity))
+        }
     }
 }
 

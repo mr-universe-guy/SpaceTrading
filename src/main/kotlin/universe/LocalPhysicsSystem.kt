@@ -15,6 +15,11 @@ import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
 /**
+ * A "close to zero" number to use for physics calculations.
+ */
+const val EPSILON = 0.01
+
+/**
  * Local Physics System simply applies physics forces and updates velocities and positions
  */
 class LocalPhysicsSystem: AbstractGameSystem() {

@@ -44,3 +44,13 @@ data class Cargo(val items: Array<ItemStack>): EntityComponent {
         return items.contentHashCode()
     }
 }
+
+/**
+ * Apply thrust in direction until throttle percentage of max speed is met
+ */
+data class EngineDriver(val direction:Vec3d): EntityComponent
+
+/**
+ * Engine will provide thrust until the maximum speed is met
+ */
+data class Engine(val maxSpeed:Double, val thrust:Double): EntityComponent
