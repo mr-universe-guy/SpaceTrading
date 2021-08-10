@@ -54,3 +54,8 @@ data class EngineDriver(val direction:Vec3d): EntityComponent
  * Engine will provide thrust until the maximum speed is met
  */
 data class Engine(val maxSpeed:Double, val thrust:Double): EntityComponent
+
+/**
+ * For now just the text to the asset. In the future this will likely have to store more info.
+ */
+data class VisualAsset(val asset:String): EntityComponent
