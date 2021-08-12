@@ -6,6 +6,7 @@
 package universe
 
 import com.jme3.app.SimpleApplication
+import com.simsilica.lemur.GuiGlobals
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
@@ -17,6 +18,8 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     override fun simpleInitApp() {
         //jfx initialization
         JavaFxUI.initialize(this)
+        //lemur
+        GuiGlobals.initialize(this)
         //Game Systems
         manager = GameSystemManager()
         manager.register(SimpleApplication::class.java, this)

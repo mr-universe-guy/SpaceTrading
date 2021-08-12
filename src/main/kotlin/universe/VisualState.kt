@@ -16,6 +16,9 @@ import com.simsilica.mathd.Vec3d
 
 const val ID_KEY = "EID"
 
+/**
+ * Loads visual data for spatials
+ */
 class VisualState: BaseAppState() {
     private val sceneNode = Node("Visual Scene")
     lateinit var am: AssetManager
@@ -45,6 +48,10 @@ class VisualState: BaseAppState() {
 
     override fun update(tpf: Float) {
         visContainer.update()
+    }
+
+    fun getSpatialFromId(id:EntityId): Spatial?{
+        return visContainer.getObject(id)?.vis
     }
 
     private inner class VisualContainer(data: EntityData): EntityContainer<VisObject>(data, Position::class.java,

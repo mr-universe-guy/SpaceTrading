@@ -159,7 +159,7 @@ class LocalPhysicsSystem: AbstractGameSystem() {
                 addAll(debugObjects.addedEntities)
                 debugObjects.changedEntities.forEach {
                     val obj = debugMap[it.id]
-                    obj!!.update(it.get(Position::class.java).position, it.get(Velocity::class.java).velocity)
+                    obj?.update(it.get(Position::class.java).position, it.get(Velocity::class.java).velocity)
                 }
             }
         }
