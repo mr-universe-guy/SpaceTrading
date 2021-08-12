@@ -28,6 +28,7 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         //appstates
         stateManager.attach(VisualState())
         stateManager.attach(CameraState())
+        stateManager.attach(FlightUIState())
         //start the game stuff
         loop.start()
         //spawn a single entity to watch its position change
