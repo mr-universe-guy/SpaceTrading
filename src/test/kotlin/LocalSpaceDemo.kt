@@ -73,5 +73,6 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
 
 fun main(){
     val demo = LocalSpaceDemo()
+    demo.isShowSettings = false
     demo.start()
 }
