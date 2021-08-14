@@ -10,15 +10,9 @@ import com.simsilica.es.EntityId
 import com.simsilica.lemur.GuiGlobals
 import com.simsilica.lemur.input.*
 
-const val CAM_INPUT_GROUP = "CamInput"
-val CAM_INPUT_HORIZONTAL = FunctionId(CAM_INPUT_GROUP, "horiz_cam")
-val CAM_INPUT_VERTICAL = FunctionId(CAM_INPUT_GROUP, "vert_cam")
-val CAM_INPUT_ZOOM = FunctionId(CAM_INPUT_GROUP, "zoom_cam")
-
 class CameraState: BaseAppState(), AnalogFunctionListener {
     private lateinit var visState: VisualState
     private lateinit var camera: Camera
-    private lateinit var mappings: Array<InputMapper.Mapping>
     private var target: Spatial? = null
     private val minZoom = 1f
     private val maxZoom = 50f
@@ -30,19 +24,13 @@ class CameraState: BaseAppState(), AnalogFunctionListener {
         visState = getState(VisualState::class.java)
         camera = app.camera
         //default bindings for now
-        val mapper = GuiGlobals.getInstance().inputMapper
-        mappings = arrayOf(
-            mapper.map(CAM_INPUT_HORIZONTAL, Axis.MOUSE_X, Button.MOUSE_BUTTON2),
-            mapper.map(CAM_INPUT_VERTICAL, Axis.MOUSE_Y, Button.MOUSE_BUTTON2),
-            mapper.map(CAM_INPUT_ZOOM, Axis.MOUSE_WHEEL, Button.MOUSE_BUTTON2)
-        )
-        mapper.addAnalogListener(this, CAM_INPUT_HORIZONTAL, CAM_INPUT_VERTICAL, CAM_INPUT_ZOOM)
+        GuiGlobals.getInstance().inputMapper.addAnalogListener(
+                this, CAM_INPUT_HORIZONTAL, CAM_INPUT_VERTICAL, CAM_INPUT_ZOOM
+            )
     }
 
     override fun cleanup(_app: Application) {
-        val mapper = GuiGlobals.getInstance().inputMapper
-        mappings.forEach { mapper.removeMapping(it) }
-        mapper.removeAnalogListener(this, CAM_INPUT_HORIZONTAL, CAM_INPUT_VERTICAL, CAM_INPUT_ZOOM)
+        GuiGlobals.getInstance().inputMapper.removeAnalogListener(this, CAM_INPUT_HORIZONTAL, CAM_INPUT_VERTICAL, CAM_INPUT_ZOOM)
     }
 
     override fun onEnable() {

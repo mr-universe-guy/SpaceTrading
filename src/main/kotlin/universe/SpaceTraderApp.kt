@@ -20,6 +20,8 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         JavaFxUI.initialize(this)
         //lemur
         GuiGlobals.initialize(this)
+        //Controls
+        registerDefaults(GuiGlobals.getInstance().inputMapper)
         //Game Systems
         manager = GameSystemManager()
         manager.register(SimpleApplication::class.java, this)
