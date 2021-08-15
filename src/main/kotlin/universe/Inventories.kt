@@ -1,4 +1,7 @@
 package universe
+
+import com.github.doyaaaaaken.kotlincsv.client.CsvReader
+
 //The currently active item database, atm this is dangerous as it relies on being set from outside
 lateinit var activeDatabase: ItemDatabase
 
@@ -41,5 +44,18 @@ class ItemDatabase{
 
     fun clear(){
         itemData.clear()
+    }
+
+    fun fromCSV(path: String){
+        val rows = CsvReader().readAll(javaClass.getResourceAsStream(path)!!)
+        rows.forEach {
+            //Read each line as a new item
+            val item = Item(it[0], it[1], it[2].toDouble())
+            itemData[item.id] = item
+        }
+    }
+
+    override fun toString(): String {
+        return "ItemDatabase(itemData=$itemData)"
     }
 }

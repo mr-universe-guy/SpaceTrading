@@ -16,11 +16,9 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         super.simpleInitApp()
         println("Starting local space demo")
         val dataSystem = LocalDataSystem()
+        dataSystem.getItemDatabase().fromCSV("/TestItemDB.csv")
         //create a list of test items purely for this demo
-        dataSystem.getItemDatabase().append(listOf(
-            Item("ORE", "Ore", 1.0),
-            Item("EN", "Energy", 0.1))
-        )
+        println(dataSystem.getItemDatabase())
         //game systems
         manager.register(DataSystem::class.java, dataSystem)
         manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
@@ -33,7 +31,7 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         loop.start()
         //spawn a single entity to watch its position change
         val data = manager.get(DataSystem::class.java).getPhysicsData()
-        val id = spawnShip(data, "Test Ship", Vec3d(0.0,0.0,0.0), Vec3d(0.0,0.0,1.0))
+        val id = spawnShip(data, "Test Ship", Vec3d(0.0,0.0,0.0), Vec3d(0.0,0.0,0.0))
         println("Cargo Data: %s".format(data.getComponent(id, Cargo::class.java)))
         watch = data.watchEntity(id, Velocity::class.java)
         //spawn a couple more ships for reference
@@ -41,8 +39,8 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
             val rot = Math.random()*Math.PI*2
             val dist = 10+Math.random()*10
             val pos = Quatd().fromAngles(0.0, rot,0.0).mult(Vec3d(0.0,0.0,dist))
-            val dir = Vec3d(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
-            spawnShip(data, "Ship $i", pos, dir)
+            //val dir = Vec3d(Math.random()-0.5, Math.random()-0.5, Math.random()-0.5)
+            spawnShip(data, "Ship $i", pos, Vec3d(0.0,0.0,0.0))
         }
     }
 

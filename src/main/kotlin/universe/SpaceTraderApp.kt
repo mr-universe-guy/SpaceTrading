@@ -28,6 +28,8 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         loop = GameLoop(manager)
         if(initSystems){
             //Turn this off to test individual systems
+            attachPhysicsSystems()
+            attachVisualSystems()
         }
     }
 
@@ -35,6 +37,16 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     override fun destroy() {
         loop.stop()
         super.destroy()
+    }
+
+    fun attachPhysicsSystems(){
+        manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
+        manager.addSystem(EngineSystem())
+    }
+
+    fun attachVisualSystems(){
+        stateManager.attach(VisualState())
+        stateManager.attach(CameraState())
     }
 }
 

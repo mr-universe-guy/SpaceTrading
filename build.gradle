@@ -40,6 +40,8 @@ dependencies {
     implementation 'com.simsilica:sim-math:1.4.1'
     //jfx
     implementation 'io.tlf.jme:jme-jfx:1.2.1'
+    //csv
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:0.15.2")
 
     /**
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
