@@ -59,3 +59,8 @@ data class Engine(val maxSpeed:Double, val thrust:Double): EntityComponent
  * For now just the text to the asset. In the future this will likely have to store more info.
  */
 data class VisualAsset(val asset:String): EntityComponent
+
+/**
+ * Read published values for an entities current action
+ */
+data class ActionInfo(val text: String, val status: ActionStatus): EntityComponent
