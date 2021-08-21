@@ -14,7 +14,6 @@ import universe.*
  */
 
 class LocalSpaceDemo: SpaceTraderApp(false) {
-
     private val actionSys = ActionSystem()
 
     override fun simpleInitApp() {
@@ -31,30 +30,26 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         //AI should be last
         manager.register(ActionSystem::class.java, actionSys)
         //app states
-        //stateManager.attach(VisualState())
-        //stateManager.attach(CameraState())
+        stateManager.attach(VisualState())
+        val camState = CameraState()
+        stateManager.attach(camState)
         stateManager.attach(StatsAppState())
-        //stateManager.attach(FlightUIState())
+        val flightUiState = FlightUIState()
+        stateManager.attach(flightUiState)
         //add this loop listener to test stuff
         manager.addSystem(LoopListener())
+        //spawn player ship n stuff
+        manager.enqueue {
+            val playerId = spawnShip(dataSystem.getPhysicsData(), "Player Ship", Vec3d(0.0,0.0,0.0))
+            actionSys.setAction(playerId, MoveAction(randomVec3d(100.0)))
+            enqueue{
+                camState.setTarget(playerId)
+                flightUiState.setPlayerId(playerId)
+            }
+        }
+        //---THREAD SAFETY ENDS HERE!---
         //start the game stuff
         loop.start()
-    }
-
-    private fun spawnShip(data:EntityData, name:String, position:Vec3d): EntityId{
-        val id = data.createEntity()
-        data.setComponents(id,
-            Name(name),
-            Position(position),
-            Mass(1.0),
-            Velocity(Vec3d(0.0,0.0,0.0)),
-            CargoHold(10.0),
-            Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10))),
-            Engine(100.0, 10.0),
-            EngineDriver(Vec3d(0.0,0.0,0.0)),
-            VisualAsset("TestShip/Insurgent.gltf")
-        )
-        return id
     }
 
     private fun randomVec3d(scalar: Double): Vec3d{
@@ -84,10 +79,10 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
                 testEntities.changedEntities.forEach {
                     val info = it.get(ActionInfo::class.java)
                     if(info.status != ActionStatus.COMPLETE) return
-                    println("${it.id} has finished it's action ${it.get(ActionInfo::class.java).text}.")
+                    //println("${it.id} has finished its action ${it.get(ActionInfo::class.java).text}.")
                     val nextAction = MoveAction(randomVec3d(100.0))
                     actionSys.setAction(it.id, nextAction)
-                    println("${it.id} beginning new action $nextAction")
+                    //println("${it.id} beginning new action $nextAction")
                 }
             }
         }
@@ -97,6 +92,22 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         }
 
     }
+}
+
+private fun spawnShip(data:EntityData, name:String, position:Vec3d): EntityId{
+    val id = data.createEntity()
+    data.setComponents(id,
+        Name(name),
+        Position(position),
+        Mass(1.0),
+        Velocity(Vec3d(0.0,0.0,0.0)),
+        CargoHold(10.0),
+        Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10))),
+        Engine(100.0, 10.0),
+        EngineDriver(Vec3d(0.0,0.0,0.0)),
+        VisualAsset("TestShip/Insurgent.gltf")
+    )
+    return id
 }
 
 fun main(){

@@ -13,6 +13,7 @@ import com.simsilica.lemur.input.*
 class CameraState: BaseAppState(), AnalogFunctionListener {
     private lateinit var visState: VisualState
     private lateinit var camera: Camera
+    private var targetId: EntityId? = null
     private var target: Spatial? = null
     private val minZoom = 1f
     private val maxZoom = 50f
@@ -43,16 +44,21 @@ class CameraState: BaseAppState(), AnalogFunctionListener {
 
     /**
      * Set the target spatial for the camera, or null to return camera to origin
+     * NOT THREAD SAFE
      */
     fun setTarget(id: EntityId?){
         if (id==null){
             target = null
             return
         }
-        target = visState.getSpatialFromId(id)
+        targetId = id
     }
 
     override fun update(tpf: Float) {
+        if(targetId != null){
+            target = visState.getSpatialFromId(targetId!!)
+            targetId = null
+        }
         val pos = if(target != null) target!!.worldTranslation else Vector3f(0f,0f,0f)
         //Update the camera location and rotation around the spatial as the center point
         rotation.fromAngles(inputs.y, inputs.x, 0f)
