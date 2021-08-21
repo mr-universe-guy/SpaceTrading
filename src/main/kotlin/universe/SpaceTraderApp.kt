@@ -28,8 +28,10 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         loop = GameLoop(manager)
         if(initSystems){
             //Turn this off to test individual systems
+            attachDataSystems()
             attachPhysicsSystems()
             attachVisualSystems()
+            attachAiSystems()
         }
     }
 
@@ -37,6 +39,13 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     override fun destroy() {
         loop.stop()
         super.destroy()
+    }
+
+    fun attachDataSystems(){
+        val dataSystem = LocalDataSystem()
+        //TODO: Change this database to the release database
+        dataSystem.getItemDatabase().fromCSV("/TestItemDB.csv")
+        manager.register(DataSystem::class.java, dataSystem)
     }
 
     fun attachPhysicsSystems(){
@@ -47,6 +56,10 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     fun attachVisualSystems(){
         stateManager.attach(VisualState())
         stateManager.attach(CameraState())
+    }
+
+    fun attachAiSystems(){
+        manager.register(ActionSystem::class.java, ActionSystem())
     }
 }
 
