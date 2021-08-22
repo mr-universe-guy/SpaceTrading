@@ -26,7 +26,8 @@ class ActionSystem: AbstractGameSystem() {
             //This may not be a great way of doing things when we have a massive number of ships
             val status = action.update(entityId, data, time)
             //if the status has changed assign a new status info
-            if(status != data.getComponent(entityId, ActionInfo::class.java).status){
+            if(status != action.getStatus()){
+                action.setStatus(status)
                 data.setComponent(entityId, ActionInfo(action.toString(), status))
             }
         }
