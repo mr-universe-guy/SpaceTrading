@@ -6,8 +6,10 @@ import com.jme3.asset.AssetManager
 import com.jme3.asset.ModelKey
 import com.jme3.material.Material
 import com.jme3.math.Vector3f
+import com.jme3.scene.Geometry
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
+import com.jme3.scene.shape.Sphere
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
 import com.simsilica.es.EntityData
@@ -73,11 +75,22 @@ class VisualState: BaseAppState() {
         }
     }
 
-    private inner class VisObject(_eid:EntityId, asset:String, position:Vec3d, velocity: Vec3d){
-        val vis: Spatial = am.loadAsset(ModelKey(asset))!!
+    private inner class VisObject(eid:EntityId, asset:String, position:Vec3d, velocity: Vec3d){
+        val vis: Spatial
         init{
+            //Use a switch statement for now to implement super simple debug stuff
+            when(asset){
+                "ASTEROID"->{
+                    val mesh = Sphere(8,8,5f)
+                    vis = Geometry("Asteroid", mesh)
+                    println("Asteroid created")
+                }
+                else -> {
+                    vis = am.loadAsset(ModelKey(asset))!!
+                }
+            }
             if (debug) vis.setMaterial(debugMat)
-            vis.setUserData(ID_KEY, _eid.id)
+            vis.setUserData(ID_KEY, eid.id)
             vis.localTranslation = position.toVector3f()
             setVelocity(velocity)
         }

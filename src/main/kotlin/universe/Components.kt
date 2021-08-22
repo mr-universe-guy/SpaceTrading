@@ -16,7 +16,9 @@ data class Position(val position:Vec3d): EntityComponent
 /**
  * The entities current velocity in m/s
  */
-data class Velocity(val velocity:Vec3d): EntityComponent
+data class Velocity(val velocity:Vec3d): EntityComponent{
+    constructor(x: Double, y: Double, z: Double) : this(Vec3d(x,y,z))
+}
 
 /**
  * The mass of an entity in kg
