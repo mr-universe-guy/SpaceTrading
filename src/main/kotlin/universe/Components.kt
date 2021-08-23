@@ -66,3 +66,9 @@ data class VisualAsset(val asset:String): EntityComponent
  * Read published values for an entities current action
  */
 data class ActionInfo(val text: String, val status: ActionStatus): EntityComponent
+
+/**
+ * Drag to be applied to moving entities to create more natural maximum speeds and accelerations
+ * @param dragCoefficient Should be a number 0.0 < 1.0
+ */
+data class Drag(val dragCoefficient: Double): EntityComponent

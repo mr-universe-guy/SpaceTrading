@@ -27,6 +27,7 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         manager.register(DataSystem::class.java, dataSystem)
         manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
         manager.addSystem(EngineSystem())
+        manager.addSystem(DragSystem())
         //AI should be last
         manager.register(ActionSystem::class.java, actionSys)
         //app states
@@ -100,6 +101,7 @@ private fun spawnShip(data:EntityData, name:String, position:Vec3d): EntityId{
         Name(name),
         Position(position),
         Mass(1.0),
+        Drag(0.1),
         Velocity(Vec3d(0.0,0.0,0.0)),
         CargoHold(10.0),
         Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10))),
