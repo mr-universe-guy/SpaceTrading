@@ -22,8 +22,8 @@ class DragSystem: AbstractGameSystem() {
             //if velocity is near 0 skip
             if(lenSqr <= EPSILON) return
             val dc = it.get(Drag::class.java).dragCoefficient
-            //force(drag) = v^2*dc
-            val force = vel.normalize().mult(-lenSqr*dc)
+            //force(drag) = (v^2)/2*dc
+            val force = vel.normalize().mult(-lenSqr*0.5*dc)
             physSystem.getPhysicsBody(it.id)?.applyForce(force)
         }
     }
