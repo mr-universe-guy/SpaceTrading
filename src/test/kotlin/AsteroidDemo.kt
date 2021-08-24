@@ -1,5 +1,9 @@
 import com.jme3.system.AppSettings
+import com.simsilica.es.EntityId
+import com.simsilica.es.WatchedEntity
 import com.simsilica.mathd.Vec3d
+import com.simsilica.sim.AbstractGameSystem
+import com.simsilica.sim.SimTime
 import universe.*
 
 /*
@@ -14,6 +18,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         attachDataSystems()
         //use general physics
         attachPhysicsSystems()
+        manager.register(EnergySystem::class.java, EnergySystem())
         //use general visuals
         attachVisualSystems()
         //ai
@@ -37,7 +42,26 @@ class AsteroidDemo: SpaceTraderApp(false){
         manager.enqueue {
             //manager.get(ActionSystem::class.java).setAction(playerId, OrbitAction(asteroidID, 20.0))
         }
+        manager.addSystem(LoopListener(playerId))
         loop.start()
+    }
+}
+
+class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
+    private lateinit var player: WatchedEntity
+    override fun initialize() {
+        val data = getSystem(DataSystem::class.java).getPhysicsData()
+        player = data.watchEntity(playerId, Energy::class.java)
+    }
+
+    override fun update(time: SimTime?) {
+        if(player.applyChanges()){
+            println(player.get(Energy::class.java))
+        }
+    }
+
+    override fun terminate() {
+
     }
 }
 

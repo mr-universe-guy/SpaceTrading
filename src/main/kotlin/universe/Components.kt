@@ -72,3 +72,16 @@ data class ActionInfo(val text: String, val status: ActionStatus): EntityCompone
  * @param dragCoefficient Should be a number 0.0 < 1.0
  */
 data class Drag(val dragCoefficient: Double): EntityComponent
+
+/**
+ * The current energy an entity has available
+ */
+data class Energy(val curEnergy: Long): EntityComponent
+
+/**
+ * The maximum energy an entity can have
+ * @param maxEnergy the maximum energy this grid can contain, excess energy will be discarded
+ * @param recharge the amount of energy that is re-charged per cycle
+ * @param cycleTime the amount of time, in seconds to complete one recharge cycle
+ */
+data class EnergyGridInfo(val maxEnergy: Long, val recharge: Long, val cycleTime: Double): EntityComponent
