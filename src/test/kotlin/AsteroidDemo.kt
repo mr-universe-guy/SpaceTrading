@@ -36,11 +36,11 @@ class AsteroidDemo: SpaceTraderApp(false){
             println("Camera target set")
         }
         //spawn asteroids
-        val asteroidID = spawnTestAsteroid(data, Vec3d(1.0,0.0,50.0))
+        val asteroidID = spawnTestAsteroid(data, Vec3d(25.0,25.0,75.0))
         println("Asteroid spawned")
         //order player to orbit asteroid for now
         manager.enqueue {
-            //manager.get(ActionSystem::class.java).setAction(playerId, OrbitAction(asteroidID, 20.0))
+            manager.get(ActionSystem::class.java).setAction(playerId, OrbitAction(asteroidID, 50.0))
         }
         manager.addSystem(LoopListener(playerId))
         loop.start()
@@ -52,6 +52,7 @@ class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
     override fun initialize() {
         val data = getSystem(DataSystem::class.java).getPhysicsData()
         player = data.watchEntity(playerId, Energy::class.java)
+
     }
 
     override fun update(time: SimTime?) {
@@ -69,6 +70,7 @@ fun main(){
     val app = AsteroidDemo()
     val settings = AppSettings(true)
     settings.setResolution(1280,720)
+    app.setSettings(settings)
     app.isShowSettings = false
     app.start()
 }

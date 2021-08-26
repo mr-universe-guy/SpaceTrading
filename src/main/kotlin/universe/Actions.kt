@@ -19,7 +19,7 @@ enum class ActionStatus{
 interface Action{
     fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus
     fun getStatus(): ActionStatus
-    fun setStatus(status: ActionStatus)
+    fun setStatus(_status: ActionStatus)
 }
 
 abstract class AbstractAction: Action{
@@ -40,6 +40,7 @@ abstract class AbstractAction: Action{
 class MoveAction(private val destination: Vec3d): AbstractAction() {
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
         //TODO: Take into account engine strength and braking distance
+        //TODO: Incorporate throttle control
         val pos = data.getComponent(id, Position::class.java).position
         val diff = destination.subtract(pos)
         //println("$id heading towards $pos, ${diff.length()}")
@@ -55,5 +56,30 @@ class MoveAction(private val destination: Vec3d): AbstractAction() {
 
     override fun toString(): String {
         return "Move To $destination"
+    }
+}
+
+class OrbitAction(private val targetId: EntityId, private val distance: Double): AbstractAction(){
+    override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
+        //if target or self are missing a position fail early
+        val pos = data.getComponent(id, Position::class.java)?.position ?: return ActionStatus.FAILED
+        val vel = data.getComponent(id, Velocity::class.java)?.velocity ?: return ActionStatus.FAILED
+        val tgtPos = data.getComponent(targetId, Position::class.java)?.position ?: return ActionStatus.FAILED
+        //get math local to target, add velocity to compensate!
+        val localPos = pos.subtract(tgtPos).add(vel)
+        val dist = localPos.length()
+        val localDir = localPos.mult(1.0/dist)
+        //we can use our current position and velocity as an "up" dir to allow non-planar orbits at the cost of another sqrt
+        var upDir = localDir.cross(vel.normalize())
+        if(upDir.isNaN) upDir = Vec3d.UNIT_Y
+        //val upDir = Vec3d.UNIT_Y
+        //normal between current pos and up is the orbit's tangent
+        val orbitDir = upDir.cross(localDir)
+        //add the error of the distance to our orbit direction and normalize
+        val steer = orbitDir.addLocal(localDir.mult(distance-dist)).normalizeLocal()
+        //TODO: Incorporate a throttle control
+        data.setComponent(id, EngineDriver(steer))
+        //println(dist)
+        return ActionStatus.ONGOING
     }
 }
