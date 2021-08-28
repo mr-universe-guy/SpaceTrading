@@ -2,29 +2,52 @@ package universe
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.jme3.math.Vector3f
+import com.jme3.scene.Node
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.es.WatchedEntity
-import com.simsilica.lemur.GuiGlobals
+import com.simsilica.lemur.*
+import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
+import com.simsilica.mathd.Vec3d
 
 /**
  * A state to manage the interactive ship Hud and UI.
  * The ship hud consists of both lemur and jfx elements
  */
 class ShipHudState: BaseAppState(), StateFunctionListener {
+    //lemur hud elements
+    private val hudNode = Node("Hud_Gui")
+    private lateinit var energyGuage: Label
+    private lateinit var velocityIndicator: Label
+    //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
     private lateinit var inRangeTargets: EntitySet
+
     var playerId : EntityId? = null
     private var playerShip: WatchedEntity? = null
     private var target: WatchedEntity? = null
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
+        //build lemur hud
+        val screenWidth = app.camera.width
+        val screenHeight = app.camera.height
+        val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
+        readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
+        readoutContainer.localTranslation = Vector3f(0f, 100f, 0f)
+        energyGuage = Label("XXX% Energy")
+        energyGuage.textHAlignment = HAlignment.Center
+        readoutContainer.addChild(energyGuage)
+        velocityIndicator = Label("XXXX m/s")
+        velocityIndicator.textHAlignment = HAlignment.Center
+        readoutContainer.addChild(velocityIndicator)
+        hudNode.attachChild(readoutContainer)
         //keyboard shortcuts
         mapper = GuiGlobals.getInstance().inputMapper
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
@@ -39,23 +62,36 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
     }
 
     override fun onEnable() {
+        val app = application as SpaceTraderApp
+        app.guiNode.attachChild(hudNode)
         mapper.activateGroup(SHIP_INPUT_GROUP)
     }
 
     override fun onDisable() {
+        hudNode.removeFromParent()
         mapper.deactivateGroup(SHIP_INPUT_GROUP)
     }
 
     override fun update(tpf: Float) {
         playerId?.let { watchPlayer(it) }
-        playerShip?.applyChanges()
+        if(playerShip?.applyChanges() == true){
+            updatePlayerGui(playerShip!!)
+        }
         target?.applyChanges()
         inRangeTargets.applyChanges()
     }
 
+    private fun updatePlayerGui(playerShip: WatchedEntity){
+        val velocity = playerShip.get(Velocity::class.java)?.velocity ?: Vec3d(0.0,0.0,0.0)
+        val floatFormat = "%.1f"
+        velocityIndicator.text = "${floatFormat.format(velocity.length())} M/S"
+        val energy = playerShip.get(Energy::class.java)?.curEnergy ?: 0.0
+        energyGuage.text = "$energy% Energy"
+    }
+
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
-        playerShip = data.watchEntity(id, Position::class.java)
+        playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java)
         playerId = null
     }
 

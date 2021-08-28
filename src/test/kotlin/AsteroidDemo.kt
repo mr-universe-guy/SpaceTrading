@@ -68,7 +68,7 @@ class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
 
     override fun update(time: SimTime?) {
         if(player.applyChanges()){
-            println(player.get(Energy::class.java))
+            //println(player.get(Energy::class.java))
         }
     }
 
