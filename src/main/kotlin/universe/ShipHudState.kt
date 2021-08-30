@@ -23,7 +23,7 @@ import com.simsilica.mathd.Vec3d
 class ShipHudState: BaseAppState(), StateFunctionListener {
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
-    private lateinit var energyGuage: Label
+    private lateinit var energyGauge: Label
     private lateinit var velocityIndicator: Label
     //
     private lateinit var mapper: InputMapper
@@ -37,17 +37,22 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
         val app = _app as SpaceTraderApp
         //build lemur hud
         val screenWidth = app.camera.width
-        val screenHeight = app.camera.height
         val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
         readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
         readoutContainer.localTranslation = Vector3f(0f, 100f, 0f)
-        energyGuage = Label("XXX% Energy")
-        energyGuage.textHAlignment = HAlignment.Center
-        readoutContainer.addChild(energyGuage)
+        energyGauge = Label("XXX% Energy")
+        energyGauge.textHAlignment = HAlignment.Center
+        readoutContainer.addChild(energyGauge)
         velocityIndicator = Label("XXXX m/s")
         velocityIndicator.textHAlignment = HAlignment.Center
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
+        //minimap
+        val mapPanel = getState(LocalMapState::class.java).getMapPanel()
+        val mapSize = Vector3f(220f, 220f, 1f)
+        mapPanel.preferredSize = mapSize
+        mapPanel.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
+        hudNode.attachChild(mapPanel)
         //keyboard shortcuts
         mapper = GuiGlobals.getInstance().inputMapper
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
@@ -86,7 +91,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
         val floatFormat = "%.1f"
         velocityIndicator.text = "${floatFormat.format(velocity.length())} M/S"
         val energy = playerShip.get(Energy::class.java)?.curEnergy ?: 0.0
-        energyGuage.text = "$energy% Energy"
+        energyGauge.text = "$energy% Energy"
     }
 
     private fun watchPlayer(id: EntityId){

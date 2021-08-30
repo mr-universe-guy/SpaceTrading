@@ -85,3 +85,9 @@ data class Energy(val curEnergy: Long): EntityComponent
  * @param cycleTime the amount of time, in seconds to complete one recharge cycle
  */
 data class EnergyGridInfo(val maxEnergy: Long, val recharge: Long, val cycleTime: Double): EntityComponent
+
+enum class Category{
+    SHIP, ASTEROID
+}
+
+data class ObjectCategory(val category: Category): EntityComponent

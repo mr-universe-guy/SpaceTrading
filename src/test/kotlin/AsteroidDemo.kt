@@ -29,6 +29,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         //use general visuals
         stateManager.attach(VisualState())
         stateManager.attach(CameraState())
+        stateManager.attach(LocalMapState())
         stateManager.attach(ShipHudState())
         //ai
         manager.register(ActionSystem::class.java, ActionSystem())
@@ -43,6 +44,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         enqueue{
             stateManager.getState(CameraState::class.java).setTarget(playerId)
             stateManager.getState(ShipHudState::class.java).playerId = playerId
+            stateManager.getState(LocalMapState::class.java).targetId = playerId
             println("Camera target set")
         }
         //spawn asteroids

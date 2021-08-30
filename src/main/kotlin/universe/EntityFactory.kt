@@ -16,7 +16,8 @@ fun spawnTestShip(data: EntityData, name: String, position: Vec3d): EntityId{
         Engine(100.0, 10.0),
         EngineDriver(Vec3d(0.0,0.0,0.0)),
         VisualAsset("TestShip/Insurgent.gltf"),
-        EnergyGridInfo(100, 10, 3.0)
+        EnergyGridInfo(100, 10, 3.0),
+        ObjectCategory(Category.SHIP)
     )
     return id
 }
@@ -27,7 +28,8 @@ fun spawnTestAsteroid(data: EntityData, position: Vec3d): EntityId{
         Name("Asteroid"),
         Position(position),
         Velocity(0.0,0.0,0.0),
-        VisualAsset("ASTEROID")
+        VisualAsset("ASTEROID"),
+        ObjectCategory(Category.ASTEROID)
     )
     return id
 }
