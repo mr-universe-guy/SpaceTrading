@@ -1,6 +1,5 @@
 package universe
 
-import com.jme3.math.Transform
 import com.jme3.math.Vector3f
 import com.simsilica.lemur.Panel
 import com.simsilica.lemur.core.GuiControl
@@ -13,7 +12,8 @@ class VersionedPanel: Panel(), VersionedObject<Panel>, GuiControlListener {
     private var version = 0L
 
     init{
-        panel.getControl(GuiControl::class.java).addListener(this)
+        val uic = panel.getControl(GuiControl::class.java)
+        uic.addListener(this)
     }
 
     override fun getVersion(): Long {
@@ -29,40 +29,16 @@ class VersionedPanel: Panel(), VersionedObject<Panel>, GuiControlListener {
     }
 
     override fun reshape(source: GuiControl?, pos: Vector3f?, size: Vector3f?) {
-        println("Reshape event")
         version++
     }
 
-    override fun focusGained(source: GuiControl?) {
+    override fun focusGained(source: GuiControl?) {}
 
-    }
+    override fun focusLost(source: GuiControl?) {}
 
-    override fun focusLost(source: GuiControl?) {
-
-    }
-
-    override fun setLocalTransform(t: Transform?) {
-        super.setLocalTransform(t)
+    override fun setTransformRefresh() {
+        super.setTransformRefresh()
         version++
     }
 
-    override fun setLocalTranslation(localTranslation: Vector3f?) {
-        super.setLocalTranslation(localTranslation)
-        version++
-    }
-
-    override fun setLocalTranslation(x: Float, y: Float, z: Float) {
-        super.setLocalTranslation(x, y, z)
-        version++
-    }
-
-    override fun setSize(size: Vector3f?) {
-        super.setSize(size)
-        version++
-    }
-
-    override fun setPreferredSize(size: Vector3f?) {
-        super.setPreferredSize(size)
-        version++
-    }
 }

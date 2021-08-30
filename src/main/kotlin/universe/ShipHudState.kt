@@ -48,7 +48,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
         //minimap
-        val mapPanel = getState(LocalMapState::class.java).getMapPanel()
+        val mapPanel = getState(LocalMapState::class.java).getMap()
         val mapSize = Vector3f(220f, 220f, 1f)
         mapPanel.preferredSize = mapSize
         mapPanel.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
@@ -103,7 +103,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
     /**
      * Target the next-furthest target until the furthest target has been found, then target the nearest
      */
-    fun nextTarget(){
+    private fun nextTarget(){
         println("Searching for next furthest target")
         val pos = playerShip?.get(Position::class.java)?.position ?: return
         val farTgtDist = target?.get(Position::class.java)?.position?.distanceSq(pos) ?: 0.0
@@ -129,7 +129,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
     /**
      * Target the nearest target
      */
-    fun nearestTarget(){
+    private fun nearestTarget(){
         println("Searching for nearest target")
         val pos = playerShip?.get(Position::class.java)?.position ?: return
         var nearestDist = Double.MAX_VALUE
