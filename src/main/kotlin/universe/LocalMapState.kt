@@ -90,8 +90,10 @@ class LocalMapState: BaseAppState() {
         val x2 = pos.x+size.x
         val y1 = pos.y-size.y
         val y2 = pos.y
+        val aspect = size.y/size.x
         mapCam.setViewPort(x1/camWidth, x2/camWidth, y1/camHeight, y2/camHeight)
-        mapCam.setFrustum(-10f,10f,mapRadius, -mapRadius, mapRadius, -mapRadius)
+        val mapHeight = mapRadius*aspect
+        mapCam.setFrustum(-10f,10f,mapRadius, -mapRadius, mapHeight, -mapHeight)
     }
 
     override fun update(tpf: Float) {
