@@ -12,9 +12,7 @@ import com.jme3.renderer.queue.RenderQueue
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
 import com.simsilica.es.*
-import com.simsilica.lemur.*
-import com.simsilica.lemur.component.BorderLayout
-import com.simsilica.lemur.component.BoxLayout
+import com.simsilica.lemur.Panel
 import com.simsilica.lemur.component.IconComponent
 import com.simsilica.lemur.component.QuadBackgroundComponent
 import com.simsilica.lemur.core.GuiControl
@@ -34,19 +32,22 @@ const val MAP_LAYER = "Map"
  * A map showing all entities in the local space as simple symbols and markers, good for a minimap or battle map
  */
 class LocalMapState: BaseAppState() {
-
+    private val listeners = mutableListOf<MapFocusListener>()
     private val mapNode = Node("Battle_Map")
     private val mapOffset = Node("Map_Offset")
     private var mapCam: Camera = Camera(0,0)
-    private val mapContainer = Container(BorderLayout())
     private lateinit var mapPanel: VersionedReference<Panel>
     private lateinit var mapViewport: ViewPort
     private lateinit var data: EntityData
     private lateinit var mapObjects: MapObjectContainer
     private var mapRadius = 100f
-    private var mapFocus: WatchedEntity? = null
     private var followTarget: WatchedEntity? = null
     var targetId: EntityId? = null
+    var focusedItem: EntityId? = null
+        private set(value) {
+            field = value
+            listeners.forEach { it.iconFocused(value) }
+        }
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
@@ -73,16 +74,6 @@ class LocalMapState: BaseAppState() {
         panel.background = QuadBackgroundComponent(ColorRGBA(0f,0.1f,0f,0.5f))
         panel.localTranslation = Vector3f(0f,0f,10f)
         mapPanel = panel.createReference()
-        mapContainer.addChild(mapPanel.get(), BorderLayout.Position.Center)
-        //default map stuff (grid and range bands)
-        val focusContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
-        val nameLabel = Label("Name")
-        nameLabel.name = "Name"
-        focusContainer.addChild(nameLabel)
-        val distanceLabel = Label("Distance")
-        distanceLabel.name = "Distance"
-        focusContainer.addChild(distanceLabel)
-        mapContainer.addChild(focusContainer, BorderLayout.Position.North)
         //entities
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
         mapObjects = MapObjectContainer(data)
@@ -103,7 +94,7 @@ class LocalMapState: BaseAppState() {
 
     private fun viewportToPanel(){
         val panel = mapPanel.get()
-        val size = panel.size
+        val size = if(panel.size.isSimilar(Vector3f.ZERO, 0.001f)) panel.preferredSize else panel.size
         val pos = panel.worldTranslation
         //cam
         val camWidth = mapCam.width
@@ -125,8 +116,6 @@ class LocalMapState: BaseAppState() {
             val pos = followTarget!!.get(Position::class.java).position
             mapOffset.localTranslation = Vector3f(pos.x.toFloat(), -pos.z.toFloat(), 9f)
         }
-        mapFocus?.applyChanges()
-        mapFocus?.let { updateFocusedInfo() }
         mapObjects.update()
         if(mapPanel.update()) {
             viewportToPanel()
@@ -135,23 +124,16 @@ class LocalMapState: BaseAppState() {
         mapNode.updateGeometricState()
     }
 
-    private fun updateFocusedInfo(){
-        //update focus info above minimap
-        val name = mapFocus?.get(Name::class.java)?.name ?: ""
-        val followPos = followTarget?.get(Position::class.java)?.position
-        val distance = mapFocus?.get(Position::class.java)?.position?.distance(followPos)
-        val nl = mapContainer.getChild("Name") as Label?
-        val dl = mapContainer.getChild("Distance") as Label?
-        nl?.text = name
-        if(distance == null) {
-            dl?.text = ""
-        } else{
-            dl?.text = "%.2f m".format(distance)
-        }
+    fun getMap(): Panel{
+        return mapPanel.get()
     }
 
-    fun getMap(): Panel{
-        return mapContainer
+    fun addFocusListener(l: MapFocusListener){
+        listeners.add(l)
+    }
+
+    fun removeFocusListener(l: MapFocusListener){
+        listeners.remove(l)
     }
 
     private inner class MapObject(val id: EntityId, pos:Vec3d, category: Category){
@@ -213,18 +195,11 @@ class LocalMapState: BaseAppState() {
 
         override fun focusGained(event: FocusChangeEvent?) {
             bg.color = ColorRGBA.Yellow
-            mapFocus?.release()
-            mapFocus = data.watchEntity(target.id, Name::class.java, Position::class.java)
-            //for some reason the first frame of watching an entity doesn't return as updated... let's fix that
-            mapFocus?.applyChanges()
-            updateFocusedInfo()
+            focusedItem = target.id
         }
 
         override fun focusLost(event: FocusChangeEvent?) {
             bg.color = ColorRGBA.Gray
-            mapFocus?.release()
-            mapFocus = null
-            updateFocusedInfo()
         }
     }
 
@@ -234,6 +209,12 @@ class LocalMapState: BaseAppState() {
             event?.setConsumed()
             //un-focus whatever is focused
             getState(FocusManagerState::class.java).focus = null
+            //specifically un-focus our stuff
+            focusedItem = null
         }
+    }
+
+    interface MapFocusListener{
+        fun iconFocused(id: EntityId?)
     }
 }

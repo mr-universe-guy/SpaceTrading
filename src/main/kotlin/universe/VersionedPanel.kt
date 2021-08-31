@@ -32,6 +32,11 @@ class VersionedPanel: Panel(), VersionedObject<Panel>, GuiControlListener {
         version++
     }
 
+    override fun setPreferredSize(size: Vector3f?) {
+        super.setPreferredSize(size)
+        version++
+    }
+
     override fun focusGained(source: GuiControl?) {}
 
     override fun focusLost(source: GuiControl?) {}

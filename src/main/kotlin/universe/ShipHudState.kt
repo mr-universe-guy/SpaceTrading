@@ -9,6 +9,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.es.WatchedEntity
 import com.simsilica.lemur.*
+import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
@@ -20,11 +21,14 @@ import com.simsilica.mathd.Vec3d
  * A state to manage the interactive ship Hud and UI.
  * The ship hud consists of both lemur and jfx elements
  */
-class ShipHudState: BaseAppState(), StateFunctionListener {
+class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocusListener {
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
-    private lateinit var energyGauge: Label
-    private lateinit var velocityIndicator: Label
+    private val energyGauge= Label("XXX% Energy")
+    private val velocityIndicator= Label("XXXX m/s")
+    //mini map container
+    private val mapContainer = Container(BorderLayout())
+    private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
     //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
@@ -40,19 +44,25 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
         val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
         readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
         readoutContainer.localTranslation = Vector3f(0f, 100f, 0f)
-        energyGauge = Label("XXX% Energy")
         energyGauge.textHAlignment = HAlignment.Center
         readoutContainer.addChild(energyGauge)
-        velocityIndicator = Label("XXXX m/s")
         velocityIndicator.textHAlignment = HAlignment.Center
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
+        //minimap info
+        val mapInfoName = Label("")
+        mapInfoName.name = "NAME"
+        mapInfoContainer.addChild(mapInfoName)
+        mapContainer.addChild(mapInfoContainer, BorderLayout.Position.North)
         //minimap
-        val mapPanel = getState(LocalMapState::class.java).getMap()
+        val mapState = getState(LocalMapState::class.java)
+        mapState.addFocusListener(this)
+        val mapPanel = mapState.getMap()
         val mapSize = Vector3f(220f, 220f, 1f)
-        mapPanel.preferredSize = mapSize
-        mapPanel.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
-        hudNode.attachChild(mapPanel)
+        mapContainer.addChild(mapPanel, BorderLayout.Position.Center)
+        mapContainer.preferredSize = mapSize
+        mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
+        hudNode.attachChild(mapContainer)
         //keyboard shortcuts
         mapper = GuiGlobals.getInstance().inputMapper
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
@@ -64,6 +74,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
     override fun cleanup(app: Application?) {
         //keyboard shortcuts
         mapper.removeStateListener(this, SHIP_NEXT_TARGET)
+        getState(LocalMapState::class.java)?.removeFocusListener(this)
     }
 
     override fun onEnable() {
@@ -164,5 +175,17 @@ class ShipHudState: BaseAppState(), StateFunctionListener {
                 nextTarget()
             }
         }
+    }
+
+    override fun iconFocused(id: EntityId?) {
+        val name:String
+        if(id == null){
+            //clear all info
+            name = ""
+        }  else{
+            //fill all info
+            name = data.getComponent(id, Name::class.java).name
+        }
+        (mapInfoContainer.getChild("NAME") as Label).text = name
     }
 }
