@@ -11,6 +11,7 @@ import com.simsilica.es.WatchedEntity
 import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
+import com.simsilica.lemur.core.VersionedReference
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
@@ -26,20 +27,29 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private val hudNode = Node("Hud_Gui")
     private val energyGauge= Label("XXX% Energy")
     private val velocityIndicator= Label("XXXX m/s")
+    //all panels go on the dash
+    private val dashboard = Container(BorderLayout())
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
+    //navigation panel
+    private val navContainer = Container(BorderLayout())
+    private lateinit var throttle : VersionedReference<Double>
     //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
     private lateinit var inRangeTargets: EntitySet
+    private lateinit var actionSys: ActionSystem
 
     var playerId : EntityId? = null
     private var playerShip: WatchedEntity? = null
     private var target: WatchedEntity? = null
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
+        data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        actionSys = app.manager.get(ActionSystem::class.java)
         //build lemur hud
+        val screenHeight = app.camera.height
         val screenWidth = app.camera.width
         val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
         readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
@@ -62,12 +72,26 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         mapContainer.addChild(mapPanel, BorderLayout.Position.Center)
         mapContainer.preferredSize = mapSize
         mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
-        hudNode.attachChild(mapContainer)
+        //hudNode.attachChild(mapContainer)
+        //nav panel
+        val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
+        throttle = throttleModel.createReference()
+        val throttleSlider = Slider(throttleModel, Axis.Y)
+        throttleSlider.incrementButton.removeFromParent()
+        throttleSlider.decrementButton.removeFromParent()
+        navContainer.addChild(throttleSlider, BorderLayout.Position.East)
+        //add all our panels to the single dashboard
+        //let's go for screen width and .25 screen height
+        val dashY = screenHeight*0.25f
+        dashboard.preferredSize = Vector3f(screenWidth.toFloat(), dashY, 1f)
+        dashboard.localTranslation = Vector3f(0f, dashY, 0f)
+        dashboard.addChild(mapContainer, BorderLayout.Position.East)
+        dashboard.addChild(navContainer, BorderLayout.Position.West)
+        hudNode.attachChild(dashboard)
         //keyboard shortcuts
         mapper = GuiGlobals.getInstance().inputMapper
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
         println("Ship Hud Enabled")
-        data = app.manager.get(DataSystem::class.java).getPhysicsData()
         inRangeTargets = data.getEntities(Position::class.java)
     }
 
@@ -90,6 +114,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
 
     override fun update(tpf: Float) {
         playerId?.let { watchPlayer(it) }
+        if(playerShip != null){
+            //do things with gui input
+            if(throttle.update()) {
+                val action = actionSys.getAction(playerShip?.id!!)
+                action?.setThrottle(throttle.get())
+            }
+        }
         if(playerShip?.applyChanges() == true){
             updatePlayerGui(playerShip!!)
         }
@@ -178,14 +209,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     }
 
     override fun iconFocused(id: EntityId?) {
-        val name:String
-        if(id == null){
-            //clear all info
-            name = ""
-        }  else{
-            //fill all info
-            name = data.getComponent(id, Name::class.java).name
-        }
+        val name:String = if(id == null) "" else data.getComponent(id, Name::class.java).name
         (mapInfoContainer.getChild("NAME") as Label).text = name
     }
 }

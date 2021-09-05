@@ -20,18 +20,18 @@ interface Action{
     fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus
     fun getStatus(): ActionStatus
     fun setStatus(_status: ActionStatus)
+    fun getThrottle(): Double
+    fun setThrottle(_throttle: Double)
 }
 
 abstract class AbstractAction: Action{
+    private var throttle = 1.0
+    override fun setThrottle(_throttle: Double) {throttle = _throttle}
+    override fun getThrottle(): Double {return throttle}
+
     private var status = ActionStatus.STARTING
-
-    override fun getStatus(): ActionStatus {
-        return status
-    }
-
-    override fun setStatus(_status: ActionStatus) {
-        status = _status
-    }
+    override fun getStatus(): ActionStatus {return status}
+    override fun setStatus(_status: ActionStatus) {status = _status}
 }
 
 /**
@@ -39,8 +39,6 @@ abstract class AbstractAction: Action{
  */
 class MoveAction(private val destination: Vec3d): AbstractAction() {
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
-        //TODO: Take into account engine strength and braking distance
-        //TODO: Incorporate throttle control
         val pos = data.getComponent(id, Position::class.java).position
         val diff = destination.subtract(pos)
         //println("$id heading towards $pos, ${diff.length()}")
@@ -50,7 +48,7 @@ class MoveAction(private val destination: Vec3d): AbstractAction() {
             )
             return ActionStatus.COMPLETE
         }
-        data.setComponent(id, EngineDriver(diff.normalizeLocal()))
+        data.setComponent(id, EngineDriver(diff.normalizeLocal().multLocal(getThrottle())))
         return ActionStatus.ONGOING
     }
 
@@ -78,7 +76,7 @@ class OrbitAction(private val targetId: EntityId, private val distance: Double):
         //add the error of the distance to our orbit direction and normalize
         val steer = orbitDir.addLocal(localDir.mult(distance-dist)).normalizeLocal()
         //TODO: Incorporate a throttle control
-        data.setComponent(id, EngineDriver(steer))
+        data.setComponent(id, EngineDriver(steer.mult(getThrottle())))
         //println(dist)
         return ActionStatus.ONGOING
     }

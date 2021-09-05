@@ -6,7 +6,7 @@ import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
 /**
- * Actions are the micro level ai decisions performed by units in a fleet. These will need to be very cheap as every fleet
+ * Actions are the micro level AI decisions performed by units in a fleet. These will need to be very cheap as every fleet
  * that is in simulated space will run one action per unit.
  */
 class ActionSystem: AbstractGameSystem() {
@@ -41,5 +41,9 @@ class ActionSystem: AbstractGameSystem() {
             unitActions[id] = action
             data.setComponent(id, ActionInfo(action.toString(), ActionStatus.STARTING))
         }
+    }
+
+    fun getAction(id: EntityId): Action?{
+        return unitActions[id]
     }
 }
