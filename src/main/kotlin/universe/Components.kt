@@ -1,6 +1,7 @@
 package universe
 
 import com.simsilica.es.EntityComponent
+import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 
 /**
@@ -91,3 +92,13 @@ enum class Category{
 }
 
 data class ObjectCategory(val category: Category): EntityComponent
+
+/**
+ * The stats to determine how a target can be tracked by weapons systems
+ */
+data class Sensors(val range: Double): EntityComponent
+
+/**
+ * Store target locks as a component so other systems can break locks, etc
+ */
+data class TargetLock(val targetId: EntityId): EntityComponent

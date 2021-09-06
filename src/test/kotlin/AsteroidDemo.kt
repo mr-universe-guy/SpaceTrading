@@ -26,6 +26,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
         manager.addSystem(EngineSystem())
         manager.register(EnergySystem::class.java, EnergySystem())
+        manager.register(SensorSystem::class.java, SensorSystem())
         //use general visuals
         stateManager.attach(VisualState())
         stateManager.attach(CameraState())

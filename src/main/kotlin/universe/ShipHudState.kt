@@ -29,6 +29,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private val velocityIndicator= Label("XXXX m/s")
     //all panels go on the dash
     private val dashboard = Container(BorderLayout())
+    //target panel
+    private val targetPanel = Container(BorderLayout())
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
@@ -40,6 +42,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private lateinit var data: EntityData
     private lateinit var inRangeTargets: EntitySet
     private lateinit var actionSys: ActionSystem
+    private lateinit var sensorSys: SensorSystem
 //
     var playerId : EntityId? = null
     private var playerShip: WatchedEntity? = null
@@ -50,6 +53,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
         actionSys = app.manager.get(ActionSystem::class.java)
+        sensorSys = app.manager.get(SensorSystem::class.java)
         //build lemur hud
         val screenHeight = app.camera.height
         val screenWidth = app.camera.width
@@ -62,7 +66,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
         //target info
-        val targetPanel = Container(BorderLayout())
+        val targetName = Label("")
+        targetName.name = "TargetName"
+        targetPanel.addChild(targetName, BorderLayout.Position.North)
         //minimap info
         val mapInfoName = Label("")
         mapInfoName.name = "NAME"
@@ -133,6 +139,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
             }
         }
         if(playerShip?.applyChanges() == true){
+            //does player have a target
+            val tgtId = playerShip?.get(TargetLock::class.java)?.targetId
+            if(tgtId != target?.id){
+                //our target has changed or been lost
+                target?.release()
+                target = if(tgtId == null) null else data.watchEntity(tgtId, Position::class.java, Name::class.java)
+            }
             updatePlayerGui(playerShip!!)
         }
         target?.applyChanges()
@@ -149,11 +162,14 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         velocityIndicator.text = "${floatFormat.format(velocity.length())} M/S"
         val energy = playerShip.get(Energy::class.java)?.curEnergy ?: 0.0
         energyGauge.text = "$energy% Energy"
+        val targetName = target?.get(Name::class.java)?.name ?: ""
+        (targetPanel.getChild("TargetName") as Label).text = targetName
     }
 
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
-        playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java)
+        playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
+            TargetLock::class.java)
         playerId = null
     }
 
@@ -206,17 +222,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
      * Set the active target to the given id
      */
     private fun selectTarget(targetId: EntityId?){
-        target?.release()
-
-        if(targetId == null){
-            target = null
-            println("Clearing target")
-            return
-        }
-        target = data.watchEntity(targetId, Position::class.java, Name::class.java)
-        val pos = data.getComponent(targetId, Position::class.java).position
-        val name = data.getComponent(targetId, Name::class.java).name
-        println("Targeting $name at $pos")
+        if(!sensorSys.acquireLock(playerShip?.id!!, targetId!!)) return
     }
 
     override fun iconFocused(id: EntityId?) {
