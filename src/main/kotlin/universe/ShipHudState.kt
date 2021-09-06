@@ -40,10 +40,12 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private lateinit var data: EntityData
     private lateinit var inRangeTargets: EntitySet
     private lateinit var actionSys: ActionSystem
-
+//
     var playerId : EntityId? = null
     private var playerShip: WatchedEntity? = null
     private var target: WatchedEntity? = null
+    private var mapSelection: EntityId? = null
+
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
@@ -59,6 +61,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         velocityIndicator.textHAlignment = HAlignment.Center
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
+        //target info
+        val targetPanel = Container(BorderLayout())
         //minimap info
         val mapInfoName = Label("")
         mapInfoName.name = "NAME"
@@ -80,11 +84,18 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         throttleSlider.incrementButton.removeFromParent()
         throttleSlider.decrementButton.removeFromParent()
         navContainer.addChild(throttleSlider, BorderLayout.Position.East)
+        //nav options
+        val navOptions = Container(BoxLayout(Axis.Y, FillMode.Even))
+        val orbitButton = Button("Orbit")
+        orbitButton.addClickCommands { orbitTarget() }
+        navOptions.addChild(orbitButton)
+        navContainer.addChild(navOptions, BorderLayout.Position.Center)
         //add all our panels to the single dashboard
         //let's go for screen width and .25 screen height
         val dashY = screenHeight*0.25f
         dashboard.preferredSize = Vector3f(screenWidth.toFloat(), dashY, 1f)
         dashboard.localTranslation = Vector3f(0f, dashY, 0f)
+        dashboard.addChild(targetPanel, BorderLayout.Position.Center)
         dashboard.addChild(mapContainer, BorderLayout.Position.East)
         dashboard.addChild(navContainer, BorderLayout.Position.West)
         hudNode.attachChild(dashboard)
@@ -126,6 +137,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         }
         target?.applyChanges()
         inRangeTargets.applyChanges()
+    }
+
+    private fun orbitTarget(){
+
     }
 
     private fun updatePlayerGui(playerShip: WatchedEntity){
@@ -190,26 +205,40 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     /**
      * Set the active target to the given id
      */
-    private fun selectTarget(targetId: EntityId){
+    private fun selectTarget(targetId: EntityId?){
         target?.release()
+
+        if(targetId == null){
+            target = null
+            println("Clearing target")
+            return
+        }
         target = data.watchEntity(targetId, Position::class.java, Name::class.java)
-        val name = data.getComponent(targetId, Name::class.java).name
         val pos = data.getComponent(targetId, Position::class.java).position
+        val name = data.getComponent(targetId, Name::class.java).name
         println("Targeting $name at $pos")
     }
 
+    override fun iconFocused(id: EntityId?) {
+        mapSelection = id
+        val name:String = if(id == null) "" else data.getComponent(id, Name::class.java).name
+        (mapInfoContainer.getChild("NAME") as Label).text = name
+        println("Map item $id selected")
+    }
+
+    /**
+     * Keyboard Input
+     */
     override fun valueChanged(func: FunctionId?, value: InputState?, tpf: Double) {
         when(func){
             SHIP_NEXT_TARGET -> {
                 if(InputState.Positive != value) return
-                println("Select next target")
-                nextTarget()
+                if(mapSelection == null){
+                    nextTarget()
+                } else{
+                    selectTarget(mapSelection)
+                }
             }
         }
-    }
-
-    override fun iconFocused(id: EntityId?) {
-        val name:String = if(id == null) "" else data.getComponent(id, Name::class.java).name
-        (mapInfoContainer.getChild("NAME") as Label).text = name
     }
 }
