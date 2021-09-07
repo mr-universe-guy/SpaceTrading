@@ -27,6 +27,8 @@ import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
 
 private const val CATEGORY_KEY = "Category"
+private const val HIGHLIGHTED = 1 shl 0
+private const val TARGETED = 1 shl 1
 const val MAP_LAYER = "Map"
 /**
  * A map showing all entities in the local space as simple symbols and markers, good for a minimap or battle map
@@ -41,8 +43,9 @@ class LocalMapState: BaseAppState() {
     private lateinit var data: EntityData
     private lateinit var mapObjects: MapObjectContainer
     private var mapRadius = 100f
-    private var followTarget: WatchedEntity? = null
-    var targetId: EntityId? = null
+    private var player: WatchedEntity? = null
+    private var targetId: EntityId? = null
+    var playerId: EntityId? = null
     var focusedItem: EntityId? = null
         private set(value) {
             field = value
@@ -107,14 +110,19 @@ class LocalMapState: BaseAppState() {
     }
 
     override fun update(tpf: Float) {
-        if(targetId != null){
-            followTarget?.release()
-            followTarget = data.watchEntity(targetId, Position::class.java)
-            targetId = null
+        if(playerId != null){
+            player?.release()
+            player = data.watchEntity(playerId, Position::class.java, TargetLock::class.java)
+            playerId = null
         }
-        if(followTarget?.applyChanges() == true){
-            val pos = followTarget!!.get(Position::class.java).position
+        if(player?.applyChanges() == true){
+            val pos = player!!.get(Position::class.java).position
             mapOffset.localTranslation = Vector3f(pos.x.toFloat(), -pos.z.toFloat(), 9f)
+            //TODO: Only set targetId once, un-set flags when target changes
+            val tgtId = player?.get(TargetLock::class.java)?.targetId
+            if(targetId != tgtId) {
+                setPlayerTarget(tgtId)
+            }
         }
         mapObjects.update()
         if(mapPanel.update()) {
@@ -122,6 +130,15 @@ class LocalMapState: BaseAppState() {
         }
         mapNode.updateLogicalState(tpf)
         mapNode.updateGeometricState()
+    }
+
+    /**
+     * Set the active target id and mark it on the map
+     */
+    private fun setPlayerTarget(id: EntityId?){
+        if(targetId != null) mapObjects.getObject(targetId).unsetFlag(TARGETED)
+        if(id != null) mapObjects.getObject(id).setFlag(TARGETED)
+        targetId = id
     }
 
     fun getMap(): Panel{
@@ -137,6 +154,8 @@ class LocalMapState: BaseAppState() {
     }
 
     private inner class MapObject(val id: EntityId, pos:Vec3d, category: Category){
+        private var flags = 0
+
         val icon = Panel()
 
         init{
@@ -163,6 +182,35 @@ class LocalMapState: BaseAppState() {
 
         fun setPosition(pos: Vec3d){
             icon.localTranslation = Vector3f(-pos.x.toFloat(),pos.z.toFloat(), 0f)
+        }
+
+        fun setFlag(_flag: Int){
+            flags = flags or _flag
+            setColor()
+        }
+
+        fun unsetFlag(_flag: Int){
+            flags = flags and _flag.inv()
+            setColor()
+        }
+
+        fun setColor(){
+            //set color based on flags
+            val color = when(flags){
+                HIGHLIGHTED -> {
+                    ColorRGBA.Yellow
+                }
+                TARGETED -> {
+                    ColorRGBA.Red
+                }
+                HIGHLIGHTED or TARGETED -> {
+                    ColorRGBA.Magenta
+                }
+                else -> {
+                    ColorRGBA.Gray
+                }
+            }
+            (icon.background as IconComponent).color = color
         }
     }
 
@@ -191,15 +239,13 @@ class LocalMapState: BaseAppState() {
     }
 
     private inner class IconFocusListener(val target: MapObject): FocusChangeListener{
-        val bg = target.icon.background as IconComponent
-
         override fun focusGained(event: FocusChangeEvent?) {
-            bg.color = ColorRGBA.Yellow
+            target.setFlag(HIGHLIGHTED)
             focusedItem = target.id
         }
 
         override fun focusLost(event: FocusChangeEvent?) {
-            bg.color = ColorRGBA.Gray
+            target.unsetFlag(HIGHLIGHTED)
         }
     }
 

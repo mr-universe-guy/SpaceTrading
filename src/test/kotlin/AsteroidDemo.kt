@@ -45,7 +45,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         enqueue{
             stateManager.getState(CameraState::class.java).setTarget(playerId)
             stateManager.getState(ShipHudState::class.java).playerId = playerId
-            stateManager.getState(LocalMapState::class.java).targetId = playerId
+            stateManager.getState(LocalMapState::class.java).playerId = playerId
             println("Camera target set")
         }
         //spawn asteroids
