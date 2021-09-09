@@ -36,6 +36,7 @@ dependencies {
     //jme libs
     implementation "com.simsilica:zay-es:1.3.2"
     implementation "com.simsilica:lemur:1.15.0"
+    implementation "com.simsilica:lemur-proto:1.12.0"
     implementation 'com.simsilica:sio2:1.6.0'
     implementation 'com.simsilica:sim-math:1.4.1'
     //jfx
