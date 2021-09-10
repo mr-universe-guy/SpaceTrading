@@ -3,6 +3,7 @@ package universe
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.input.event.MouseButtonEvent
+import com.jme3.input.event.MouseMotionEvent
 import com.jme3.math.ColorRGBA
 import com.jme3.math.Vector2f
 import com.jme3.math.Vector3f
@@ -43,6 +44,7 @@ class LocalMapState: BaseAppState() {
     private lateinit var data: EntityData
     private lateinit var mapObjects: MapObjectContainer
     private var mapRadius = 100f
+    private var zoomSpeed = 0.25f
     private var player: WatchedEntity? = null
     private var targetId: EntityId? = null
     var playerId: EntityId? = null
@@ -250,6 +252,15 @@ class LocalMapState: BaseAppState() {
     }
 
     private inner class MapPanelHandler: DefaultMouseListener(){
+        override fun mouseMoved(event: MouseMotionEvent, target: Spatial?, capture: Spatial?) {
+            val wheel = event.deltaWheel
+            if(wheel != 0){
+                //zoom
+                event.setConsumed()
+                mapRadius = (mapRadius+(wheel*zoomSpeed)).coerceIn(10f, 1000f)
+                viewportToPanel()
+            }
+        }
         override fun mouseButtonEvent(event: MouseButtonEvent?, target: Spatial?, capture: Spatial?) {
             if(event?.isPressed == false) return
             event?.setConsumed()
