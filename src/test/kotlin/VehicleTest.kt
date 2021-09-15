@@ -1,3 +1,5 @@
+import com.jme3.asset.DesktopAssetManager
+import com.jme3.asset.plugins.ClasspathLocator
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -6,7 +8,7 @@ import java.io.File
 import javax.swing.JFileChooser
 
 val format = Json{
-    serializersModule = mod
+    serializersModule = VEHICLE_MOD
     prettyPrint = true
 }
 
@@ -15,6 +17,7 @@ fun main(vararg args: String) {
         when(args[0]){
             "Vehicle" -> testVehicle()
             "Loadout" -> testLoadout()
+            "Asset" -> testAssetLoad()
         }
     } else{
         val lines = arrayOf(
@@ -26,11 +29,20 @@ fun main(vararg args: String) {
     }
 }
 
+fun testAssetLoad() {
+    //create an asset manager
+    val am = DesktopAssetManager()
+    am.registerLoader(VehicleLoader::class.java, "ship")
+    am.registerLocator("", ClasspathLocator::class.java)
+    val vehicle = am.loadAsset(VehicleKey("TestShip/test.ship"))
+    println(vehicle)
+}
+
 fun buildVehicle(): Vehicle {
     //first create a few sections
-    val fuseSect = Section("Fuselage", 9, 10, arrayOf(Bay(3, arrayOf(EquipmentType.ENGINE))))
-    val lWingSect = Section("Left Wing", 4, 5, arrayOf(Bay(2, arrayOf(EquipmentType.WEAPON))))
-    val rWingSect = Section("Right Wing", 4, 5, arrayOf(Bay(2, arrayOf(EquipmentType.WEAPON))))
+    val fuseSect = Section("Fuselage", 9, 10, listOf(Bay(3, setOf(EquipmentType.ENGINE))))
+    val lWingSect = Section("Left Wing", 4, 5, listOf(Bay(2, setOf(EquipmentType.WEAPON))))
+    val rWingSect = Section("Right Wing", 4, 5, listOf(Bay(2, setOf(EquipmentType.WEAPON))))
     val sections = arrayOf(fuseSect, lWingSect, rWingSect)
     //attach some things
     return Vehicle("Test", 100, 1.0, "TestShip.Insurgent.gltf", Category.SHIP, sections)

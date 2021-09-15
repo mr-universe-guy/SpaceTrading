@@ -1,0 +1,48 @@
+{
+    "name": "Test",
+    "basePower": 100,
+    "emptyMass": 1.0,
+    "asset": "TestShip.Insurgent.gltf",
+    "category": "SHIP",
+    "sections": {
+        "Left Wing": {
+            "name": "Left Wing",
+            "slots": 4,
+            "HP": 5,
+            "bays": [
+                {
+                    "count": 2,
+                    "types": [
+                        "WEAPON"
+                    ]
+                }
+            ]
+        },
+        "Right Wing": {
+            "name": "Right Wing",
+            "slots": 4,
+            "HP": 5,
+            "bays": [
+                {
+                    "count": 2,
+                    "types": [
+                        "WEAPON"
+                    ]
+                }
+            ]
+        },
+        "Fuselage": {
+            "name": "Fuselage",
+            "slots": 9,
+            "HP": 10,
+            "bays": [
+                {
+                    "count": 3,
+                    "types": [
+                        "ENGINE"
+                    ]
+                }
+            ]
+        }
+    }
+}

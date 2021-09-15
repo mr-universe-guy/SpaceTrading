@@ -22,6 +22,8 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         GuiGlobals.initialize(this)
         //Controls
         registerDefaults(GuiGlobals.getInstance().inputMapper)
+        //I/O
+        assetManager.registerLoader(VehicleLoader::class.java, "ship")
         //Game Systems
         manager = GameSystemManager()
         manager.register(SimpleApplication::class.java, this)

@@ -1,16 +1,32 @@
 package universe
 
+import com.jme3.asset.AssetInfo
+import com.jme3.asset.AssetKey
+import com.jme3.asset.AssetLoader
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 
-val mod = SerializersModule {
+/**
+ * Polymorphic serializer for vehicle
+ */
+val VEHICLE_MOD = SerializersModule {
     polymorphic(Equipment::class){
         subclass(EngineEquip::class, EngineEquip.serializer())
         subclass(CargoEquip::class, CargoEquip.serializer())
         subclass(EnergyGridEquip::class, EnergyGridEquip.serializer())
         subclass(SensorEquip::class, SensorEquip.serializer())
     }
+}
+
+/**
+ * Json format for vehicles
+ */
+val VEHICLE_FORMAT = Json{
+    serializersModule = VEHICLE_MOD
+    prettyPrint = true
 }
 
 /**
@@ -31,7 +47,7 @@ class Loadout(val vehicleKey: String){
  * Vehicles are made up of many sections
  */
 @Serializable
-class Vehicle(val name: String, val basePower: Int, val emptyMass: Double, val asset: String, val category: Category,
+data class Vehicle(val name: String, val basePower: Int, val emptyMass: Double, val asset: String, val category: Category,
               val sections: MutableMap<String, Section>){
     constructor(name:String, basePower: Int, emptyMass: Double, asset: String, category: Category, _sections:Array<Section>)
             : this(name, basePower, emptyMass, asset, category, HashMap()) {
@@ -44,56 +60,13 @@ class Vehicle(val name: String, val basePower: Int, val emptyMass: Double, val a
  * Some equipment require a Bay to be functional.
  */
 @Serializable
-data class Section(val name:String, val slots: Int, val HP: Long, val bays: Array<Bay>?) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Section
-
-        if (name != other.name) return false
-        if (slots != other.slots) return false
-        if (HP != other.HP) return false
-        if (bays != null) {
-            if (other.bays == null) return false
-            if (!bays.contentEquals(other.bays)) return false
-        } else if (other.bays != null) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = name.hashCode()
-        result = 31 * result + slots
-        result = 31 * result + HP.hashCode()
-        result = 31 * result + (bays?.contentHashCode() ?: 0)
-        return result
-    }
-}
+data class Section(val name:String, val slots: Int, val HP: Long, val bays: List<Bay>?)
 
 /**
  * Bays separate a number of slots that can only fit equipment of a certain type.
  */
 @Serializable
-data class Bay(val count: Int, val types: Array<EquipmentType>) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Bay
-
-        if (count != other.count) return false
-        if (!types.contentEquals(other.types)) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = count
-        result = 31 * result + types.contentHashCode()
-        return result
-    }
-}
+data class Bay(val count: Int, val types: Set<EquipmentType>)
 
 @Serializable
 enum class EquipmentType{
@@ -140,4 +113,20 @@ class EnergyGridEquip(override val name: String, override val size:Int, override
 @Serializable
 class SensorEquip(override val name: String, override val size:Int, override val power: Int, val range:Double): Equipment{
     override val equipmentType = EquipmentType.SENSOR
+}
+
+/**
+ * An asset key to easily load vehicles via the asset manager
+ */
+class VehicleKey(name: String): AssetKey<Vehicle>(name)
+
+/**
+ * An asset loader to read vehicle assets from Json input
+ */
+class VehicleLoader: AssetLoader {
+    override fun load(assetInfo: AssetInfo): Any {
+        //get asset as string
+        val assetString = assetInfo.openStream().bufferedReader().use { it.readText() }
+        return VEHICLE_FORMAT.decodeFromString<Vehicle>(assetString)
+    }
 }
