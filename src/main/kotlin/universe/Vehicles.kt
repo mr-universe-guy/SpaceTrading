@@ -24,9 +24,21 @@ private val VEHICLE_MOD = SerializersModule {
 /**
  * Json format for vehicles
  */
-private val VEHICLE_FORMAT = Json{
+val VEHICLE_FORMAT = Json{
     serializersModule = VEHICLE_MOD
     prettyPrint = true
+}
+
+/**
+ * A cache containing all vehicles, stored by VehicleId
+ */
+private val VEHICLE_CACHE = mutableMapOf<String, Vehicle>()
+
+/**
+ * Get a read-only map of cached vehicles, stored by VehicleId
+ */
+fun getVehicleCache(): Map<String, Vehicle>{
+    return VEHICLE_CACHE.toMap()
 }
 
 /**
@@ -34,8 +46,13 @@ private val VEHICLE_FORMAT = Json{
  * @param vehicleId The name of the vehicle this loadout is modifying
  */
 @Serializable
-class Loadout(val vehicleId: String){
+data class Loadout(var name: String, val vehicleId: String){
+    // TODO:Equipment should store equipment ID's
     val equipmentMap: MutableMap<String, MutableList<Equipment?>> = HashMap()
+    constructor(name:String, vehicle: Vehicle) : this(name, vehicle.vehicleId){
+        vehicle.sections.forEach { (s) ->  equipmentMap[s] = mutableListOf()}
+    }
+
 
     fun attachEquipment(sect: String, equipment: Equipment){
         equipmentMap[sect]!!.add(equipment)
@@ -54,7 +71,7 @@ data class Vehicle(val name: String, val vehicleId: String, val basePower: Int, 
         _sections.forEach { sections[it.name] = it }
     }
     init{
-
+        VEHICLE_CACHE[vehicleId] = this
     }
 }
 

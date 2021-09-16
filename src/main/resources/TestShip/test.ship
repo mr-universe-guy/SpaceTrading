@@ -1,5 +1,6 @@
 {
     "name": "Test",
+    "vehicleId": "T001",
     "basePower": 100,
     "emptyMass": 1.0,
     "asset": "TestShip.Insurgent.gltf",

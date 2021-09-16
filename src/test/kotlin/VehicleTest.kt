@@ -2,15 +2,9 @@ import com.jme3.asset.DesktopAssetManager
 import com.jme3.asset.plugins.ClasspathLocator
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import universe.*
 import java.io.File
 import javax.swing.JFileChooser
-
-val format = Json{
-    serializersModule = VEHICLE_MOD
-    prettyPrint = true
-}
 
 fun main(vararg args: String) {
     if(args.isNotEmpty()){
@@ -55,7 +49,7 @@ fun testLoadout() {
     val engine = EngineEquip("TestEngine", 3,30, 100.0, 10.0)
     val cargoHold = CargoEquip("TestCargoHold", 3, 10, 10.0)
     val energyGrid = EnergyGridEquip("TestEnergyGrid", 3, 30, 100, 10, 3.0)
-    val loadout = Loadout(testVic.name)
+    val loadout = Loadout("Test Loadout", testVic)
     loadout.attachEquipment("Fuselage", engine)
     loadout.attachEquipment("Fuselage", cargoHold)
     loadout.attachEquipment("Fuselage", energyGrid)
@@ -66,9 +60,9 @@ fun testLoadout() {
         return
     }
     file = chooser.selectedFile
-    file.writeText(format.encodeToString(loadout))
+    file.writeText(VEHICLE_FORMAT.encodeToString(loadout))
     //read back
-    val readLoadout: Loadout = format.decodeFromString(file.readText())
+    val readLoadout: Loadout = VEHICLE_FORMAT.decodeFromString(file.readText())
     println(readLoadout)
 }
 
@@ -83,8 +77,8 @@ fun testVehicle(){
     file = chooser.selectedFile
     //write this vehicle to file
     val testVic = buildVehicle()
-    file.writeText(format.encodeToString(testVic))
+    file.writeText(VEHICLE_FORMAT.encodeToString(testVic))
     //read back values
-    val readVic = format.decodeFromString<Vehicle>(file.readText())
+    val readVic = VEHICLE_FORMAT.decodeFromString<Vehicle>(file.readText())
     println(readVic)
 }
