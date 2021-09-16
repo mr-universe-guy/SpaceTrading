@@ -12,7 +12,7 @@ import kotlinx.serialization.modules.polymorphic
 /**
  * Polymorphic serializer for vehicle
  */
-val VEHICLE_MOD = SerializersModule {
+private val VEHICLE_MOD = SerializersModule {
     polymorphic(Equipment::class){
         subclass(EngineEquip::class, EngineEquip.serializer())
         subclass(CargoEquip::class, CargoEquip.serializer())
@@ -24,7 +24,7 @@ val VEHICLE_MOD = SerializersModule {
 /**
  * Json format for vehicles
  */
-val VEHICLE_FORMAT = Json{
+private val VEHICLE_FORMAT = Json{
     serializersModule = VEHICLE_MOD
     prettyPrint = true
 }
@@ -52,6 +52,9 @@ data class Vehicle(val name: String, val vehicleId: String, val basePower: Int, 
     constructor(name:String, vehicleId: String, basePower: Int, emptyMass: Double, asset: String, category: Category, _sections:Array<Section>)
             : this(name, vehicleId, basePower, emptyMass, asset, category, HashMap()) {
         _sections.forEach { sections[it.name] = it }
+    }
+    init{
+
     }
 }
 
