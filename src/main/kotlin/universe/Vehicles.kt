@@ -31,10 +31,10 @@ val VEHICLE_FORMAT = Json{
 
 /**
  * Loadouts assign equipment to section slots of a specific vehicle.
- * @param vehicleKey The name of the vehicle this loadout is modifying
+ * @param vehicleId The name of the vehicle this loadout is modifying
  */
 @Serializable
-class Loadout(val vehicleKey: String){
+class Loadout(val vehicleId: String){
     val equipmentMap: MutableMap<String, MutableList<Equipment?>> = HashMap()
 
     fun attachEquipment(sect: String, equipment: Equipment){
@@ -47,10 +47,10 @@ class Loadout(val vehicleKey: String){
  * Vehicles are made up of many sections
  */
 @Serializable
-data class Vehicle(val name: String, val basePower: Int, val emptyMass: Double, val asset: String, val category: Category,
+data class Vehicle(val name: String, val vehicleId: String, val basePower: Int, val emptyMass: Double, val asset: String, val category: Category,
               val sections: MutableMap<String, Section>){
-    constructor(name:String, basePower: Int, emptyMass: Double, asset: String, category: Category, _sections:Array<Section>)
-            : this(name, basePower, emptyMass, asset, category, HashMap()) {
+    constructor(name:String, vehicleId: String, basePower: Int, emptyMass: Double, asset: String, category: Category, _sections:Array<Section>)
+            : this(name, vehicleId, basePower, emptyMass, asset, category, HashMap()) {
         _sections.forEach { sections[it.name] = it }
     }
 }
@@ -89,7 +89,7 @@ interface Equipment{
  * A piece of equipment that directly applies thrust
  */
 @Serializable
-class EngineEquip(override val name: String, override val size:Int, override val power:Int, val maxSpeed: Double, val maxThrust: Double): Equipment{
+data class EngineEquip(override val name: String, override val size:Int, override val power:Int, val maxSpeed: Double, val maxThrust: Double): Equipment{
     override val equipmentType = EquipmentType.ENGINE
 }
 
@@ -97,7 +97,7 @@ class EngineEquip(override val name: String, override val size:Int, override val
  * A piece of equipment that directly stores cargo
  */
 @Serializable
-class CargoEquip(override val name: String, override val size:Int, override val power: Int, val volume:Double): Equipment{
+data class CargoEquip(override val name: String, override val size:Int, override val power: Int, val volume:Double): Equipment{
     override val equipmentType = EquipmentType.CARGO
 }
 
@@ -105,13 +105,13 @@ class CargoEquip(override val name: String, override val size:Int, override val 
  * A piece of equipment that directly generates and stores energy
  */
 @Serializable
-class EnergyGridEquip(override val name: String, override val size:Int, override val power: Int, val storage: Long,
+data class EnergyGridEquip(override val name: String, override val size:Int, override val power: Int, val storage: Long,
                       val recharge: Long, val cycleTime: Double): Equipment{
     override val equipmentType = EquipmentType.ENERGY
 }
 
 @Serializable
-class SensorEquip(override val name: String, override val size:Int, override val power: Int, val range:Double): Equipment{
+data class SensorEquip(override val name: String, override val size:Int, override val power: Int, val range:Double): Equipment{
     override val equipmentType = EquipmentType.SENSOR
 }
 

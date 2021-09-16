@@ -45,7 +45,7 @@ fun buildVehicle(): Vehicle {
     val rWingSect = Section("Right Wing", 4, 5, listOf(Bay(2, setOf(EquipmentType.WEAPON))))
     val sections = arrayOf(fuseSect, lWingSect, rWingSect)
     //attach some things
-    return Vehicle("Test", 100, 1.0, "TestShip.Insurgent.gltf", Category.SHIP, sections)
+    return Vehicle("Test", "T-001", 100, 1.0, "TestShip.Insurgent.gltf", Category.SHIP, sections)
 }
 
 fun testLoadout() {
