@@ -35,10 +35,19 @@ val VEHICLE_FORMAT = Json{
 private val VEHICLE_CACHE = mutableMapOf<String, Vehicle>()
 
 /**
+ * A cache containing all equipment, stored by EquipmentId
+ */
+private val EQUIPMENT_CACHE = mutableMapOf<String, Equipment>()
+
+/**
  * Get a read-only map of cached vehicles, stored by VehicleId
  */
 fun getVehicleCache(): Map<String, Vehicle>{
     return VEHICLE_CACHE.toMap()
+}
+
+fun getEquipmentCache(): Map<String, Equipment>{
+    return EQUIPMENT_CACHE.toMap()
 }
 
 /**
@@ -48,14 +57,13 @@ fun getVehicleCache(): Map<String, Vehicle>{
 @Serializable
 data class Loadout(var name: String, val vehicleId: String){
     // TODO:Equipment should store equipment ID's
-    val equipmentMap: MutableMap<String, MutableList<Equipment?>> = HashMap()
+    private val equipmentMap: MutableMap<String, MutableList<String?>> = HashMap()
     constructor(name:String, vehicle: Vehicle) : this(name, vehicle.vehicleId){
         vehicle.sections.forEach { (s) ->  equipmentMap[s] = mutableListOf()}
     }
 
-
     fun attachEquipment(sect: String, equipment: Equipment){
-        equipmentMap[sect]!!.add(equipment)
+        equipmentMap[sect]!!.add(equipment.equipmentId)
     }
 }
 
@@ -98,18 +106,27 @@ enum class EquipmentType{
  * There is functional and passive equipment.
  * TODO: Equipment should handle it's own accumulation and component creation
  */
-interface Equipment{
-    val name:String
-    val equipmentType:EquipmentType
-    val size:Int
-    val power:Int
+abstract class Equipment{
+    abstract val equipmentId: String
+    abstract val name:String
+    abstract val equipmentType:EquipmentType
+    abstract val size:Int
+    abstract val power:Int
+    init {
+        register()
+    }
+
+    private fun register(){
+        EQUIPMENT_CACHE[equipmentId] = this
+    }
 }
 
 /**
  * A piece of equipment that directly applies thrust
  */
 @Serializable
-data class EngineEquip(override val name: String, override val size:Int, override val power:Int, val maxSpeed: Double, val maxThrust: Double): Equipment{
+data class EngineEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power:Int,
+                       val maxSpeed: Double, val maxThrust: Double): Equipment(){
     override val equipmentType = EquipmentType.ENGINE
 }
 
@@ -117,7 +134,8 @@ data class EngineEquip(override val name: String, override val size:Int, overrid
  * A piece of equipment that directly stores cargo
  */
 @Serializable
-data class CargoEquip(override val name: String, override val size:Int, override val power: Int, val volume:Double): Equipment{
+data class CargoEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
+                      val volume:Double): Equipment(){
     override val equipmentType = EquipmentType.CARGO
 }
 
@@ -125,13 +143,14 @@ data class CargoEquip(override val name: String, override val size:Int, override
  * A piece of equipment that directly generates and stores energy
  */
 @Serializable
-data class EnergyGridEquip(override val name: String, override val size:Int, override val power: Int, val storage: Long,
-                      val recharge: Long, val cycleTime: Double): Equipment{
+data class EnergyGridEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
+                           val storage: Long, val recharge: Long, val cycleTime: Double): Equipment(){
     override val equipmentType = EquipmentType.ENERGY
 }
 
 @Serializable
-data class SensorEquip(override val name: String, override val size:Int, override val power: Int, val range:Double): Equipment{
+data class SensorEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
+                       val range:Double): Equipment(){
     override val equipmentType = EquipmentType.SENSOR
 }
 

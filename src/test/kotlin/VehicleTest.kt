@@ -46,9 +46,9 @@ fun testLoadout() {
     println("Testing loadout save/load")
     val testVic = buildVehicle()
     //attach some equipment to this vic
-    val engine = EngineEquip("TestEngine", 3,30, 100.0, 10.0)
-    val cargoHold = CargoEquip("TestCargoHold", 3, 10, 10.0)
-    val energyGrid = EnergyGridEquip("TestEnergyGrid", 3, 30, 100, 10, 3.0)
+    val engine = EngineEquip("Engine1","TestEngine", 3,30, 100.0, 10.0)
+    val cargoHold = CargoEquip("CargoPod","TestCargoHold", 3, 10, 10.0)
+    val energyGrid = EnergyGridEquip("Reactor","TestEnergyGrid", 3, 30, 100, 10, 3.0)
     val loadout = Loadout("Test Loadout", testVic)
     loadout.attachEquipment("Fuselage", engine)
     loadout.attachEquipment("Fuselage", cargoHold)
