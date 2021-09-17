@@ -6,7 +6,11 @@ import universe.*
 import java.io.File
 import javax.swing.JFileChooser
 
+val am = DesktopAssetManager()
 fun main(vararg args: String) {
+    am.registerLoader(VehicleLoader::class.java, "ship")
+    am.registerLoader(EquipmentLoader::class.java, "eqp")
+    am.registerLocator("", ClasspathLocator::class.java)
     if(args.isNotEmpty()){
         when(args[0]){
             "Vehicle" -> testVehicle()
@@ -25,9 +29,6 @@ fun main(vararg args: String) {
 
 fun testAssetLoad() {
     //create an asset manager
-    val am = DesktopAssetManager()
-    am.registerLoader(VehicleLoader::class.java, "ship")
-    am.registerLocator("", ClasspathLocator::class.java)
     val vehicle = am.loadAsset(VehicleKey("TestShip/test.ship"))
     println(vehicle)
 }
@@ -49,7 +50,10 @@ fun testLoadout() {
     val engine = EngineEquip("Engine1","TestEngine", 3,30, 100.0, 10.0)
     val cargoHold = CargoEquip("CargoPod","TestCargoHold", 3, 10, 10.0)
     val energyGrid = EnergyGridEquip("Reactor","TestEnergyGrid", 3, 30, 100, 10, 3.0)
-    val loadout = Loadout("Test Loadout", testVic)
+    cacheEquipment(engine)
+    cacheEquipment(cargoHold)
+    cacheEquipment(energyGrid)
+    val loadout = Loadout("Test Loadout", testVic.vehicleId)
     loadout.attachEquipment("Fuselage", engine)
     loadout.attachEquipment("Fuselage", cargoHold)
     loadout.attachEquipment("Fuselage", energyGrid)
@@ -64,6 +68,7 @@ fun testLoadout() {
     //read back
     val readLoadout: Loadout = VEHICLE_FORMAT.decodeFromString(file.readText())
     println(readLoadout)
+    println(readLoadout.getEquipment())
 }
 
 fun testVehicle(){
