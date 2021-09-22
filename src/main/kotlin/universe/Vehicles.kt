@@ -9,7 +9,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
-import java.lang.Exception
 
 /**
  * Polymorphic serializer for vehicle
@@ -36,10 +35,18 @@ val VEHICLE_FORMAT = Json{
  */
 private val VEHICLE_CACHE = mutableMapOf<String, Vehicle>()
 
+fun getVehicleCache(): Map<String, Vehicle>{
+    return VEHICLE_CACHE.toMap()
+}
+
 /**
  * A cache containing all equipment, stored by EquipmentId
  */
 private val EQUIPMENT_CACHE = mutableMapOf<String, Equipment>()
+
+fun getEquipmentCache(): Map<String, Equipment>{
+    return EQUIPMENT_CACHE.toMap()
+}
 
 /**
  * Loadouts assign equipment to section slots of a specific vehicle.
@@ -61,19 +68,24 @@ data class Loadout(var name: String, val vehicleId: String){
         return equipmentMap.mapValues { it.value.map { id -> EQUIPMENT_CACHE[id] } }
     }
 
-    fun attachEquipment(sect: String, equipment: Equipment){
-        if(!canEquip(sect, equipment.equipmentId)) throw Exception("$equipment can not fit in ${vehicle.sections[sect]}")
+    /**
+     * Attempts to put the equipment into this slot
+     * @return true if equipment was placed successfully, false otherwise
+     */
+    fun attachEquipment(sect: String, equipment: Equipment): Boolean{
+        if(!canEquip(sect, equipment.equipmentId)) return false
         equipmentMap[sect]!!.add(equipment.equipmentId)
+        return true
+    }
+
+    fun removeEquipment(sect: String, equipment: String): Boolean{
+        return equipmentMap[sect]!!.remove(equipment)
     }
 
     fun getFreeSlots(section:Section): Int{
         var slots = section.slots
         equipmentMap[section.name]!!.map{EQUIPMENT_CACHE[it]!!}.forEach {slots-= it.size}
         return slots
-    }
-
-    fun getFreeSlots(sect: String): Int{
-        return getFreeSlots(vehicle.sections[sect]!!)
     }
 
     fun canEquip(sect: String, equipmentId: String): Boolean{
@@ -85,6 +97,10 @@ data class Loadout(var name: String, val vehicleId: String){
         if(freeSlots < equipment.size) return false
         //check bays and other stuff
         return true
+    }
+
+    fun getEquipmentInSection(sect: String): List<String>{
+        return equipmentMap[sect]!!.toList()
     }
 }
 
