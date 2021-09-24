@@ -15,6 +15,8 @@ import com.simsilica.lemur.core.VersionedList
 import com.simsilica.lemur.event.CursorButtonEvent
 import com.simsilica.lemur.event.CursorEventControl
 import com.simsilica.lemur.event.DragHandler
+import javafx.stage.FileChooser
+import javax.swing.JFileChooser
 
 class LoadoutEditorState: BaseAppState() {
     private val editorNode = Node("Editor")
@@ -29,7 +31,9 @@ class LoadoutEditorState: BaseAppState() {
             pop.showModalPopup(createLoadoutPopup)
         }}
     private val saveAction = object: Action("Save"){override fun execute(source: Button?) {
-            TODO("Not yet implemented")
+            val fileFinder = JFileChooser()
+            if(fileFinder.showSaveDialog(null) != JFileChooser.APPROVE_OPTION) return
+            exportLoadout(activeLoadout!!, fileFinder.selectedFile)
         }}
     private var activeVehicle: Vehicle? = null
     private var activeLoadout: Loadout? = null

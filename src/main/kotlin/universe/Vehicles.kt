@@ -6,9 +6,11 @@ import com.jme3.asset.AssetLoader
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import java.io.File
 
 /**
  * Polymorphic serializer for vehicle
@@ -102,6 +104,10 @@ data class Loadout(var name: String, val vehicleId: String){
     fun getEquipmentInSection(sect: String): List<String>{
         return equipmentMap[sect]!!.toList()
     }
+}
+
+fun exportLoadout(loadout: Loadout, file: File){
+    file.writeText(Json.encodeToString(loadout))
 }
 
 /**
