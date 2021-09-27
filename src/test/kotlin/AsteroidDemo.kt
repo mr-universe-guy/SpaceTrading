@@ -39,7 +39,9 @@ class AsteroidDemo: SpaceTraderApp(false){
 
         //spawn a player ship and a couple of asteroids
         val data = manager.get(DataSystem::class.java).getPhysicsData()
-        val playerId = spawnTestShip(data, "Player", Vec3d(0.0,0.0,0.0))
+        val loadout = generateTestLoadout()
+        val playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
+        //val playerId = spawnTestShip(data, "Player", Vec3d(0.0,0.0,0.0))
         println("Player Spawned")
         //register player to systems that care
         enqueue{
