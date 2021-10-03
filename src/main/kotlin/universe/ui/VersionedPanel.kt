@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.math.Vector3f
 import com.simsilica.lemur.Panel

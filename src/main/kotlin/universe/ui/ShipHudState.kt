@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -18,6 +18,7 @@ import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.mathd.Vec3d
+import universe.*
 
 private const val HUD_SELECTION_NAME = "Selected_name"
 
@@ -168,7 +169,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
 
     fun orbitSelection(){
         val popState = getState(PopupState::class.java)
-        val popup = object:RangePopup(0.0,100.0,25.0){
+        val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
                 actionSys.setAction(playerShip!!.id, OrbitAction(selectedObject!!, value))
             }

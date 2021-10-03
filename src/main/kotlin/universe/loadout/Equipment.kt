@@ -1,10 +1,11 @@
-package universe
+package universe.loadout
 
 import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
+import universe.VEHICLE_FORMAT
 
 /**
  * A cache containing all equipment, stored by EquipmentId
@@ -40,7 +41,7 @@ enum class EquipmentType{
 abstract class Equipment{
     abstract val equipmentId: String
     abstract val name:String
-    abstract val equipmentType:EquipmentType
+    abstract val equipmentType: EquipmentType
     abstract val size:Int
     abstract val power:Int
 

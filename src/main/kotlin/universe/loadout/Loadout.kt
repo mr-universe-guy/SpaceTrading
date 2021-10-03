@@ -1,10 +1,11 @@
-package universe
+package universe.loadout
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
+import universe.*
 
 /**
  * Loadouts assign equipment to section slots of a specific vehicle.

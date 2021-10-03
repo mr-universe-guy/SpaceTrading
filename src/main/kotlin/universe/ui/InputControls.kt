@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.input.KeyInput
 import com.simsilica.lemur.input.*

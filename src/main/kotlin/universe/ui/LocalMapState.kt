@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -26,6 +26,7 @@ import com.simsilica.lemur.focus.FocusChangeEvent
 import com.simsilica.lemur.focus.FocusChangeListener
 import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
+import universe.*
 
 private const val CATEGORY_KEY = "Category"
 private const val HIGHLIGHTED = 1 shl 0

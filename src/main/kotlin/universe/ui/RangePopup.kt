@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort

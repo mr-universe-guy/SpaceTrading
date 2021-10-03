@@ -10,6 +10,8 @@ import com.simsilica.lemur.GuiGlobals
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
+import universe.ui.CameraState
+import universe.ui.registerDefaults
 
 open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(null){
     lateinit var manager: GameSystemManager

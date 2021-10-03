@@ -3,9 +3,10 @@ package universe
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
+import universe.loadout.*
 
 fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout): EntityId{
-    val vehicle = getVehicleFromId(loadout.vehicleId)
+    val vehicle = getVehicleFromId(loadout.vehicleId)!!
     val stats = loadout.getStats()
     val id = data.createEntity()
     data.setComponents(id,

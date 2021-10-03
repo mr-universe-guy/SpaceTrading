@@ -7,6 +7,8 @@ import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 import universe.*
+import universe.ui.CameraState
+import universe.ui.FlightUIState
 
 /**
  * A demo of local space interaction. This demo should spawn several asteroids, a station and some destructible targets

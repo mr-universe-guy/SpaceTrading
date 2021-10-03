@@ -7,6 +7,7 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
+import universe.loadout.*
 
 /**
  * Polymorphic serializer for vehicle

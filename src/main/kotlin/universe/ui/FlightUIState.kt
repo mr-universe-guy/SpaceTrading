@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -11,6 +11,8 @@ import javafx.fxml.FXMLLoader
 import javafx.scene.Node
 import javafx.scene.control.ListView
 import javafx.scene.control.ScrollPane
+import universe.*
+import universe.Name
 
 class FlightUIState: BaseAppState() {
     private lateinit var tgtList: Node

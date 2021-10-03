@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -9,6 +9,8 @@ import com.jme3.scene.Spatial
 import com.simsilica.es.EntityId
 import com.simsilica.lemur.GuiGlobals
 import com.simsilica.lemur.input.*
+import universe.SpaceTraderApp
+import universe.VisualState
 
 class CameraState: BaseAppState(), AnalogFunctionListener {
     private lateinit var visState: VisualState

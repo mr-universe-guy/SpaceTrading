@@ -3,6 +3,7 @@ import com.jme3.asset.plugins.ClasspathLocator
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import universe.*
+import universe.loadout.*
 import java.io.File
 import javax.swing.JFileChooser
 

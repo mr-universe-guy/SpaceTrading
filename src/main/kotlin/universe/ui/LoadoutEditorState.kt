@@ -1,4 +1,4 @@
-package universe
+package universe.ui
 
 import com.jme3.app.Application
 import com.jme3.app.SimpleApplication
@@ -15,7 +15,8 @@ import com.simsilica.lemur.core.VersionedList
 import com.simsilica.lemur.event.CursorButtonEvent
 import com.simsilica.lemur.event.CursorEventControl
 import com.simsilica.lemur.event.DragHandler
-import javafx.stage.FileChooser
+import universe.*
+import universe.loadout.*
 import javax.swing.JFileChooser
 
 class LoadoutEditorState: BaseAppState() {
