@@ -6,16 +6,35 @@
 package universe
 
 import com.jme3.app.SimpleApplication
+import com.jme3.system.AppSettings
+import com.jme3.system.JmeContext
 import com.simsilica.lemur.GuiGlobals
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
 import universe.ui.CameraState
 import universe.ui.registerDefaults
+import java.util.*
+
+fun main(){
+    println("Space trading app")
+    val app = SpaceTraderApp(true)
+    app.start()
+}
 
 open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(null){
+    val appProperties : Properties = Properties()
+    init {
+        appProperties.load(this::class.java.getResourceAsStream("version.properties"))
+    }
     lateinit var manager: GameSystemManager
     lateinit var loop: GameLoop
+
+    override fun start(contextType: JmeContext.Type?, waitFor: Boolean) {
+        val appSettings = settings ?: AppSettings(true)
+        appSettings.title = appProperties.getProperty("name")+" : "+appProperties.getProperty("version")
+        super.start(contextType, waitFor)
+    }
 
     override fun simpleInitApp() {
         //jfx initialization
@@ -65,9 +84,4 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     fun attachAiSystems(){
         manager.register(ActionSystem::class.java, ActionSystem())
     }
-}
-
-fun main(){
-    println("Space trading app")
-    SpaceTraderApp(true).start()
 }
