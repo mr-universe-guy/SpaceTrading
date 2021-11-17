@@ -60,6 +60,9 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
 
     //Cleanly destroy multi threading
     override fun destroy() {
+        //check for client and server
+        manager.get(ClientSystem::class.java)?.stop()
+        manager.get(ServerSystem::class.java)?.stop()
         loop.stop()
         super.destroy()
     }
