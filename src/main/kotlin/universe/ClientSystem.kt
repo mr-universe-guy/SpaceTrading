@@ -1,28 +1,23 @@
 package universe
 
 import com.jme3.app.SimpleApplication
-import com.jme3.network.Client
 import com.jme3.network.Network
+import com.jme3.network.NetworkClient
 import com.simsilica.sim.AbstractGameSystem
 
 class ClientSystem: AbstractGameSystem() {
     var tcpPort = 6111
     var udpPort = 6111
-    var client: Client? = null
+    lateinit var client: NetworkClient
 
     override fun initialize() {
-
+        val name = (getSystem(SimpleApplication::class.java) as SpaceTraderApp).appProperties.getProperty("name")
+        client = Network.createClient(name, 0)
     }
 
     override fun start() {
-        val name = (getSystem(SimpleApplication::class.java) as SpaceTraderApp).appProperties.getProperty("name")
-        client = Network.connectToServer(name,0,"localhost",tcpPort,udpPort)
-        client!!.addMessageListener { source, m ->
-            if(m is TextMessage){
-                println(m.message)
-            }
-        }
-        client!!.start()
+        client.connectToServer("localhost",tcpPort,udpPort)
+        client.start()
     }
 
     override fun terminate() {
@@ -30,8 +25,8 @@ class ClientSystem: AbstractGameSystem() {
     }
 
     override fun stop() {
-        if(client?.isStarted == true){
-            client!!.close()
+        if(client.isStarted){
+            client.close()
         }
     }
 }
