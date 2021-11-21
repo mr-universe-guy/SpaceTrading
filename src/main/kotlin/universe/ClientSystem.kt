@@ -6,9 +6,10 @@ import com.jme3.network.NetworkClient
 import com.simsilica.sim.AbstractGameSystem
 
 class ClientSystem: AbstractGameSystem() {
+    lateinit var client: NetworkClient
     var tcpPort = 6111
     var udpPort = 6111
-    lateinit var client: NetworkClient
+    var dest = "localhost"
 
     override fun initialize() {
         val name = (getSystem(SimpleApplication::class.java) as SpaceTraderApp).appProperties.getProperty("name")
@@ -16,7 +17,7 @@ class ClientSystem: AbstractGameSystem() {
     }
 
     override fun start() {
-        client.connectToServer("localhost",tcpPort,udpPort)
+        client.connectToServer(dest,tcpPort,udpPort)
         client.start()
     }
 
