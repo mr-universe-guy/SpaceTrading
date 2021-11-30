@@ -9,14 +9,13 @@ class ClientSystem: AbstractGameSystem() {
     lateinit var client: NetworkClient
     var tcpPort = 6111
     var udpPort = 6111
-    var dest = "localhost"
 
     override fun initialize() {
         val name = (getSystem(SimpleApplication::class.java) as SpaceTraderApp).appProperties.getProperty("name")
         client = Network.createClient(name, 0)
     }
 
-    override fun start() {
+    fun connectTo(dest:String){
         client.connectToServer(dest,tcpPort,udpPort)
         client.start()
     }
