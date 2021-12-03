@@ -1,3 +1,5 @@
+import com.jme3.app.Application
+import com.jme3.app.state.BaseAppState
 import com.jme3.system.AppSettings
 import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
@@ -30,7 +32,10 @@ class AsteroidDemo: SpaceTraderApp(false){
         manager.register(SensorSystem::class.java, SensorSystem())
         //use general visuals
         stateManager.attach(VisualState())
-        stateManager.attach(CameraState())
+        //stateManager.attach(CameraState())
+        val cameraManagerState = CameraManagerState(cam)
+        cameraManagerState.activeController = OrbitController(5f,100f)
+        stateManager.attach(cameraManagerState)
         stateManager.attach(LocalMapState())
         stateManager.attach(ShipHudState())
         //ai
@@ -45,12 +50,17 @@ class AsteroidDemo: SpaceTraderApp(false){
         //val playerId = spawnTestShip(data, "Player", Vec3d(0.0,0.0,0.0))
         println("Player Spawned")
         //register player to systems that care
-        enqueue{
-            stateManager.getState(CameraState::class.java).setTarget(playerId)
-            stateManager.getState(ShipHudState::class.java).playerId = playerId
-            stateManager.getState(LocalMapState::class.java).playerId = playerId
-            println("Camera target set")
+        val initListener =object: UpdateListener(){
+            override fun onUpdate(tpf: Float) {
+                if(!stateManager.getState(VisualState::class.java).isInitialized) return
+                stateManager.getState(CameraManagerState::class.java).setTargetFromId(playerId)
+                stateManager.getState(ShipHudState::class.java).playerId = playerId
+                stateManager.getState(LocalMapState::class.java).playerId = playerId
+                println("Camera target set")
+                stateManager.detach(this)
+            }
         }
+        stateManager.attach(initListener)
         //spawn asteroids
         val asteroidID = spawnTestAsteroid(data, Vec3d(25.0,25.0,75.0))
         spawnTestAsteroid(data, Vec3d(-25.0, -25.0, 75.0))
@@ -64,12 +74,23 @@ class AsteroidDemo: SpaceTraderApp(false){
     }
 }
 
+private abstract class UpdateListener: BaseAppState(){
+    abstract fun onUpdate(tpf:Float)
+
+    override fun initialize(app: Application?) {}
+    override fun cleanup(app: Application?) {}
+    override fun onEnable() {}
+    override fun onDisable() {}
+    override fun update(tpf: Float) {
+        onUpdate(tpf)
+    }
+}
+
 class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
     private lateinit var player: WatchedEntity
     override fun initialize() {
         val data = getSystem(DataSystem::class.java).getPhysicsData()
         player = data.watchEntity(playerId, Energy::class.java)
-
     }
 
     override fun update(time: SimTime?) {

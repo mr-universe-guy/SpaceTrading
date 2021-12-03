@@ -9,10 +9,12 @@ import com.jme3.app.SimpleApplication
 import com.jme3.system.AppSettings
 import com.jme3.system.JmeContext
 import com.simsilica.lemur.GuiGlobals
+import com.simsilica.lemur.input.InputMapper
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
-import universe.ui.CameraState
+import universe.ui.CameraManagerState
+import universe.ui.OrbitController
 import universe.ui.registerDefaults
 import java.util.*
 
@@ -48,6 +50,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         //Game Systems
         manager = GameSystemManager()
         manager.register(SimpleApplication::class.java, this)
+        manager.register(InputMapper::class.java, GuiGlobals.getInstance().inputMapper)
         loop = GameLoop(manager)
         if(initSystems){
             //Turn this off to test individual systems
@@ -81,7 +84,10 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
 
     fun attachVisualSystems(){
         stateManager.attach(VisualState())
-        stateManager.attach(CameraState())
+        //stateManager.attach(CameraState())
+        val camManager = CameraManagerState(cam)
+        camManager.activeController = OrbitController(5f,50f)
+        stateManager.attach(camManager)
     }
 
     fun attachAiSystems(){

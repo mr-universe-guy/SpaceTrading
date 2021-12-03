@@ -7,8 +7,9 @@ import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 import universe.*
-import universe.ui.CameraState
+import universe.ui.CameraManagerState
 import universe.ui.FlightUIState
+import universe.ui.OrbitController
 
 /**
  * A demo of local space interaction. This demo should spawn several asteroids, a station and some destructible targets
@@ -34,9 +35,10 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         manager.register(ActionSystem::class.java, actionSys)
         //app states
         stateManager.attach(VisualState())
-        val camState = CameraState()
-        stateManager.attach(camState)
         stateManager.attach(StatsAppState())
+        val camManager = CameraManagerState(cam)
+        camManager.activeController = OrbitController(10f,500f)
+        stateManager.attach(camManager)
         val flightUiState = FlightUIState()
         stateManager.attach(flightUiState)
         //add this loop listener to test stuff
@@ -46,7 +48,6 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
             val playerId = spawnShip(dataSystem.getPhysicsData(), "Player Ship", Vec3d(0.0,0.0,0.0))
             actionSys.setAction(playerId, MoveAction(randomVec3d(100.0)))
             enqueue{
-                camState.setTarget(playerId)
                 flightUiState.setPlayerId(playerId)
             }
         }
