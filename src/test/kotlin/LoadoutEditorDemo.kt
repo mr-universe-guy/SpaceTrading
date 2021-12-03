@@ -1,9 +1,9 @@
+import `fun`.familyfunforce.cosmos.SpaceTraderApp
+import `fun`.familyfunforce.cosmos.loadout.CargoEquip
+import `fun`.familyfunforce.cosmos.loadout.EngineEquip
+import `fun`.familyfunforce.cosmos.loadout.cacheEquipment
+import `fun`.familyfunforce.cosmos.ui.LoadoutEditorState
 import com.jme3.system.AppSettings
-import universe.*
-import universe.loadout.CargoEquip
-import universe.loadout.EngineEquip
-import universe.loadout.cacheEquipment
-import universe.ui.LoadoutEditorState
 
 class LoadoutEditorDemo: SpaceTraderApp(false){
     override fun simpleInitApp() {

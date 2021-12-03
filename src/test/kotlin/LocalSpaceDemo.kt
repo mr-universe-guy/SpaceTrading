@@ -1,3 +1,7 @@
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.ui.CameraManagerState
+import `fun`.familyfunforce.cosmos.ui.FlightUIState
+import `fun`.familyfunforce.cosmos.ui.OrbitController
 import com.jme3.app.StatsAppState
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
@@ -6,10 +10,6 @@ import com.simsilica.mathd.Quatd
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
-import universe.*
-import universe.ui.CameraManagerState
-import universe.ui.FlightUIState
-import universe.ui.OrbitController
 
 /**
  * A demo of local space interaction. This demo should spawn several asteroids, a station and some destructible targets

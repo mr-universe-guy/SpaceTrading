@@ -9,8 +9,8 @@ plugins {
     id 'idea'
 }
 
-def name = 'Space trader'
-group 'com.spacetrading'
+def name = 'Cosmos'
+group 'fun.familyfunforce.cosmos'
 version '1.0-SNAPSHOT'
 
 task createProperties(dependsOn: processResources){

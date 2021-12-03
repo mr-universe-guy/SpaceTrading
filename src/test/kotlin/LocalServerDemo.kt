@@ -1,10 +1,10 @@
+import `fun`.familyfunforce.cosmos.ClientSystem
+import `fun`.familyfunforce.cosmos.ServerSystem
+import `fun`.familyfunforce.cosmos.SpaceTraderApp
+import `fun`.familyfunforce.cosmos.ui.ChatState
+import `fun`.familyfunforce.cosmos.ui.OnlineState
 import com.jme3.network.Client
 import com.jme3.network.ClientStateListener
-import universe.ClientSystem
-import universe.ServerSystem
-import universe.SpaceTraderApp
-import universe.ui.ChatState
-import universe.ui.OnlineState
 
 fun main(){
     val app = ServerDemo()
