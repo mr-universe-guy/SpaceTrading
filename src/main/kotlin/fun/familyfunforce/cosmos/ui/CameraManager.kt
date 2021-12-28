@@ -61,6 +61,7 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
             target?.let { con.targetPos.set(it.worldTranslation) }
             con.updateCamera(tpf, camAxis.toVector3f(), camPressed)
         }
+        camAxis.set(0.0,0.0,0.0)
     }
 
     override fun valueActive(func: FunctionId?, value: Double, tpf: Double) {
