@@ -36,17 +36,21 @@ fun generateGalaxy(name:String, numSystems:Int, radius:Double, gravity:Double): 
     return Galaxy(name, radius, systems)
 }
 
+/**
+ * Generates a simple system of planets spaced equally out to the radius.
+ */
 fun generateSystem(name:String, radius:Double, g:Double, random:Random):System{
     val angle = random.nextDouble()*Math.PI*2
     val dist = g.pow(-random.nextDouble())*radius
     println(dist)
     val pos = Vec3d(dist*cos(angle),0.0,dist*sin(angle))
     val numPlanets = 1+random.nextInt(8)
+    val spacing = radius/numPlanets
     val planets = List(numPlanets){
         //for now planets distance = number in sequence
         val planetName = "$name ${(it+10).digitToChar(36)}"
         println(planetName)
-        Orbital(planetName,Vec3d(it*10.0,0.0,0.0), 1.0)
+        Orbital(planetName,Vec3d(1+it*spacing,0.0,0.0), 1.0)
     }
     return System(name, pos, planets)
 }
