@@ -1,10 +1,9 @@
-import `fun`.familyfunforce.cosmos.FirstFrameState
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
-import `fun`.familyfunforce.cosmos.generateSystem
+import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.ui.CameraManagerState
 import `fun`.familyfunforce.cosmos.ui.OrbitController
 import `fun`.familyfunforce.cosmos.ui.SystemMapState
 import com.jme3.system.AppSettings
+import com.simsilica.mathd.Vec3d
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
 
@@ -12,6 +11,9 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
     override fun simpleInitApp() {
         println("Starting system interaction demo")
         super.simpleInitApp()
+        //phys
+        val data = LocalDataSystem()
+        manager.register(DataSystem::class.java, data)
         //camera
         val cms = CameraManagerState(cam)
         val camCont=OrbitController(5f,100f)
@@ -20,7 +22,13 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         val mapState = SystemMapState()
         stateManager.attach(mapState)
         //generate a random system
-        val system = generateSystem("Test System", 100.0, 5.0, Random.asJavaRandom())
+        val system = generateSystem("Test System", 1, 100.0, 5.0, Random.asJavaRandom())
+        //spawn a player controllable object
+        val pid = data.getPhysicsData().createEntity()
+        data.getPhysicsData().setComponents(pid,
+                StellarObject(0.5),
+                StellarPosition(system.id, Vec3d(5.0,0.0,5.0))
+            )
         stateManager.attach(object:FirstFrameState(){
             override fun onFirstFrame() {
                 mapState.system=system

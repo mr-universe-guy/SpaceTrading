@@ -18,7 +18,7 @@ data class Galaxy(val name:String, val radius:Double, val systems: List<System>)
  * @param position Galactic position of this star system
  * @param orbitals Collection of orbital bodies that orbit the central star of this system
  */
-data class System(val name:String,val position:Vec3d,val orbitals:List<Orbital>)
+data class System(val name:String,val id:Int,val position:Vec3d,val orbitals:List<Orbital>)
 
 data class Orbital(val name:String,val position:Vec3d,val size:Double)
 
@@ -31,7 +31,7 @@ fun generateGalaxy(name:String, numSystems:Int, radius:Double, gravity:Double): 
     val g = if(gravity<1.0) 1.0 else gravity
     //for now, we're just going to generate completely randomly, no checks and no weights
     val systems = List(numSystems) {
-        generateSystem("System $it", radius, g, random)
+        generateSystem("System $it", it, radius, g, random)
     }
     return Galaxy(name, radius, systems)
 }
@@ -39,7 +39,7 @@ fun generateGalaxy(name:String, numSystems:Int, radius:Double, gravity:Double): 
 /**
  * Generates a simple system of planets spaced equally out to the radius.
  */
-fun generateSystem(name:String, radius:Double, g:Double, random:Random):System{
+fun generateSystem(name:String, id:Int, radius:Double, g:Double, random:Random):System{
     val angle = random.nextDouble()*Math.PI*2
     val dist = g.pow(-random.nextDouble())*radius
     println(dist)
@@ -52,5 +52,5 @@ fun generateSystem(name:String, radius:Double, g:Double, random:Random):System{
         println(planetName)
         Orbital(planetName,Vec3d(1+it*spacing,0.0,0.0), 1.0)
     }
-    return System(name, pos, planets)
+    return System(name, id, pos, planets)
 }

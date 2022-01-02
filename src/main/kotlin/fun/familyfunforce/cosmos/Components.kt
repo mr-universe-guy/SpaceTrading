@@ -27,6 +27,16 @@ data class Velocity(val velocity:Vec3d): EntityComponent{
 data class Mass(val mass:Double): EntityComponent
 
 /**
+ * The position relative to a star system referenced by the star systems id
+ */
+data class StellarPosition(val systemId:Int, val position:Vec3d): EntityComponent
+
+/**
+ * An object that can be interacted with within a star system, such as fleets, asteroids, anomalies, etc.
+ */
+data class StellarObject(val radius:Double): EntityComponent
+
+/**
  * Size of an entities inventory in cubic meters
  */
 data class CargoHold(val volume:Double): EntityComponent
