@@ -1,8 +1,10 @@
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import `fun`.familyfunforce.cosmos.ui.CameraManagerState
 import `fun`.familyfunforce.cosmos.ui.OrbitController
 import `fun`.familyfunforce.cosmos.ui.SystemMapState
 import com.jme3.system.AppSettings
+import com.simsilica.event.EventBus
 import com.simsilica.mathd.Vec3d
 import kotlin.random.Random
 import kotlin.random.asJavaRandom
@@ -14,6 +16,8 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         //phys
         val data = LocalDataSystem()
         manager.register(DataSystem::class.java, data)
+        //vis
+        stateManager.attach(VisualState())
         //camera
         val cms = CameraManagerState(cam)
         val camCont=OrbitController(5f,100f)
@@ -31,6 +35,7 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
             )
         stateManager.attach(object:FirstFrameState(){
             override fun onFirstFrame() {
+                EventBus.publish(PlayerIdChangeEvent.PlayerIdCreated, PlayerIdChangeEvent(pid))
                 mapState.system=system
             }
         })

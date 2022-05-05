@@ -2,6 +2,7 @@ package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import `fun`.familyfunforce.cosmos.VisualState
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.FastMath
@@ -10,11 +11,13 @@ import com.jme3.math.Vector3f
 import com.jme3.renderer.Camera
 import com.jme3.scene.Spatial
 import com.simsilica.es.EntityId
+import com.simsilica.event.EventBus
+import com.simsilica.event.EventListener
+import com.simsilica.event.EventType
 import com.simsilica.lemur.input.*
 import com.simsilica.mathd.Vec3d
 
-class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener, StateFunctionListener {
-
+class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener, StateFunctionListener, EventListener<PlayerIdChangeEvent>{
     /**
      * Stores the current camera axis inputs in a single variable
      */
@@ -28,19 +31,24 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
         }
 
     override fun initialize(app: Application?) {
+        EventBus.addListener(PlayerIdChangeEvent.PlayerIdCreated, this)
+        EventBus.addListener(PlayerIdChangeEvent.PlayerIdChanged, this)
+    }
 
+    override fun newEvent(type: EventType<PlayerIdChangeEvent>, event: PlayerIdChangeEvent) {
+        application.enqueue { setTargetFromId(event.playerId) }
     }
 
     override fun cleanup(app: Application?) {
-
+        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdCreated, this)
+        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdChanged, this)
     }
 
     /**
      * Set the target spatial from an entity ID.
      */
     fun setTargetFromId(id: EntityId){
-        target = getState(VisualState::class.java).getSpatialFromId(id)
-        println("Target set to $target")
+        target = getState(VisualState::class.java)!!.getSpatialFromId(id)
     }
 
     override fun onEnable() {
