@@ -27,6 +27,7 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         stateManager.attach(mapState)
         //generate a random system
         val system = generateSystem("Test System", 1, 100.0, 5.0, Random.asJavaRandom())
+        system.updateOrbitals(0L)
         //spawn a player controllable object
         val pid = data.getPhysicsData().createEntity()
         data.getPhysicsData().setComponents(pid,

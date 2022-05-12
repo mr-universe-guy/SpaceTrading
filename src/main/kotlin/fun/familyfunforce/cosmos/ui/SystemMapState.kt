@@ -67,7 +67,7 @@ class SystemMapState : BaseAppState(){
         val mesh = Sphere(12,12,orbital.size.toFloat())
         val geo = Geometry(orbital.name, mesh)
         geo.material = mat
-        geo.localTranslation = orbital.position.toVector3f()
+        geo.localTranslation = orbital.globalPos.toVector3f()
         return geo
     }
 

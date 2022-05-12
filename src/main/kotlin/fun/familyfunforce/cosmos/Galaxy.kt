@@ -18,9 +18,41 @@ data class Galaxy(val name:String, val radius:Double, val systems: List<System>)
  * @param position Galactic position of this star system
  * @param orbitals Collection of orbital bodies that orbit the central star of this system
  */
-data class System(val name:String,val id:Int,val position:Vec3d,val orbitals:List<Orbital>)
+data class System(val name:String,val id:Int,val position:Vec3d,val orbitals:List<Orbital>){
+    fun updateOrbitals(curTime:Long) {orbitals.forEach{it.updatePositions(curTime)}}
+}
 
-data class Orbital(val name:String,val position:Vec3d,val size:Double)
+/**
+ * An object that orbits another object in a System
+ * @param argument The angle of periapsis
+ * @param period The duration of an orbital period in millis(for now, time unit may change!)
+ */
+data class Orbital(val name:String, val distance:Double, val argument:Double, val period:Long, val size:Double,
+                   val parent: Orbital?, val children:List<Orbital>){
+    constructor(name:String, distance: Double, argument: Double, period:Long, size: Double, parent: Orbital?) :
+            this(name, distance, argument, period, size, parent, emptyList())
+    constructor(name:String, distance: Double, argument: Double, period:Long, size: Double) :
+            this(name, distance, argument, period, size, null, emptyList())
+    var localPos: Vec3d = Vec3d(0.0,0.0,0.0)
+    var globalPos: Vec3d = Vec3d(0.0,0.0,0.0)
+
+    /**
+     * This will compute this orbitals position as well as all child orbitals positions
+     */
+    fun updatePositions(curTime:Long){
+        //compute angle and distance and convert it to a 3d translation in local space first
+        //TODO:do we NEED to do a modulus here? I'm tempted to say no
+        val timeOfYear = curTime%period
+        //TODO: The following is a cheat and only works on circular orbits
+        val ma = timeOfYear.toDouble()/period.toDouble()
+        val angle = ma*Math.PI*2
+        //point on circle angle*distance
+        localPos.x = distance* cos(angle)
+        localPos.z = distance* sin(angle)
+        globalPos = (parent?.globalPos ?: Vec3d(0.0,0.0,0.0)).add(localPos)
+        children.forEach{it.updatePositions(curTime)}
+    }
+}
 
 /**
  * Generates a random circular galaxy with the given number of stars randomly distributed around a central point
@@ -50,7 +82,7 @@ fun generateSystem(name:String, id:Int, radius:Double, g:Double, random:Random):
         //for now planets distance = number in sequence
         val planetName = "$name ${(it+10).digitToChar(36)}"
         println(planetName)
-        Orbital(planetName,Vec3d(1+it*spacing,0.0,0.0), 1.0)
+        Orbital(planetName,1+it*spacing,0.0, 60000, 1.0)
     }
     return System(name, id, pos, planets)
 }
