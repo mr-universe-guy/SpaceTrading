@@ -28,6 +28,9 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         //generate a random system
         val system = generateSystem("Test System", 1, 100.0, 5.0, Random.asJavaRandom())
         system.updateOrbitals(0L)
+        //simulate galaxy stuff
+        val galaxy = Galaxy("Test", 10.0, listOf(system))
+        manager.addSystem(GalaxySimSystem(galaxy))
         //spawn a player controllable object
         val pid = data.getPhysicsData().createEntity()
         data.getPhysicsData().setComponents(pid,
@@ -40,6 +43,8 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
                 mapState.system=system
             }
         })
+        //start manager
+        loop.start()
     }
 }
 

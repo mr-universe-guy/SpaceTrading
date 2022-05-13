@@ -1,7 +1,10 @@
 package `fun`.familyfunforce.cosmos
 
 import com.simsilica.mathd.Vec3d
+import com.simsilica.sim.AbstractGameSystem
+import com.simsilica.sim.SimTime
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
@@ -85,4 +88,27 @@ fun generateSystem(name:String, id:Int, radius:Double, g:Double, random:Random):
         Orbital(planetName,1+it*spacing,0.0, 60000, 1.0)
     }
     return System(name, id, pos, planets)
+}
+
+/**
+ * Handles galaxy and system simulation, speedup/slowdown
+ *
+ */
+class GalaxySimSystem(val galaxy: Galaxy): AbstractGameSystem(){
+    val galacticTime = SimTime()
+    override fun initialize() {
+
+    }
+
+    override fun terminate() {
+
+    }
+
+    /**
+     * Updates the galactic simulation time. This is used for planetary bodies and stellar travel.
+     */
+    override fun update(time: SimTime) {
+        galacticTime.update(time.time)
+        galaxy.systems.forEach { it.updateOrbitals(TimeUnit.MICROSECONDS.toSeconds(galacticTime.time)) }
+    }
 }

@@ -4,9 +4,12 @@ import `fun`.familyfunforce.cosmos.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.material.Material
+import com.jme3.renderer.RenderManager
+import com.jme3.renderer.ViewPort
 import com.jme3.scene.Geometry
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
+import com.jme3.scene.control.AbstractControl
 import com.jme3.scene.shape.Cylinder
 import com.jme3.scene.shape.Sphere
 import com.simsilica.es.Entity
@@ -68,6 +71,12 @@ class SystemMapState : BaseAppState(){
         val geo = Geometry(orbital.name, mesh)
         geo.material = mat
         geo.localTranslation = orbital.globalPos.toVector3f()
+        geo.addControl(object : AbstractControl(){
+            override fun controlUpdate(tpf: Float) {
+                spatial.localTranslation = orbital.globalPos.toVector3f()
+            }
+            override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
+        })
         return geo
     }
 
