@@ -1,8 +1,10 @@
 package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.InspectEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.jme3.input.event.MouseButtonEvent
 import com.jme3.material.Material
 import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort
@@ -16,6 +18,9 @@ import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
+import com.simsilica.event.EventBus
+import com.simsilica.lemur.event.DefaultMouseListener
+import com.simsilica.lemur.event.MouseEventControl
 import com.simsilica.mathd.Vec3d
 
 /**
@@ -76,6 +81,13 @@ class SystemMapState : BaseAppState(){
                 spatial.localTranslation = orbital.globalPos.toVector3f()
             }
             override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
+        })
+        MouseEventControl.addListenersToSpatial(geo, object : DefaultMouseListener(){
+            override fun mouseButtonEvent(event: MouseButtonEvent, target: Spatial, capture: Spatial) {
+                if(event.isPressed){
+                    EventBus.publish(InspectEvent.InspectionRequest, InspectEvent(orbital))
+                }
+            }
         })
         return geo
     }

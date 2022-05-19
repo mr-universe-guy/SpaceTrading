@@ -1,6 +1,7 @@
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import `fun`.familyfunforce.cosmos.ui.CameraManagerState
+import `fun`.familyfunforce.cosmos.ui.InspectionState
 import `fun`.familyfunforce.cosmos.ui.OrbitController
 import `fun`.familyfunforce.cosmos.ui.SystemMapState
 import com.jme3.system.AppSettings
@@ -18,6 +19,8 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         manager.register(DataSystem::class.java, data)
         //vis
         stateManager.attach(VisualState())
+        //interaction
+        stateManager.attach(InspectionState())
         //camera
         val cms = CameraManagerState(cam)
         val camCont=OrbitController(5f,100f)

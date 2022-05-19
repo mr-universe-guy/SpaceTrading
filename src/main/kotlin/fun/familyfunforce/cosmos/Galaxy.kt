@@ -1,5 +1,6 @@
 package `fun`.familyfunforce.cosmos
 
+import `fun`.familyfunforce.cosmos.ui.Inspectable
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
@@ -31,7 +32,7 @@ data class System(val name:String,val id:Int,val position:Vec3d,val orbitals:Lis
  * @param period The duration of an orbital period in millis(for now, time unit may change!)
  */
 data class Orbital(val name:String, val distance:Double, val argument:Double, val period:Long, val size:Double,
-                   val parent: Orbital?, val children:List<Orbital>){
+                   val parent: Orbital?, val children:List<Orbital>):Inspectable{
     constructor(name:String, distance: Double, argument: Double, period:Long, size: Double, parent: Orbital?) :
             this(name, distance, argument, period, size, parent, emptyList())
     constructor(name:String, distance: Double, argument: Double, period:Long, size: Double) :
@@ -54,6 +55,10 @@ data class Orbital(val name:String, val distance:Double, val argument:Double, va
         localPos.z = distance* sin(angle)
         globalPos = (parent?.globalPos ?: Vec3d(0.0,0.0,0.0)).add(localPos)
         children.forEach{it.updatePositions(curTime)}
+    }
+
+    override fun getInfo(): Map<String, Any> {
+        return mapOf<String, Any>(Pair("Name",name))
     }
 }
 
