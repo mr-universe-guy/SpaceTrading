@@ -17,6 +17,7 @@ import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
 import `fun`.familyfunforce.cosmos.loadout.VehicleLoader
+import com.simsilica.lemur.style.BaseStyles
 import java.util.*
 
 fun main(){
@@ -44,6 +45,10 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         JavaFxUI.initialize(this)
         //lemur
         GuiGlobals.initialize(this)
+        //BaseStyles.loadGlassStyle()
+        //GuiGlobals.getInstance().styles.defaultStyle = BaseStyles.GLASS
+        BaseStyles.loadStyleResources("UI/Space.groovy")
+        GuiGlobals.getInstance().styles.defaultStyle = "space"
         //Controls
         registerDefaults(GuiGlobals.getInstance().inputMapper)
         //I/O

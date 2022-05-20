@@ -54,6 +54,8 @@ dependencies {
     runtimeOnly "${jme3.g}:jme3-desktop:${jme3.v}"
     runtimeOnly "${jme3.g}:jme3-lwjgl3:${jme3.v}"
     runtimeOnly "${jme3.g}:jme3-networking:${jme3.v}"
+    //groovy
+    implementation 'org.codehaus.groovy:groovy-all:2.4.15'
     //jme libs
     implementation "com.simsilica:zay-es:1.3.2"
     implementation "com.simsilica:lemur:1.15.0"

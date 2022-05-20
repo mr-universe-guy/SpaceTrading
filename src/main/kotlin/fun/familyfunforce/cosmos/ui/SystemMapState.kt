@@ -83,8 +83,8 @@ class SystemMapState : BaseAppState(){
             override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
         })
         MouseEventControl.addListenersToSpatial(geo, object : DefaultMouseListener(){
-            override fun mouseButtonEvent(event: MouseButtonEvent, target: Spatial, capture: Spatial) {
-                if(event.isPressed){
+            override fun mouseButtonEvent(event: MouseButtonEvent?, target: Spatial?, capture: Spatial?) {
+                if(event?.isPressed == true){
                     EventBus.publish(InspectEvent.InspectionRequest, InspectEvent(orbital))
                 }
             }
