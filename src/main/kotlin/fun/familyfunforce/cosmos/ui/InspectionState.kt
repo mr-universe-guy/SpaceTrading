@@ -11,10 +11,11 @@ import com.simsilica.event.EventType
 import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
+import com.simsilica.lemur.style.ElementId
 
 class InspectionState:BaseAppState(), EventListener<InspectEvent> {
     private lateinit var guiNode: Node
-    private val inspectorPane = Container(BorderLayout())
+    private val inspectorPane = Container(BorderLayout(), ElementId("outline"))
     private val inspectorTitleBar = Container(BoxLayout(Axis.X, FillMode.First))
     private val inspectorTitle = Label("Inspector")
     private val inspectorCloseBtn = Button("X")
