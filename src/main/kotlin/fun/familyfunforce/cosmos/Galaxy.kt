@@ -31,12 +31,11 @@ data class System(val name:String,val id:Int,val position:Vec3d,val orbitals:Lis
  * @param argument The angle of periapsis
  * @param period The duration of an orbital period in millis(for now, time unit may change!)
  */
-data class Orbital(val name:String, val distance:Double, val argument:Double, val period:Long, val size:Double,
+data class Orbital(val name:String, val semiMajorAxis:Double, val argument:Double, val size:Double,
                    val parent: Orbital?, val children:List<Orbital>):Inspectable{
-    constructor(name:String, distance: Double, argument: Double, period:Long, size: Double, parent: Orbital?) :
-            this(name, distance, argument, period, size, parent, emptyList())
-    constructor(name:String, distance: Double, argument: Double, period:Long, size: Double) :
-            this(name, distance, argument, period, size, null, emptyList())
+    constructor(name:String, distance: Double, argument: Double, size: Double) :
+            this(name, distance, argument, size, null, emptyList())
+    val period:Long = (semiMajorAxis.pow(3.0)/(parent?.size?:1.0)).toLong()
     var localPos: Vec3d = Vec3d(0.0,0.0,0.0)
     var globalPos: Vec3d = Vec3d(0.0,0.0,0.0)
 
@@ -51,14 +50,14 @@ data class Orbital(val name:String, val distance:Double, val argument:Double, va
         val ma = timeOfYear.toDouble()/period.toDouble()
         val angle = ma*Math.PI*2
         //point on circle angle*distance
-        localPos.x = distance* cos(angle)
-        localPos.z = distance* sin(angle)
+        localPos.x = semiMajorAxis* cos(angle)
+        localPos.z = semiMajorAxis* sin(angle)
         globalPos = (parent?.globalPos ?: Vec3d(0.0,0.0,0.0)).add(localPos)
         children.forEach{it.updatePositions(curTime)}
     }
 
     override fun getInfo(): Map<String, Any> {
-        return mapOf<String, Any>(Pair("Name",name))
+        return mapOf<String, Any>(Pair("Name",name),Pair("Period",period),Pair("Semi-Major Axis",semiMajorAxis))
     }
 }
 
@@ -90,7 +89,7 @@ fun generateSystem(name:String, id:Int, radius:Double, g:Double, random:Random):
         //for now planets distance = number in sequence
         val planetName = "$name ${(it+10).digitToChar(36)}"
         println(planetName)
-        Orbital(planetName,1+it*spacing,0.0, 60000, 1.0)
+        Orbital(planetName,1+it*spacing,0.0, 1.0)
     }
     return System(name, id, pos, planets)
 }

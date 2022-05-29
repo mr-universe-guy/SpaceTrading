@@ -15,6 +15,14 @@ selector("space"){
     font=font("UI/Orbitron12.fnt")
 }
 
+selector("button", "space"){
+    background = bg.clone()
+    background.setColor(ColorRGBA.DarkGray)
+    background.setAlpha(0.5f)
+    border=outline.clone()
+    border.setColor(ColorRGBA.Orange)
+}
+
 selector("outline", "space"){
     background=bg.clone()
     background.setColor(color(0.5,0.5,0.5,0.5))
