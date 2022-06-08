@@ -17,6 +17,7 @@ import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import io.tlf.jme.jfx.JavaFxUI
 import `fun`.familyfunforce.cosmos.loadout.VehicleLoader
+import `fun`.familyfunforce.cosmos.ui.UIAudioState
 import com.simsilica.lemur.style.BaseStyles
 import java.util.*
 
@@ -94,6 +95,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         val camManager = CameraManagerState(cam)
         camManager.activeController = OrbitController(5f,50f)
         stateManager.attach(camManager)
+        stateManager.attach(UIAudioState())
     }
 
     fun attachAiSystems(){

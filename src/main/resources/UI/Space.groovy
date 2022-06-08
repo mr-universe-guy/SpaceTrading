@@ -1,13 +1,24 @@
 package UI
 
 import com.jme3.math.ColorRGBA
+import com.simsilica.event.EventBus
 import com.simsilica.lemur.*
-import com.simsilica.lemur.component.InsetsComponent
 import com.simsilica.lemur.component.QuadBackgroundComponent
 import com.simsilica.lemur.component.TbtQuadBackgroundComponent
+import fun.familyfunforce.cosmos.ui.UIAudioEvent
 
 def outline = TbtQuadBackgroundComponent.create("UI/SimpleBorders.png",1f,6,6,27,27,0,false)
 def bg = new QuadBackgroundComponent(color(1,1,1,1))
+def clickSound = new Command<Button>(){
+    public void execute(Button source){
+        if(source.isPressed()){
+            EventBus.publish(UIAudioEvent.playAudio, UIAudioEvent.createUIAudioEvent("click.wav"))
+        }
+    }
+}
+def stdButtonCommands = [
+        (Button.ButtonAction.Down):[clickSound]
+]
 
 selector("space"){
     fontSize=16
@@ -21,6 +32,7 @@ selector("button", "space"){
     background.setAlpha(0.5f)
     border=outline.clone()
     border.setColor(ColorRGBA.Orange)
+    buttonCommands=stdButtonCommands
 }
 
 selector("outline", "space"){

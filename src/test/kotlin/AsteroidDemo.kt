@@ -38,6 +38,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         stateManager.attach(cameraManagerState)
         stateManager.attach(LocalMapState())
         stateManager.attach(ShipHudState())
+        stateManager.attach(UIAudioState())
         //ai
         manager.register(
             ActionSystem::class.java,
