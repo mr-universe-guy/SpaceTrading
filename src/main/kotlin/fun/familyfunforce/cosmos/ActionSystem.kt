@@ -1,7 +1,9 @@
 package `fun`.familyfunforce.cosmos
 
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
+import com.simsilica.event.EventBus
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
@@ -15,10 +17,11 @@ class ActionSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).getPhysicsData()
+        EventBus.addListener(this, OrbitOrderEvent.orbitTarget)
     }
 
     override fun terminate() {
-
+        EventBus.removeListener(this, OrbitOrderEvent.orbitTarget)
     }
 
     override fun update(time: SimTime) {
@@ -46,6 +49,10 @@ class ActionSystem: AbstractGameSystem() {
                 )
             )
         }
+    }
+
+    fun orbitTarget(orb: OrbitOrderEvent){
+        setAction(orb.shipId, OrbitAction(orb.targetId, orb.range))
     }
 
     fun getAction(id: EntityId): Action?{

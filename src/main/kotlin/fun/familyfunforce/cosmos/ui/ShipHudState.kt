@@ -1,6 +1,7 @@
 package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.Vector3f
@@ -9,6 +10,7 @@ import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.es.WatchedEntity
+import com.simsilica.event.EventBus
 import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
@@ -171,7 +173,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
-                actionSys.setAction(playerShip!!.id, OrbitAction(selectedObject!!, value))
+                //actionSys.setAction(playerShip!!.id, OrbitAction(selectedObject!!, value))
+                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, selectedObject!!, value))
             }
         }
         popState.centerInGui(popup)
