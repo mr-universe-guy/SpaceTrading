@@ -2,6 +2,7 @@ package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
+import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.Vector3f
@@ -51,7 +52,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
     private lateinit var inRangeTargets: EntitySet
-    private lateinit var actionSys: `fun`.familyfunforce.cosmos.ActionSystem
+    private lateinit var actionSys: ActionSystem
     private lateinit var sensorSys: SensorSystem
     //
     var playerId : EntityId? = null
@@ -62,7 +63,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
-        actionSys = app.manager.get(`fun`.familyfunforce.cosmos.ActionSystem::class.java)
+        actionSys = app.manager.get(ActionSystem::class.java)
         sensorSys = app.manager.get(SensorSystem::class.java)
         //build lemur hud
         val screenHeight = app.camera.height
@@ -151,8 +152,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         if(playerShip != null){
             //do things with gui input
             if(throttle.update()) {
-                val action = actionSys.getAction(playerShip?.id!!)
-                action?.setThrottle(throttle.get())
+                EventBus.publish(ThrottleOrderEvent.setThrottle, ThrottleOrderEvent(playerShip!!.id, throttle.get()))
             }
         }
         if(playerShip?.applyChanges() == true){
@@ -173,7 +173,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
-                //actionSys.setAction(playerShip!!.id, OrbitAction(selectedObject!!, value))
                 EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, selectedObject!!, value))
             }
         }

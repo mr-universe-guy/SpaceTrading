@@ -18,3 +18,9 @@ class OrbitOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Do
         val orbitTarget:EventType<OrbitOrderEvent> = EventType.create("orbitTarget", OrbitOrderEvent::class.java)
     }
 }
+
+class ThrottleOrderEvent(val shipId: EntityId, val throttle:Double){
+    companion object{
+        val setThrottle:EventType<ThrottleOrderEvent> = EventType.create("setThrottle", ThrottleOrderEvent::class.java)
+    }
+}
