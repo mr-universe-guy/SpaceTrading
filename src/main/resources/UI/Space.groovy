@@ -10,14 +10,24 @@ import fun.familyfunforce.cosmos.ui.UIAudioEvent
 def outline = TbtQuadBackgroundComponent.create("UI/SimpleBorders.png",1f,6,6,27,27,0,false)
 def bg = new QuadBackgroundComponent(color(1,1,1,1))
 def clickSound = new Command<Button>(){
-    public void execute(Button source){
+    void execute(Button source){
         if(source.isPressed()){
             EventBus.publish(UIAudioEvent.playAudio, UIAudioEvent.createUIAudioEvent("click.wav"))
         }
     }
 }
+def clickShift = new Command<Button>(){
+    void execute(Button source){
+        if(source.isPressed()){
+            source.move(1,-1,0)
+        } else{
+            source.move(-1,1,0)
+        }
+    }
+}
 def stdButtonCommands = [
-        (Button.ButtonAction.Down):[clickSound]
+        (Button.ButtonAction.Down):[clickSound,clickShift],
+        (Button.ButtonAction.Up):[clickShift]
 ]
 
 selector("space"){
