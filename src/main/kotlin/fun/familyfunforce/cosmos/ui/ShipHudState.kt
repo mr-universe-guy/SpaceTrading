@@ -1,16 +1,18 @@
 package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.Name
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.Vector3f
+import com.jme3.renderer.Camera
+import com.jme3.renderer.RenderManager
+import com.jme3.renderer.ViewPort
 import com.jme3.scene.Node
-import com.simsilica.es.EntityData
-import com.simsilica.es.EntityId
-import com.simsilica.es.EntitySet
-import com.simsilica.es.WatchedEntity
+import com.jme3.scene.control.AbstractControl
+import com.simsilica.es.*
 import com.simsilica.event.EventBus
 import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
@@ -21,6 +23,7 @@ import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
+import com.simsilica.lemur.style.ElementId
 import com.simsilica.mathd.Vec3d
 
 private const val HUD_SELECTION_NAME = "Selected_name"
@@ -30,6 +33,10 @@ private const val HUD_SELECTION_NAME = "Selected_name"
  * The ship hud consists of both lemur and jfx elements
  */
 class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocusListener {
+    private lateinit var targetMap: TargetContainer
+    //TODO: uiPane should become it's own class called TargetBracket that will have it's own styles/colors/icons similar to a pane or button
+    private data class TargetUIElement(val id:EntityId, val uiPane:Panel, var pos:Position)
+
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
     private val energyGauge= Label("XXX% Energy")
@@ -51,7 +58,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
-    private lateinit var inRangeTargets: EntitySet
+    //private lateinit var targettables: EntitySet
     private lateinit var actionSys: ActionSystem
     private lateinit var sensorSys: SensorSystem
     //
@@ -125,7 +132,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         mapper = GuiGlobals.getInstance().inputMapper
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
         println("Ship Hud Enabled")
-        inRangeTargets = data.getEntities(Position::class.java)
+        targetMap = TargetContainer(data, application.camera)
+        targetMap.start()
         //finalize setup for some functions
         selectId(null)
     }
@@ -166,7 +174,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
             updatePlayerGui(playerShip!!)
         }
         target?.applyChanges()
-        inRangeTargets.applyChanges()
+        targetMap.update()
     }
 
     fun orbitSelection(){
@@ -203,19 +211,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private fun nextTarget(){
         println("Searching for next furthest target")
         val pos = playerShip?.get(Position::class.java)?.position ?: return
-        val farTgtDist = target?.get(Position::class.java)?.position?.distanceSq(pos) ?: 0.0
-        var nearestDist = Double.MAX_VALUE
-        var farTgtId: EntityId? = target?.id
-        //find the next-furthest target from us currently
-        inRangeTargets.forEach {
-            if(it.id == playerShip?.id) return@forEach
-            if(it.id == farTgtId) return@forEach
-            val itDist = it.get(Position::class.java).position.distanceSq(pos)
-            if(itDist > farTgtDist && itDist < nearestDist){
-                nearestDist = itDist
-                farTgtId = it.id
-            }
-        }
+        val farTgtId = targetMap.getNext(pos)
         if(farTgtId != target?.id){
             selectTarget(farTgtId!!)
         } else{
@@ -229,17 +225,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private fun nearestTarget(){
         println("Searching for nearest target")
         val pos = playerShip?.get(Position::class.java)?.position ?: return
-        var nearestDist = Double.MAX_VALUE
-        var nearTgtId: EntityId? = target?.id
-        inRangeTargets.forEach {
-            if(it.id == playerShip?.id) return@forEach
-            if(it.id == nearTgtId) return@forEach
-            val itDist = it.get(Position::class.java).position.distanceSq(pos)
-            if(itDist >= nearestDist) return@forEach
-            nearestDist = itDist
-            nearTgtId = it.id
-        }
-        nearTgtId?.let { selectTarget(it) }
+        targetMap.getNearest(pos)?.let { selectTarget(it) }
     }
 
     /**
@@ -278,5 +264,64 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
                 }
             }
         }
+    }
+
+    private inner class TargetContainer(data:EntityData, val cam:Camera):EntityContainer<TargetUIElement>(data, Position::class.java){
+        override fun addObject(e: Entity): TargetUIElement {
+            val pane=Panel(16f,16f, ElementId("brackets"),null)
+            val pos = e.get(Position::class.java)
+            val tgt = TargetUIElement(e.id,pane,pos)
+            pane.addControl(WorldToCamControl(tgt, cam))
+            hudNode.attachChild(pane)
+            return tgt
+        }
+
+        override fun updateObject(tgt: TargetUIElement, e: Entity) {
+            tgt.pos=e.get(Position::class.java)
+        }
+
+        override fun removeObject(tgt: TargetUIElement, e: Entity) {
+            tgt.uiPane.removeFromParent()
+        }
+
+        fun getNearest(refPos:Vec3d): EntityId?{
+            var nearestDist = Double.MAX_VALUE
+            var nearTgtId: EntityId? = target?.id
+            array.forEach {
+                if(it.id == playerShip?.id) return@forEach
+                if(it.id == nearTgtId) return@forEach
+                val itDist = it.pos.position.distanceSq(refPos)
+                if(itDist >= nearestDist) return@forEach
+                nearestDist = itDist
+                nearTgtId = it.id
+            }
+            return nearTgtId
+        }
+
+        fun getNext(refPos:Vec3d): EntityId?{
+            println("Searching for next furthest target")
+            val farTgtDist = target?.get(Position::class.java)?.position?.distanceSq(refPos) ?: 0.0
+            var nearestDist = Double.MAX_VALUE
+            var farTgtId: EntityId? = target?.id
+            //find the next-furthest target from us currently
+            array.forEach {
+                if(it.id == playerShip?.id) return@forEach
+                if(it.id == farTgtId) return@forEach
+                val itDist = it.pos.position.distanceSq(refPos)
+                if(itDist > farTgtDist && itDist < nearestDist){
+                    nearestDist = itDist
+                    farTgtId = it.id
+                }
+            }
+            return farTgtId
+        }
+    }
+
+    private class WorldToCamControl(val tgt:TargetUIElement, val cam:Camera): AbstractControl(){
+        override fun controlUpdate(tpf: Float) {
+            spatial.localTranslation = cam.getScreenCoordinates(tgt.pos.position.toVector3f())
+        }
+
+        override fun controlRender(rm: RenderManager?, vp: ViewPort) {}
     }
 }

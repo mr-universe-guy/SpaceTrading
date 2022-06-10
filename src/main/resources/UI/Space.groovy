@@ -9,6 +9,7 @@ import fun.familyfunforce.cosmos.ui.UIAudioEvent
 
 def outline = TbtQuadBackgroundComponent.create("UI/SimpleBorders.png",1f,6,6,27,27,0,false)
 def bg = new QuadBackgroundComponent(color(1,1,1,1))
+def brackets = TbtQuadBackgroundComponent.create("UI/Brackets.png",1f,4,4,8,8,0,false)
 def clickSound = new Command<Button>(){
     void execute(Button source){
         if(source.isPressed()){
@@ -51,4 +52,9 @@ selector("outline", "space"){
     border=outline.clone()
     border.setColor(ColorRGBA.Orange)
     insets = new Insets3f(6f,6f,6f,6f)
+}
+
+selector("brackets", "space"){
+    background=brackets.clone()
+    background.setColor(ColorRGBA.Green)
 }
