@@ -25,7 +25,7 @@ class SystemInteractionDemo: SpaceTraderApp(false) {
         stateManager.attach(InspectionState())
         //camera
         val cms = CameraManagerState(cam)
-        val camCont=OrbitController(5f,100f)
+        val camCont=OrbitController(5f,100f,10f)
         cms.activeController=camCont
         stateManager.attach(cms)
         val mapState = SystemMapState()

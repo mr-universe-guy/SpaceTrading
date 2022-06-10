@@ -37,7 +37,7 @@ class LocalSpaceDemo: SpaceTraderApp(false) {
         stateManager.attach(VisualState())
         stateManager.attach(StatsAppState())
         val camManager = CameraManagerState(cam)
-        camManager.activeController = OrbitController(10f,500f)
+        camManager.activeController = OrbitController(10f,500f, 10f)
         stateManager.attach(camManager)
         val flightUiState = FlightUIState()
         stateManager.attach(flightUiState)

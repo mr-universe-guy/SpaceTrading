@@ -103,7 +103,7 @@ interface CameraController{
     fun updateCamera(tpf:Float, inputRotation:Vector3f, camPressed:Boolean)
 }
 
-class OrbitController(private var minZoom:Float, private var maxZoom:Float): CameraController{
+class OrbitController(private val minZoom:Float, private val maxZoom:Float, val speed:Float): CameraController{
     override val targetPos = Vector3f()
     override var cam:Camera?=null
     private val offset = Vector3f(0f,0f,0.5f)
@@ -111,9 +111,9 @@ class OrbitController(private var minZoom:Float, private var maxZoom:Float): Cam
 
     override fun updateCamera(tpf: Float, inputRotation: Vector3f, camPressed: Boolean) {
         if(camPressed) {
-            offset.x = ((offset.x+inputRotation.x*tpf)% FastMath.TWO_PI)
-            offset.y = ((offset.y+inputRotation.y*tpf)%FastMath.TWO_PI)
-            offset.z = (offset.z+inputRotation.z*tpf).coerceIn(0f,1f)
+            offset.x = (offset.x+(inputRotation.x*tpf*speed)) % FastMath.TWO_PI
+            offset.y = (offset.y+(inputRotation.y*tpf*speed)) % FastMath.TWO_PI
+            offset.z = (offset.z+(inputRotation.z*tpf*speed)).coerceIn(0f,1f)
             rotation.fromAngles(offset.y, offset.x,0f)
         }
         cam?.location = targetPos.add(rotation.mult(Vector3f(0f,0f,-(minZoom+(offset.z*maxZoom)))))

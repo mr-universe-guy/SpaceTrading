@@ -93,7 +93,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         stateManager.attach(VisualState())
         //stateManager.attach(CameraState())
         val camManager = CameraManagerState(cam)
-        camManager.activeController = OrbitController(5f,50f)
+        camManager.activeController = OrbitController(5f,50f, 10f)
         stateManager.attach(camManager)
         stateManager.attach(UIAudioState())
     }

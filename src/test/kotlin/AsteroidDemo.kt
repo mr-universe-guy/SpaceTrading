@@ -34,7 +34,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         stateManager.attach(VisualState())
         //stateManager.attach(CameraState())
         val cameraManagerState = CameraManagerState(cam)
-        cameraManagerState.activeController = OrbitController(5f,100f)
+        cameraManagerState.activeController = OrbitController(5f,100f, 10f)
         stateManager.attach(cameraManagerState)
         stateManager.attach(LocalMapState())
         stateManager.attach(ShipHudState())
