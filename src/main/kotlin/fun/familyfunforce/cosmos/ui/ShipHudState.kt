@@ -34,8 +34,7 @@ private const val HUD_SELECTION_NAME = "Selected_name"
  */
 class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocusListener {
     private lateinit var targetMap: TargetContainer
-    //TODO: uiPane should become it's own class called TargetBracket that will have it's own styles/colors/icons similar to a pane or button
-    private data class TargetUIElement(val id:EntityId, val uiPane:Panel, var pos:Position)
+    private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
 
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
@@ -268,7 +267,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
 
     private inner class TargetContainer(data:EntityData, val cam:Camera):EntityContainer<TargetUIElement>(data, Position::class.java){
         override fun addObject(e: Entity): TargetUIElement {
-            val pane=Panel(16f,16f, ElementId("brackets"),null)
+            val pane = HudBracket()
             val pos = e.get(Position::class.java)
             val tgt = TargetUIElement(e.id,pane,pos)
             pane.addControl(WorldToCamControl(tgt, cam))
@@ -318,10 +317,17 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     }
 
     private class WorldToCamControl(val tgt:TargetUIElement, val cam:Camera): AbstractControl(){
+        private val offset:Vector3f = tgt.uiPane.preferredSize.mult(Vector3f(-0.5f,0.5f,1f))
         override fun controlUpdate(tpf: Float) {
-            spatial.localTranslation = cam.getScreenCoordinates(tgt.pos.position.toVector3f())
+            spatial.localTranslation = cam.getScreenCoordinates(tgt.pos.position.toVector3f()).add(offset)
         }
 
         override fun controlRender(rm: RenderManager?, vp: ViewPort) {}
+    }
+}
+
+class HudBracket():Panel(32f,32f, ElementId(ELEMENT_ID), null){
+    companion object{
+        const val ELEMENT_ID = "bracket"
     }
 }

@@ -54,7 +54,7 @@ selector("outline", "space"){
     insets = new Insets3f(6f,6f,6f,6f)
 }
 
-selector("brackets", "space"){
+selector("bracket", "space"){
     background=brackets.clone()
     background.setColor(ColorRGBA.Green)
 }

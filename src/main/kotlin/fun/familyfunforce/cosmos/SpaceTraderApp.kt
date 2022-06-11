@@ -31,6 +31,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     val appProperties : Properties = Properties()
     init {
         appProperties.load(this::class.java.getResourceAsStream("version.properties"))
+        isPauseOnLostFocus=false
     }
     lateinit var manager: GameSystemManager
     lateinit var loop: GameLoop
