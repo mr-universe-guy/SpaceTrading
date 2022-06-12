@@ -32,7 +32,7 @@ private const val HUD_SELECTION_NAME = "Selected_name"
  * A state to manage the interactive ship Hud and UI.
  * The ship hud consists of both lemur and jfx elements
  */
-class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocusListener {
+class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
 
@@ -52,25 +52,29 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
     private val orbitAction = object: com.simsilica.lemur.Action("Orbit") {
         override fun execute(source: Button?) {orbitSelection()}
     }
+    init{
+        dashboard.addChild(interactionPanel, BorderLayout.Position.Center)
+        dashboard.addChild(mapContainer, BorderLayout.Position.East)
+        dashboard.addChild(navContainer, BorderLayout.Position.West)
+    }
     private lateinit var throttle : VersionedReference<Double>
-    //private val orbitRangeSelection = RangePopup()
     //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
-    //private lateinit var targettables: EntitySet
-    private lateinit var actionSys: ActionSystem
+    //TODO:Remove direct references to action and sensor systems, these should be server-side only
     private lateinit var sensorSys: SensorSystem
     //
     var playerId : EntityId? = null
     private var playerShip: WatchedEntity? = null
     private var target: WatchedEntity? = null
-    private var selectedObject: EntityId? = null
+    private var focusedEntity: EntityId? = null
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
-        actionSys = app.manager.get(ActionSystem::class.java)
         sensorSys = app.manager.get(SensorSystem::class.java)
+        //focus
+        EventBus.addListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusGained)
         //build lemur hud
         val screenHeight = app.camera.height
         val screenWidth = app.camera.width
@@ -90,7 +94,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val selectionName = Label("")
         selectionName.name = HUD_SELECTION_NAME
         interactionPanel.addChild(selectionName, BorderLayout.Position.North)
-        //val selectOptions = Container(BoxLayout(Axis.Y, FillMode.Even))
         //minimap info
         val mapInfoName = Label("")
         mapInfoName.name = "NAME"
@@ -98,13 +101,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         mapContainer.addChild(mapInfoContainer, BorderLayout.Position.North)
         //minimap
         val mapState = getState(LocalMapState::class.java)
-        mapState.addFocusListener(this)
         val mapPanel = mapState.getMap()
         val mapSize = Vector3f(220f, 220f, 1f)
         mapContainer.addChild(mapPanel, BorderLayout.Position.Center)
         mapContainer.preferredSize = mapSize
         mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
-        //hudNode.attachChild(mapContainer)
         //nav panel
         val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
         throttle = throttleModel.createReference()
@@ -115,7 +116,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         //nav options
         val navOptions = Container(BoxLayout(Axis.Y, FillMode.Even))
         val orbitButton = ActionButton(orbitAction)
-        //orbitButton.addClickCommands { orbitTarget() }
+
         navOptions.addChild(orbitButton)
         navContainer.addChild(navOptions, BorderLayout.Position.Center)
         //add all our panels to the single dashboard
@@ -123,9 +124,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val dashY = screenHeight*0.25f
         dashboard.preferredSize = Vector3f(screenWidth.toFloat(), dashY, 1f)
         dashboard.localTranslation = Vector3f(0f, dashY, 0f)
-        dashboard.addChild(interactionPanel, BorderLayout.Position.Center)
-        dashboard.addChild(mapContainer, BorderLayout.Position.East)
-        dashboard.addChild(navContainer, BorderLayout.Position.West)
         hudNode.attachChild(dashboard)
         //keyboard shortcuts
         mapper = GuiGlobals.getInstance().inputMapper
@@ -133,14 +131,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         println("Ship Hud Enabled")
         targetMap = TargetContainer(data, application.camera)
         targetMap.start()
-        //finalize setup for some functions
-        selectId(null)
     }
 
     override fun cleanup(app: Application?) {
         //keyboard shortcuts
         mapper.removeStateListener(this, SHIP_NEXT_TARGET)
-        getState(LocalMapState::class.java)?.removeFocusListener(this)
     }
 
     override fun onEnable() {
@@ -180,7 +175,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
-                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, selectedObject!!, value))
+                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, focusedEntity!!, value))
             }
         }
         popState.centerInGui(popup)
@@ -234,8 +229,16 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         if(!sensorSys.acquireLock(playerShip?.id!!, targetId!!)) return
     }
 
+    fun entityFocusLost(evt:EntityFocusEvent){
+        selectId(null)
+    }
+
+    fun entityFocusGained(evt:EntityFocusEvent){
+        selectId(evt.id)
+    }
+
     private fun selectId(id: EntityId?){
-        selectedObject = id
+        focusedEntity = id
         //we should wait for update to do this :/
         val name:String = if(id == null) "" else data.getComponent(id, Name::class.java).name
         (mapInfoContainer.getChild("NAME") as Label).text = name
@@ -245,10 +248,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         println("Map item $id selected")
     }
 
-    override fun iconFocused(id: EntityId?) {
-        selectId(id)
-    }
-
     /**
      * Keyboard Input
      */
@@ -256,10 +255,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener, LocalMapState.MapFocu
         when(func){
             SHIP_NEXT_TARGET -> {
                 if(InputState.Positive != value) return
-                if(selectedObject == null){
+                if(focusedEntity == null){
                     nextTarget()
                 } else{
-                    selectTarget(selectedObject)
+                    selectTarget(focusedEntity)
                 }
             }
         }

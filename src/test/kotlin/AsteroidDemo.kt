@@ -23,6 +23,8 @@ class AsteroidDemo: SpaceTraderApp(false){
         //TODO: Change this database to the release database
         dataSystem.getItemDatabase().fromCSV("/TestItemDB.csv")
         manager.register(DataSystem::class.java, dataSystem)
+        //focus
+        manager.register(EntityFocusManager::class.java, EntityFocusManager())
         //Controls
         registerDefaults(GuiGlobals.getInstance().inputMapper)
         //use general physics
@@ -32,7 +34,6 @@ class AsteroidDemo: SpaceTraderApp(false){
         manager.register(SensorSystem::class.java, SensorSystem())
         //use general visuals
         stateManager.attach(VisualState())
-        //stateManager.attach(CameraState())
         val cameraManagerState = CameraManagerState(cam)
         cameraManagerState.activeController = OrbitController(5f,100f, 10f)
         stateManager.attach(cameraManagerState)
@@ -51,7 +52,6 @@ class AsteroidDemo: SpaceTraderApp(false){
         val data = manager.get(DataSystem::class.java).getPhysicsData()
         val loadout = generateTestLoadout()
         val playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
-        //val playerId = spawnTestShip(data, "Player", Vec3d(0.0,0.0,0.0))
         println("Player Spawned")
         //register player to systems that care
         val initListener =object: UpdateListener(){
