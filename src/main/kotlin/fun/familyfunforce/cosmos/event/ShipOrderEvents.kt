@@ -24,3 +24,9 @@ class ThrottleOrderEvent(val shipId: EntityId, val throttle:Double){
         val setThrottle:EventType<ThrottleOrderEvent> = EventType.create("setThrottle", ThrottleOrderEvent::class.java)
     }
 }
+
+class ApproachOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Double){
+    companion object {
+        val approachTarget: EventType<ApproachOrderEvent> = EventType.create("approachTarget", ApproachOrderEvent::class.java)
+    }
+}

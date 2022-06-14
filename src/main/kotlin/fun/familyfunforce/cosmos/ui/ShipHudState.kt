@@ -2,6 +2,7 @@ package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.Name
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
@@ -51,6 +52,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val navContainer = Container(BorderLayout())
     private val orbitAction = object: com.simsilica.lemur.Action("Orbit") {
         override fun execute(source: Button?) {orbitSelection()}
+    }
+    private val approachAction = object: com.simsilica.lemur.Action("Approach"){
+        override fun execute(source: Button?) {approachSelection()}
     }
     init{
         dashboard.addChild(interactionPanel, BorderLayout.Position.Center)
@@ -116,8 +120,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         //nav options
         val navOptions = Container(BoxLayout(Axis.Y, FillMode.Even))
         val orbitButton = ActionButton(orbitAction)
+        val approachButton = ActionButton(approachAction)
 
         navOptions.addChild(orbitButton)
+        navOptions.addChild(approachButton)
         navContainer.addChild(navOptions, BorderLayout.Position.Center)
         //add all our panels to the single dashboard
         //let's go for screen width and .25 screen height
@@ -180,6 +186,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         }
         popState.centerInGui(popup)
         popState.showModalPopup(popup)
+    }
+
+    fun approachSelection(){
+        EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(playerShip!!.id, focusedEntity!!, 0.0))
     }
 
     private fun updatePlayerGui(playerShip: WatchedEntity){

@@ -1,5 +1,6 @@
 package `fun`.familyfunforce.cosmos
 
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.simsilica.es.EntityData
@@ -18,7 +19,7 @@ class ActionSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).getPhysicsData()
-        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle)
+        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle, ApproachOrderEvent.approachTarget)
     }
 
     override fun terminate() {
@@ -58,6 +59,10 @@ class ActionSystem: AbstractGameSystem() {
 
     fun setThrottle(evt: ThrottleOrderEvent){
         getAction(evt.shipId)?.setThrottle(evt.throttle)
+    }
+
+    fun approachTarget(evt: ApproachOrderEvent){
+        setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))
     }
 
     fun getAction(id: EntityId): Action?{

@@ -57,6 +57,21 @@ class MoveAction(private val destination: Vec3d): AbstractAction() {
     }
 }
 
+class ApproachAction(private val targetId: EntityId, private val distance:Double): AbstractAction(){
+    override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
+        val pos = data.getComponent(id, Position::class.java).position
+        val tgtPos = data.getComponent(targetId, Position::class.java)?.position ?: return ActionStatus.FAILED
+        val diff = tgtPos.subtract(pos)
+        if(diff.lengthSq() < distance){
+            data.setComponent(id, EngineDriver(Vec3d(0.0,0.0,0.0)))
+            return ActionStatus.COMPLETE
+        }
+        data.setComponent(id, EngineDriver(diff.normalizeLocal().multLocal(getThrottle())))
+        return ActionStatus.ONGOING
+    }
+
+}
+
 class OrbitAction(private val targetId: EntityId, private val distance: Double): AbstractAction(){
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
         //if target or self are missing a position fail early
