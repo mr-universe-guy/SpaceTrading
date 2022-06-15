@@ -112,3 +112,5 @@ data class Sensors(val range: Double): EntityComponent
  * Store target locks as a component so other systems can break locks, etc
  */
 data class TargetLock(val targetId: EntityId): EntityComponent
+
+data class CycleTimer(val nextCycle: Long): EntityComponent

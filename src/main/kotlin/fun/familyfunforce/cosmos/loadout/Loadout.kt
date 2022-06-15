@@ -67,7 +67,9 @@ data class Loadout(var name: String, val vehicleId: String){
         equipmentMap.values.forEach { sect ->
             sect.forEach {
                 val equipment = getEquipmentFromId(it)
-                equipment!!.getModifiedStats(curStats, this)
+                if(equipment is PassiveEquipment){
+                    equipment.getModifiedStats(curStats, this)
+                }
             }
         }
         return curStats

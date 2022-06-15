@@ -3,6 +3,8 @@ package `fun`.familyfunforce.cosmos.loadout
 import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
+import com.simsilica.es.EntityComponent
+import com.simsilica.es.EntityId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 
@@ -22,8 +24,8 @@ fun getEquipmentFromId(id: String): Equipment?{
 /**
  * Adds this piece of equipment to the cache
  */
-fun cacheEquipment(equipment: Equipment){
-    EQUIPMENT_CACHE[equipment.equipmentId] = equipment
+fun cacheEquipment(passiveEquipment: Equipment){
+    EQUIPMENT_CACHE[passiveEquipment.equipmentId] = passiveEquipment
 }
 
 @Serializable
@@ -43,7 +45,13 @@ abstract class Equipment{
     abstract val equipmentType: EquipmentType
     abstract val size:Int
     abstract val power:Int
+}
 
+/**
+ * Passive equipment are things that simply modify the ship stats. These don't need to be activated, they simply modify the
+ * ship when it spawns or when they are destroyed
+ */
+abstract class PassiveEquipment: Equipment(){
     /**
      * Get the vehicle stats as they have been modified by this equipment.
      * @inStats Read-only vehicle stats to modify
@@ -53,7 +61,14 @@ abstract class Equipment{
     abstract fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout)
 }
 
-class EquipmentKey(name: String): AssetKey<Equipment>(name)
+/**
+ * Active equipment need to be activated to function. These will create entities when spawned and can be turned on/off
+ */
+abstract class ActiveEquipment: Equipment(){
+    abstract fun createComponents(parentId: EntityId, inStats: MutableMap<String, Any>, loadout: Loadout):List<EntityComponent>
+}
+
+class EquipmentKey(name: String): AssetKey<PassiveEquipment>(name)
 
 /**
  * Simple json equipment loader that caches the equipment as it is loaded
@@ -61,7 +76,7 @@ class EquipmentKey(name: String): AssetKey<Equipment>(name)
 class EquipmentLoader: AssetLoader {
     override fun load(assetInfo: AssetInfo): Any {
         val assetString = assetInfo.openStream().bufferedReader().use{it.readText()}
-        val equip = VEHICLE_FORMAT.decodeFromString<Equipment>(assetString)
+        val equip = VEHICLE_FORMAT.decodeFromString<PassiveEquipment>(assetString)
         cacheEquipment(equip)
         return equip
     }
@@ -76,13 +91,15 @@ const val EN_STORAGE = "EnergyStorage"
 const val EN_RECHARGE = "EnergyRecharge"
 const val EN_CYCLE_TIME = "EnergyCycleTime"
 const val SEN_RANGE_MAX = "SensorRangeMax"
+const val WEP_CYCLE_TIME = "WeaponCycleTime"
+const val WEP_MAX_RANGE = "WeaponMaxRange"
 
 /**
  * A piece of equipment that directly applies thrust
  */
 @Serializable
 data class EngineEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power:Int,
-                       val maxSpeed: Double, val maxThrust: Double): Equipment(){
+                       val maxSpeed: Double, val maxThrust: Double): PassiveEquipment(){
     override val equipmentType = EquipmentType.ENGINE
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout) {
         val curMaxSpeed = inStats[MAX_SPEED] as Double? ?: 0.0
@@ -97,7 +114,7 @@ data class EngineEquip(override val equipmentId: String, override val name: Stri
  */
 @Serializable
 data class CargoEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
-                      val volume:Double): Equipment(){
+                      val volume:Double): PassiveEquipment(){
     override val equipmentType = EquipmentType.CARGO
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout){
         val curCargoCap = inStats[CARGO_VOLUME] as Double? ?: 0.0
@@ -110,7 +127,7 @@ data class CargoEquip(override val equipmentId: String, override val name: Strin
  */
 @Serializable
 data class EnergyGridEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
-                           val storage: Long, val recharge: Long, val cycleTime: Double): Equipment(){
+                           val storage: Long, val recharge: Long, val cycleTime: Double): PassiveEquipment(){
     override val equipmentType = EquipmentType.ENERGY
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout) {
         val enStorage = inStats[EN_STORAGE] as Long? ?: 0L
@@ -124,11 +141,21 @@ data class EnergyGridEquip(override val equipmentId: String, override val name: 
 
 @Serializable
 data class SensorEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
-                       val range:Double): Equipment(){
+                       val range:Double): PassiveEquipment(){
     override val equipmentType = EquipmentType.SENSOR
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout){
         val senMax = inStats[SEN_RANGE_MAX] as Double? ?: 0.0
         inStats[SEN_RANGE_MAX] = senMax + range
+    }
+}
+
+@Serializable
+data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
+                       val cycleTimeMillis:Long, val maxRange:Double): ActiveEquipment(){
+    override val equipmentType: EquipmentType = EquipmentType.WEAPON
+
+    override fun createComponents(parentId: EntityId, inStats: MutableMap<String, Any>, loadout: Loadout): List<EntityComponent> {
+        TODO("Not yet implemented")
     }
 }
 
