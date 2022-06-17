@@ -57,7 +57,7 @@ fun generateTestEquipment(){
     cacheEquipment(CargoEquip("Hold", "Cargo Hold", 3, 10, 10.0))
     cacheEquipment(EnergyGridEquip("EnGrid", "Reactor", 3, 25, 100, 10, 3.0))
     cacheEquipment(SensorEquip("Sensor", "Radar", 1, 25, 1000.0))
-    cacheEquipment(WeaponEquip("Weapon", "Gun", 1, 15, 2500, 500.0))
+    cacheEquipment(WeaponEquip("Weapon", "Gun", 1, 15, 2500, 500.0, 2.5))
 }
 
 /**

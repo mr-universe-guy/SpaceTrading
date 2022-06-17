@@ -32,9 +32,8 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         it.value.filterIsInstance<ActiveEquipment>().forEach { equip ->
             val equipId = data.createEntity()
             //default components
-            data.setComponents(equipId,
-                Name(equip.name), *equip.createComponents(id,stats,loadout).toTypedArray()
-            )
+            data.setComponents(equipId, Name(equip.name), CycleTimer(Long.MIN_VALUE, equip.duration),
+                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId))
         }
     }
     return id

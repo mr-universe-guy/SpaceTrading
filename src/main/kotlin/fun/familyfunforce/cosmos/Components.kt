@@ -113,4 +113,15 @@ data class Sensors(val range: Double): EntityComponent
  */
 data class TargetLock(val targetId: EntityId): EntityComponent
 
-data class CycleTimer(val nextCycle: Long): EntityComponent
+/**
+ * Store the time the next cycle is supposed to occur as well as the amount of time in seconds a cycle lasts
+ */
+data class CycleTimer(val nextCycle: Long, val duration:Double): EntityComponent
+
+data class AttackStrength(val atk: Int): EntityComponent
+
+data class Activate(val active:Boolean): EntityComponent
+
+data class EquipmentAsset(val key:String): EntityComponent
+
+data class Parent(val parentId:EntityId): EntityComponent

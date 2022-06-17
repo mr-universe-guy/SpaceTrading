@@ -3,7 +3,7 @@ package `fun`.familyfunforce.cosmos.loadout
 import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
-import com.simsilica.es.EntityComponent
+import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -24,8 +24,8 @@ fun getEquipmentFromId(id: String): Equipment?{
 /**
  * Adds this piece of equipment to the cache
  */
-fun cacheEquipment(passiveEquipment: Equipment){
-    EQUIPMENT_CACHE[passiveEquipment.equipmentId] = passiveEquipment
+fun cacheEquipment(Equipment: Equipment){
+    EQUIPMENT_CACHE[Equipment.equipmentId] = Equipment
 }
 
 @Serializable
@@ -65,10 +65,11 @@ abstract class PassiveEquipment: Equipment(){
  * Active equipment need to be activated to function. These will create entities when spawned and can be turned on/off
  */
 abstract class ActiveEquipment: Equipment(){
-    abstract fun createComponents(parentId: EntityId, inStats: MutableMap<String, Any>, loadout: Loadout):List<EntityComponent>
+    abstract val duration: Double
+    abstract fun activate(parentId: EntityId, data:EntityData)
 }
 
-class EquipmentKey(name: String): AssetKey<PassiveEquipment>(name)
+class EquipmentKey(name: String): AssetKey<Equipment>(name)
 
 /**
  * Simple json equipment loader that caches the equipment as it is loaded
@@ -76,7 +77,7 @@ class EquipmentKey(name: String): AssetKey<PassiveEquipment>(name)
 class EquipmentLoader: AssetLoader {
     override fun load(assetInfo: AssetInfo): Any {
         val assetString = assetInfo.openStream().bufferedReader().use{it.readText()}
-        val equip = VEHICLE_FORMAT.decodeFromString<PassiveEquipment>(assetString)
+        val equip = VEHICLE_FORMAT.decodeFromString<Equipment>(assetString)
         cacheEquipment(equip)
         return equip
     }
@@ -91,8 +92,6 @@ const val EN_STORAGE = "EnergyStorage"
 const val EN_RECHARGE = "EnergyRecharge"
 const val EN_CYCLE_TIME = "EnergyCycleTime"
 const val SEN_RANGE_MAX = "SensorRangeMax"
-const val WEP_CYCLE_TIME = "WeaponCycleTime"
-const val WEP_MAX_RANGE = "WeaponMaxRange"
 
 /**
  * A piece of equipment that directly applies thrust
@@ -151,11 +150,12 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 
 @Serializable
 data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
-                       val cycleTimeMillis:Long, val maxRange:Double): ActiveEquipment(){
+                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double): ActiveEquipment(){
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
 
-    override fun createComponents(parentId: EntityId, inStats: MutableMap<String, Any>, loadout: Loadout): List<EntityComponent> {
-        TODO("Not yet implemented")
+    override fun activate(parentId: EntityId, data:EntityData) {
+        println("Weapon activated")
+        //TODO("Not yet implemented")
     }
 }
 

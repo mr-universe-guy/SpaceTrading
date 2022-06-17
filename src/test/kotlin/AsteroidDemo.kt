@@ -32,6 +32,7 @@ class AsteroidDemo: SpaceTraderApp(false){
         manager.addSystem(EngineSystem())
         manager.register(EnergySystem::class.java, EnergySystem())
         manager.register(SensorSystem::class.java, SensorSystem())
+        manager.addSystem(ActiveEquipmentSystem())
         //use general visuals
         stateManager.attach(VisualState())
         val cameraManagerState = CameraManagerState(cam)
