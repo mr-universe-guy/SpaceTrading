@@ -28,7 +28,7 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
             //we only care about active equipment that has completed its cycle
             if(!it.get(Activate::class.java).active || cycle.nextCycle>curTime) return
             //increment next cycle and activate
-            val equip = getEquipmentFromId(it.get(EquipmentAsset::class.java).key)
+            val equip = getEquipmentFromId(it.get(EquipmentAsset::class.java).equipmentId)
             //TODO: do this better?
             if(equip !is ActiveEquipment) throw Exception("Equipment $equip is not an active equipment")
             it.set(CycleTimer(time.getFutureTime(cycle.duration), cycle.duration))

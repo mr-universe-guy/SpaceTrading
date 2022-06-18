@@ -35,6 +35,7 @@ private const val HUD_SELECTION_NAME = "Selected_name"
  */
 class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
+    private lateinit var shipEquipment: EntitySet
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
 
     //lemur hud elements
@@ -77,6 +78,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
         sensorSys = app.manager.get(SensorSystem::class.java)
+        shipEquipment = data.getEntities(ParentFilter(null), Parent::class.java)
         //focus
         EventBus.addListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusGained)
         //build lemur hud
@@ -164,6 +166,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             }
         }
         if(playerShip?.applyChanges() == true){
+            //do ship equipment processing
+            shipEquipment.applyChanges()
+            println("${shipEquipment.size}")
             //does player have a target
             val tgtId = playerShip?.get(TargetLock::class.java)?.targetId
             if(tgtId != target?.id){
@@ -206,6 +211,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         playerShip?.release()
         playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
             TargetLock::class.java)
+        shipEquipment.resetFilter(ParentFilter(id))
         playerId = null
     }
 

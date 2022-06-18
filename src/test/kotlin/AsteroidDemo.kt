@@ -20,7 +20,6 @@ class AsteroidDemo: SpaceTraderApp(false){
         super.simpleInitApp()
         //data
         val dataSystem = LocalDataSystem()
-        //TODO: Change this database to the release database
         dataSystem.getItemDatabase().fromCSV("/TestItemDB.csv")
         manager.register(DataSystem::class.java, dataSystem)
         //focus

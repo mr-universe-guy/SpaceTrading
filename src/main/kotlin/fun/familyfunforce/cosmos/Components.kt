@@ -1,5 +1,6 @@
 package `fun`.familyfunforce.cosmos
 
+import com.simsilica.es.ComponentFilter
 import com.simsilica.es.EntityComponent
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
@@ -97,10 +98,16 @@ data class Energy(val curEnergy: Long): EntityComponent
  */
 data class EnergyGridInfo(val maxEnergy: Long, val recharge: Long, val cycleTime: Double): EntityComponent
 
+/**
+ * Categories of objects that can spawn. Used to determine hud elements and sorting player side
+ */
 enum class Category{
     SHIP, ASTEROID
 }
 
+/**
+ * Component to store the Category of a given entity. Used to sort HUD elements and similar
+ */
 data class ObjectCategory(val category: Category): EntityComponent
 
 /**
@@ -120,8 +127,34 @@ data class CycleTimer(val nextCycle: Long, val duration:Double): EntityComponent
 
 data class AttackStrength(val atk: Int): EntityComponent
 
+/**
+ * Simple active/not active component
+ */
 data class Activate(val active:Boolean): EntityComponent
 
-data class EquipmentAsset(val key:String): EntityComponent
+/**
+ * Component holding the EquipmentId of a given piece of equipment
+ */
+data class EquipmentAsset(val equipmentId:String): EntityComponent
 
+/**
+ * Identifies an entity ID that acts as the parent to this entity
+ */
 data class Parent(val parentId:EntityId): EntityComponent
+
+/**
+ * Finds only Parent components that have a parentId matching the specified ID
+ * @param parentId The EntityId to match, or Null to always return false
+ */
+class ParentFilter(private val parentId:EntityId?): ComponentFilter<Parent> {
+    override fun getComponentType(): Class<Parent> {
+        return Parent::class.java
+    }
+
+    override fun evaluate(c: EntityComponent?): Boolean {
+        parentId ?: return false
+        c ?: return false
+        if(c !is Parent) return false
+        return c.parentId==parentId
+    }
+}
