@@ -33,7 +33,7 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
             val equipId = data.createEntity()
             //default components
             data.setComponents(equipId, Name(equip.name), CycleTimer(Long.MIN_VALUE, equip.duration),
-                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId))
+                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId), Name(equip.name))
         }
     }
     return id

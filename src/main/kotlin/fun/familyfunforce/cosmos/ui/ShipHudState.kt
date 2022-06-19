@@ -26,8 +26,8 @@ import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.lemur.style.ElementId
 import com.simsilica.mathd.Vec3d
-
-private const val HUD_SELECTION_NAME = "Selected_name"
+import com.simsilica.sim.SimTime
+import kotlin.math.max
 
 /**
  * A state to manage the interactive ship Hud and UI.
@@ -35,8 +35,9 @@ private const val HUD_SELECTION_NAME = "Selected_name"
  */
 class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
-    private lateinit var shipEquipment: EntitySet
+    private lateinit var shipEquipment: EquipmentContainer
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
+    private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox, val cycleProg:ProgressBar)
 
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
@@ -45,7 +46,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     //all panels go on the dash
     private val dashboard = Container(BorderLayout())
     //interaction panel
-    private val interactionPanel = Container(BorderLayout())
+    private val equipmentPanel = Container(BoxLayout(Axis.X, FillMode.None))
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
@@ -58,7 +59,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         override fun execute(source: Button?) {approachSelection()}
     }
     init{
-        dashboard.addChild(interactionPanel, BorderLayout.Position.Center)
+        dashboard.addChild(equipmentPanel, BorderLayout.Position.Center)
         dashboard.addChild(mapContainer, BorderLayout.Position.East)
         dashboard.addChild(navContainer, BorderLayout.Position.West)
     }
@@ -78,7 +79,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val app = _app as SpaceTraderApp
         data = app.manager.get(DataSystem::class.java).getPhysicsData()
         sensorSys = app.manager.get(SensorSystem::class.java)
-        shipEquipment = data.getEntities(ParentFilter(null), Parent::class.java)
+        shipEquipment = EquipmentContainer(data)
+        shipEquipment.start()
         //focus
         EventBus.addListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusGained)
         //build lemur hud
@@ -92,14 +94,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         velocityIndicator.textHAlignment = HAlignment.Center
         readoutContainer.addChild(velocityIndicator)
         hudNode.attachChild(readoutContainer)
-        //Interaction panel
-        /*
-         * This panel is used for interacting with the currently focuses entity,
-         *  or returning focus to the current target
-         */
-        val selectionName = Label("")
-        selectionName.name = HUD_SELECTION_NAME
-        interactionPanel.addChild(selectionName, BorderLayout.Position.North)
+        //Equipment Panel
+
         //minimap info
         val mapInfoName = Label("")
         mapInfoName.name = "NAME"
@@ -138,7 +134,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         mapper.addStateListener(this, SHIP_NEXT_TARGET)
         println("Ship Hud Enabled")
         targetMap = TargetContainer(data, application.camera)
-        targetMap.start()
     }
 
     override fun cleanup(app: Application?) {
@@ -150,11 +145,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val app = application as SpaceTraderApp
         app.guiNode.attachChild(hudNode)
         mapper.activateGroup(SHIP_INPUT_GROUP)
+        targetMap.start()
     }
 
     override fun onDisable() {
         hudNode.removeFromParent()
         mapper.deactivateGroup(SHIP_INPUT_GROUP)
+        shipEquipment.stop()
     }
 
     override fun update(tpf: Float) {
@@ -165,10 +162,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                 EventBus.publish(ThrottleOrderEvent.setThrottle, ThrottleOrderEvent(playerShip!!.id, throttle.get()))
             }
         }
+        //do ship equipment processing
+        val simTime = (application as SpaceTraderApp).loop.stepTime
+        shipEquipment.update(simTime)
         if(playerShip?.applyChanges() == true){
-            //do ship equipment processing
-            shipEquipment.applyChanges()
-            println("${shipEquipment.size}")
+            //println("${shipEquipment.size}")
             //does player have a target
             val tgtId = playerShip?.get(TargetLock::class.java)?.targetId
             if(tgtId != target?.id){
@@ -203,8 +201,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         velocityIndicator.text = "${floatFormat.format(velocity.length())} M/S"
         val energy = playerShip.get(Energy::class.java)?.curEnergy ?: 0.0
         energyGauge.text = "$energy% Energy"
-        val targetName = target?.get(Name::class.java)?.name ?: ""
-        (interactionPanel.getChild(HUD_SELECTION_NAME) as Label).text = targetName
+        //val targetName = target?.get(Name::class.java)?.name ?: ""
+        //(equipmentPanel.getChild(HUD_SELECTION_NAME) as Label).text = targetName
     }
 
     private fun watchPlayer(id: EntityId){
@@ -280,6 +278,50 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         }
     }
 
+    private inner class EquipmentContainer(data:EntityData):EntityContainer<EquipmentUIElement>(data,
+        ParentFilter(null), Parent::class.java, Activate::class.java, Name::class.java, CycleTimer::class.java){
+        override fun addObject(e: Entity): EquipmentUIElement {
+            println("Adding $e")
+            //make a mini container to hold the equipment and all it's data
+            val eqpCont = Container(BorderLayout())
+            eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
+            val eqpButton = Checkbox("")
+            eqpButton.isChecked = e.get(Activate::class.java)!!.active
+            eqpButton.addClickCommands { e.set(Activate(eqpButton.isChecked)) }
+            eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
+            equipmentPanel.addChild(eqpCont)
+            val cycleTimer = e.get(CycleTimer::class.java)!!
+            val cycleBar = ProgressBar(DefaultRangedValueModel(0.0,cycleTimer.duration, 0.0))
+            cycleBar.setUserData("CycleEnd", cycleTimer.nextCycle)
+            eqpCont.addChild(cycleBar, BorderLayout.Position.South)
+            return EquipmentUIElement(e.id, eqpCont, eqpButton, cycleBar)
+        }
+
+        override fun updateObject(eqp: EquipmentUIElement, e: Entity) {
+            //update checkbox and progress slider
+            eqp.activeButton.isChecked=e.get(Activate::class.java).active
+            eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
+        }
+
+        override fun removeObject(eqp: EquipmentUIElement, e: Entity?) {
+            equipmentPanel.removeChild(eqp.equipPane)
+        }
+
+        fun update(time:SimTime): Boolean {
+            val changes = super.update()
+            array.forEach {
+                val deltaSeconds = max(0.0,(it.cycleProg.getUserData<Long>("CycleEnd")-time.time)*time.timeScale)
+                it.cycleProg.progressValue=it.cycleProg.model.maximum-deltaSeconds
+                it.cycleProg.message=String.format("%.1f", deltaSeconds)
+            }
+            return changes
+        }
+
+        fun resetFilter(f:ComponentFilter<out EntityComponent>){
+            this.setFilter(f)
+        }
+    }
+
     private inner class TargetContainer(data:EntityData, val cam:Camera):EntityContainer<TargetUIElement>(data, Position::class.java){
         override fun addObject(e: Entity): TargetUIElement {
             val pane = HudBracket()
@@ -341,7 +383,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 }
 
-class HudBracket():Panel(32f,32f, ElementId(ELEMENT_ID), null){
+class HudBracket:Panel(32f,32f, ElementId(ELEMENT_ID), null){
     companion object{
         const val ELEMENT_ID = "bracket"
     }
