@@ -1,6 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import `fun`.familyfunforce.cosmos.VisualState
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
@@ -14,6 +13,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventListener
 import com.simsilica.event.EventType
+import com.simsilica.lemur.GuiGlobals
 import com.simsilica.lemur.input.*
 import com.simsilica.mathd.Vec3d
 
@@ -52,14 +52,14 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun onEnable() {
-        val mapper = (application as SpaceTraderApp).manager.get(InputMapper::class.java)
+        val mapper = GuiGlobals.getInstance().inputMapper
         mapper.addAnalogListener(this, CAM_INPUT_YAW, CAM_INPUT_PITCH, CAM_INPUT_ZOOM)
         mapper.addStateListener(this, CAM_INPUT_HOLDTOROTATE)
         mapper.activateGroup(CAM_INPUT_GROUP)
     }
 
     override fun onDisable() {
-        val mapper = (application as SpaceTraderApp).manager.get(InputMapper::class.java)
+        val mapper = GuiGlobals.getInstance().inputMapper
         mapper.removeAnalogListener(this, CAM_INPUT_YAW, CAM_INPUT_PITCH, CAM_INPUT_ZOOM)
         mapper.removeStateListener(this, CAM_INPUT_HOLDTOROTATE)
     }

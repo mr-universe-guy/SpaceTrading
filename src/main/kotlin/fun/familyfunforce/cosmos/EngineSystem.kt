@@ -15,7 +15,7 @@ class EngineSystem: AbstractGameSystem() {
     private lateinit var physicsSystem: LocalPhysicsSystem
 
     override fun initialize() {
-        data = getSystem(DataSystem::class.java).getPhysicsData()
+        data = getSystem(DataSystem::class.java).entityData
         engines = data.getEntities(Velocity::class.java, Engine::class.java, EngineDriver::class.java)
         physicsSystem = getSystem(LocalPhysicsSystem::class.java)
     }

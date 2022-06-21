@@ -11,7 +11,7 @@ class EnergySystem: AbstractGameSystem() {
     private lateinit var data: EntityData
     private lateinit var gridContainer: GridContainer
     override fun initialize() {
-        data = getSystem(DataSystem::class.java).getPhysicsData()
+        data = getSystem(DataSystem::class.java).entityData
         gridContainer = GridContainer((data))
         gridContainer.start()
     }

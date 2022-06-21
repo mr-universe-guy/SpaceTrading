@@ -39,7 +39,7 @@ class SystemMapState : BaseAppState(){
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         mat = Material(app.assetManager, "Common/MatDefs/Misc/Unshaded.j3md")
-        val data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        val data = getState(ClientDataState::class.java).entityData
         container = StellarContainer(data)
     }
 

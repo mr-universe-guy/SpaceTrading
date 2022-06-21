@@ -18,7 +18,7 @@ class ActionSystem: AbstractGameSystem() {
     private val unitActions = HashMap<EntityId, Action>()
 
     override fun initialize() {
-        data = getSystem(DataSystem::class.java).getPhysicsData()
+        data = getSystem(DataSystem::class.java).entityData
         EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle, ApproachOrderEvent.approachTarget)
     }
 

@@ -1,48 +1,82 @@
 package `fun`.familyfunforce.cosmos
 
+import com.jme3.network.serializing.Serializer
+import com.jme3.network.serializing.serializers.FieldSerializer
 import com.simsilica.es.ComponentFilter
 import com.simsilica.es.EntityComponent
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 
+object Serializers{
+    private val classes = arrayOf(
+        Name::class.java,
+        Position::class.java,
+        Velocity::class.java,
+        VisualAsset::class.java,
+        Vec3d::class.java,
+        ObjectCategory::class.java,
+        Parent::class.java,
+        Activate::class.java,
+        CycleTimer::class.java,
+        ParentFilter::class.java,
+        TargetLock::class.java,
+        Energy::class.java
+    )
+
+    fun registerClasses(){
+        classes.forEach {
+            Serializer.registerClass(it, FieldSerializer())
+            println("$it registered")
+        }
+    }
+}
+
 /**
  * An entities display name
  */
-data class Name(val name:String): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Name(var name:String): EntityComponent{
+    constructor() : this("")
+}
 
 /**
  * The grid-local 3d position of an entity
  */
-data class Position(val position:Vec3d): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Position(var position:Vec3d): EntityComponent{
+    constructor() : this(Vec3d(0.0,0.0,0.0))
+}
 
 /**
  * The entities current velocity in m/s
  */
-data class Velocity(val velocity:Vec3d): EntityComponent{
+@com.jme3.network.serializing.Serializable
+data class Velocity(var velocity:Vec3d): EntityComponent{
     constructor(x: Double, y: Double, z: Double) : this(Vec3d(x,y,z))
+    constructor() : this(Vec3d(0.0,0.0,0.0))
 }
 
 /**
  * The mass of an entity in kg
  */
-data class Mass(val mass:Double): EntityComponent
+data class Mass(var mass:Double): EntityComponent
 
 /**
  * The position relative to a star system referenced by the star systems id
  */
-data class StellarPosition(val systemId:Int, val position:Vec3d): EntityComponent
+data class StellarPosition(var systemId:Int, var position:Vec3d): EntityComponent
 
 /**
  * An object that can be interacted with within a star system, such as fleets, asteroids, anomalies, etc.
  */
-data class StellarObject(val radius:Double): EntityComponent
+data class StellarObject(var radius:Double): EntityComponent
 
 /**
  * Size of an entities inventory in cubic meters
  */
-data class CargoHold(val volume:Double): EntityComponent
+data class CargoHold(var volume:Double): EntityComponent
 
-data class Cargo(val items: Array<ItemStack>): EntityComponent {
+data class Cargo(var items: Array<ItemStack>): EntityComponent {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -62,33 +96,39 @@ data class Cargo(val items: Array<ItemStack>): EntityComponent {
 /**
  * Apply thrust in direction until throttle percentage of max speed is met
  */
-data class EngineDriver(val direction:Vec3d): EntityComponent
+data class EngineDriver(var direction:Vec3d): EntityComponent
 
 /**
  * Engine will provide thrust until the maximum speed is met
  */
-data class Engine(val maxSpeed:Double, val thrust:Double): EntityComponent
+data class Engine(var maxSpeed:Double, var thrust:Double): EntityComponent
 
 /**
  * For now just the text to the asset. In the future this will likely have to store more info.
  */
-data class VisualAsset(val asset:String): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class VisualAsset(var asset:String): EntityComponent{
+    constructor() : this("")
+}
 
 /**
- * Read published values for an entities current action
+ * Read published varues for an entities current action
  */
-data class ActionInfo(val text: String, val status: ActionStatus): EntityComponent
+data class ActionInfo(var text: String, var status: ActionStatus): EntityComponent
 
 /**
  * Drag to be applied to moving entities to create more natural maximum speeds and accelerations
  * @param dragCoefficient Should be a number 0.0 < 1.0
  */
-data class Drag(val dragCoefficient: Double): EntityComponent
+data class Drag(var dragCoefficient: Double): EntityComponent
 
 /**
  * The current energy an entity has available
  */
-data class Energy(val curEnergy: Long): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Energy(var curEnergy: Long): EntityComponent{
+    constructor():this(0)
+}
 
 /**
  * The maximum energy an entity can have
@@ -96,11 +136,12 @@ data class Energy(val curEnergy: Long): EntityComponent
  * @param recharge the amount of energy that is re-charged per cycle
  * @param cycleTime the amount of time, in seconds to complete one recharge cycle
  */
-data class EnergyGridInfo(val maxEnergy: Long, val recharge: Long, val cycleTime: Double): EntityComponent
+data class EnergyGridInfo(var maxEnergy: Long, var recharge: Long, var cycleTime: Double): EntityComponent
 
 /**
  * Categories of objects that can spawn. Used to determine hud elements and sorting player side
  */
+@com.jme3.network.serializing.Serializable
 enum class Category{
     SHIP, ASTEROID
 }
@@ -108,45 +149,62 @@ enum class Category{
 /**
  * Component to store the Category of a given entity. Used to sort HUD elements and similar
  */
-data class ObjectCategory(val category: Category): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class ObjectCategory(var category: Category): EntityComponent{
+    constructor() : this(Category.SHIP)
+}
 
 /**
  * The stats to determine how a target can be tracked by weapons systems
  */
-data class Sensors(val range: Double): EntityComponent
+data class Sensors(var range: Double): EntityComponent
 
 /**
  * Store target locks as a component so other systems can break locks, etc
  */
-data class TargetLock(val targetId: EntityId): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class TargetLock(var targetId: EntityId): EntityComponent{
+    constructor() : this(EntityId.NULL_ID)
+}
 
 /**
  * Store the time the next cycle is supposed to occur as well as the amount of time in seconds a cycle lasts
  */
-data class CycleTimer(val nextCycle: Long, val duration:Double): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent{
+    constructor() : this(0,0.0)
+}
 
-data class AttackStrength(val atk: Int): EntityComponent
+data class AttackStrength(var atk: Int): EntityComponent
 
 /**
  * Simple active/not active component
  */
-data class Activate(val active:Boolean): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Activate(var active:Boolean): EntityComponent{
+    constructor() : this(false)
+}
 
 /**
  * Component holding the EquipmentId of a given piece of equipment
  */
-data class EquipmentAsset(val equipmentId:String): EntityComponent
+data class EquipmentAsset(var equipmentId:String): EntityComponent
 
 /**
  * Identifies an entity ID that acts as the parent to this entity
  */
-data class Parent(val parentId:EntityId): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Parent(var parentId:EntityId): EntityComponent{
+    constructor() : this(EntityId.NULL_ID)
+}
 
 /**
  * Finds only Parent components that have a parentId matching the specified ID
  * @param parentId The EntityId to match, or Null to always return false
  */
-class ParentFilter(private val parentId:EntityId?): ComponentFilter<Parent> {
+@com.jme3.network.serializing.Serializable
+class ParentFilter(private var parentId:EntityId?): ComponentFilter<Parent> {
+    constructor() : this(EntityId.NULL_ID)
     override fun getComponentType(): Class<Parent> {
         return Parent::class.java
     }

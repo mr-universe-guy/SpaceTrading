@@ -77,7 +77,7 @@ class LocalMapState: BaseAppState() {
         panel.localTranslation = Vector3f(0f,0f,10f)
         mapPanel = panel.createReference()
         //entities
-        data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        data = getState(ClientDataState::class.java).entityData
         mapObjects = MapObjectContainer(data)
     }
 

@@ -1,6 +1,6 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.ClientSystem
+import `fun`.familyfunforce.cosmos.ClientState
 import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import `fun`.familyfunforce.cosmos.TextMessage
 import com.jme3.app.Application
@@ -27,7 +27,7 @@ class ChatState: BaseAppState(){
     private var client: Client? = null
     private val chatBox = ChatBox(300f,200f)
     private val chatBoxListener = ChatBoxListener { text -> sendChatMessage(text) }
-    private val messageListener = MessageListener<Client> { s, m -> receiveChatMessage(s, m) }
+    private val messageListener = MessageListener<Client> { s, m -> receiveChatMessage(m) }
 
     override fun initialize(app: Application?) {
         app as SimpleApplication
@@ -45,14 +45,14 @@ class ChatState: BaseAppState(){
         client!!.send(msg)
     }
 
-    private fun receiveChatMessage(src:Client, msg:Message){
+    private fun receiveChatMessage(msg: Message){
         chatBox.receiveChatMsg(msg as TextMessage)
     }
 
     override fun onEnable() {
         //attach self to client
         val app = application as SpaceTraderApp
-        client = app.manager.get(ClientSystem::class.java)!!.client
+        client = app.serverManager.get(ClientState::class.java)!!.client
         client!!.addMessageListener(messageListener, TextMessage::class.java)
     }
 

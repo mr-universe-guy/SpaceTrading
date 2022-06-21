@@ -1,10 +1,12 @@
 package `fun`.familyfunforce.cosmos.ui
 
+import com.jme3.app.Application
+import com.jme3.app.state.BaseAppState
 import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
 
-class EntityFocusManager{
+class EntityFocusManager: BaseAppState(){
     init{
         EventBus.addListener(this, EntityFocusEvent.entityFocusRequest)
     }
@@ -20,6 +22,18 @@ class EntityFocusManager{
         //assign and publish the gained event
         focusedId = targetId
         targetId?.let{ EventBus.publish(EntityFocusEvent.entityFocusGained, EntityFocusEvent(it)) }
+    }
+
+    override fun initialize(app: Application?) {
+    }
+
+    override fun cleanup(app: Application?) {
+    }
+
+    override fun onEnable() {
+    }
+
+    override fun onDisable() {
     }
 }
 

@@ -1,18 +1,17 @@
 package `fun`.familyfunforce.cosmos
 
-import com.jme3.app.SimpleApplication
-import com.jme3.network.ConnectionListener
-import com.jme3.network.HostedConnection
-import com.jme3.network.Network
-import com.jme3.network.Server
+import com.jme3.app.Application
+import com.jme3.app.state.BaseAppState
+import com.jme3.network.*
 import com.jme3.network.serializing.Serializer
+import com.simsilica.es.client.EntityDataClientService
 import com.simsilica.sim.AbstractGameSystem
 
 class ServerSystem: AbstractGameSystem(){
     private val listeners = mutableListOf<ServerStatusListener>()
     var tcpPort = 6111
     var udpPort = 6111
-    var server:Server? = null
+    val server:Server = Network.createServer(SpaceTraderApp.appProperties.getProperty("name"), 0, udpPort, tcpPort)
     var serverStatus = ServerStatus.CLOSED
         private set(value) {
             field = value
@@ -28,22 +27,20 @@ class ServerSystem: AbstractGameSystem(){
 
     fun startServer() {
         serverStatus = ServerStatus.INITIALIZING
-        val name = (getSystem(SimpleApplication::class.java) as SpaceTraderApp).appProperties.getProperty("name")
-        server = Network.createServer(name,0, udpPort, tcpPort)
         initSerializables()
-        server!!.addMessageListener { source, m ->
+        server.addMessageListener { _, m ->
             if(m is TextMessage){
-                server!!.broadcast(m)
+                server.broadcast(m)
             }
         }
-        server!!.addConnectionListener(ConnListener())
-        server!!.start()
-        serverStatus = if(server!!.isRunning) ServerStatus.RUNNING else ServerStatus.CLOSED
+        server.addConnectionListener(ConnListener())
+        server.start()
+        serverStatus = if(server.isRunning) ServerStatus.RUNNING else ServerStatus.CLOSED
     }
 
     fun stopServer(){
-        if(server?.isRunning == true){
-            server!!.close()
+        if(server.isRunning){
+            server.close()
         }
         serverStatus = ServerStatus.CLOSED
     }
@@ -83,5 +80,39 @@ class ServerSystem: AbstractGameSystem(){
 
     fun interface ServerStatusListener{
         fun statusChanged(status:ServerStatus)
+    }
+}
+
+class ClientState: BaseAppState() {
+    val client: NetworkClient
+    init{
+        val name = SpaceTraderApp.appProperties.getProperty("name")
+        client = Network.createClient(name, 0)
+        //add services before client starts
+        val services = client.services
+        services.addService(EntityDataClientService(MessageConnection.CHANNEL_DEFAULT_RELIABLE))
+    }
+    private val tcpPort = 6111
+    private val udpPort = 6111
+
+    fun connectTo(dest:String){
+        client.connectToServer(dest,tcpPort,udpPort)
+        client.start()
+    }
+
+    override fun initialize(app: Application?) {
+
+    }
+
+    override fun cleanup(app: Application?) {
+    }
+
+    override fun onEnable() {
+    }
+
+    override fun onDisable() {
+        if(client.isStarted){
+            client.close()
+        }
     }
 }

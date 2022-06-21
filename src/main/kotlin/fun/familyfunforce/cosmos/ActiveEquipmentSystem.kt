@@ -12,7 +12,7 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
     private lateinit var actives:EntitySet
 
     override fun initialize() {
-        data = getSystem(DataSystem::class.java).getPhysicsData()
+        data = getSystem(DataSystem::class.java).entityData
         actives = data.getEntities(EquipmentAsset::class.java, CycleTimer::class.java, Activate::class.java, Parent::class.java)
     }
 

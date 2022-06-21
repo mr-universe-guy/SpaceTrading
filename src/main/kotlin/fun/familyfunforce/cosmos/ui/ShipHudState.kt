@@ -77,8 +77,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
-        data = app.manager.get(DataSystem::class.java).getPhysicsData()
-        sensorSys = app.manager.get(SensorSystem::class.java)
+        data = getState(ClientDataState::class.java).entityData
+        sensorSys = app.serverManager.get(SensorSystem::class.java)
         shipEquipment = EquipmentContainer(data)
         shipEquipment.start()
         //focus
@@ -163,7 +163,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             }
         }
         //do ship equipment processing
-        val simTime = (application as SpaceTraderApp).loop.stepTime
+        val simTime = (application as SpaceTraderApp).serverLoop.stepTime
         shipEquipment.update(simTime)
         if(playerShip?.applyChanges() == true){
             //println("${shipEquipment.size}")
@@ -210,6 +210,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
             TargetLock::class.java)
         shipEquipment.resetFilter(ParentFilter(id))
+        println("Watching player $id")
         playerId = null
     }
 
@@ -287,7 +288,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
             eqpButton.isChecked = e.get(Activate::class.java)!!.active
-            eqpButton.addClickCommands { e.set(Activate(eqpButton.isChecked)) }
+            //eqpButton.addClickCommands { e.set(Activate(eqpButton.isChecked)) }
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
             val cycleTimer = e.get(CycleTimer::class.java)!!
