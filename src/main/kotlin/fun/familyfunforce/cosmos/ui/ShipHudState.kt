@@ -26,7 +26,6 @@ import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.lemur.style.ElementId
 import com.simsilica.mathd.Vec3d
-import com.simsilica.sim.SimTime
 import kotlin.math.max
 
 /**
@@ -37,7 +36,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
     private lateinit var shipEquipment: EquipmentContainer
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
-    private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox, val cycleProg:ProgressBar)
+    private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox,
+                                          val cycleProg:ProgressBar, var cycleEnd:Long)
 
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
@@ -163,7 +163,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             }
         }
         //do ship equipment processing
-        val simTime = (application as SpaceTraderApp).serverLoop.stepTime
+        val simTime = getState(ClientState::class.java).approxSimTime
         shipEquipment.update(simTime)
         if(playerShip?.applyChanges() == true){
             //println("${shipEquipment.size}")
@@ -180,6 +180,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         targetMap.update()
     }
 
+    //TODO: All event publishing is currently avoiding a client/server communication problem that needs fixed asap
     fun orbitSelection(){
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
@@ -288,30 +289,31 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
             eqpButton.isChecked = e.get(Activate::class.java)!!.active
+            //TODO:A form of client requests to the server to fix this
             //eqpButton.addClickCommands { e.set(Activate(eqpButton.isChecked)) }
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
             val cycleTimer = e.get(CycleTimer::class.java)!!
             val cycleBar = ProgressBar(DefaultRangedValueModel(0.0,cycleTimer.duration, 0.0))
-            cycleBar.setUserData("CycleEnd", cycleTimer.nextCycle)
             eqpCont.addChild(cycleBar, BorderLayout.Position.South)
-            return EquipmentUIElement(e.id, eqpCont, eqpButton, cycleBar)
+            return EquipmentUIElement(e.id, eqpCont, eqpButton, cycleBar, cycleTimer.nextCycle)
         }
 
         override fun updateObject(eqp: EquipmentUIElement, e: Entity) {
             //update checkbox and progress slider
             eqp.activeButton.isChecked=e.get(Activate::class.java).active
-            eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
+            eqp.cycleEnd=e.get(CycleTimer::class.java).nextCycle
+            //eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
         }
 
         override fun removeObject(eqp: EquipmentUIElement, e: Entity?) {
             equipmentPanel.removeChild(eqp.equipPane)
         }
 
-        fun update(time:SimTime): Boolean {
+        fun update(time:Long): Boolean {
             val changes = super.update()
             array.forEach {
-                val deltaSeconds = max(0.0,(it.cycleProg.getUserData<Long>("CycleEnd")-time.time)*time.timeScale)
+                val deltaSeconds = max(0.0,(it.cycleEnd-time)*NANOS_TO_SECONDS)
                 it.cycleProg.progressValue=it.cycleProg.model.maximum-deltaSeconds
                 it.cycleProg.message=String.format("%.1f", deltaSeconds)
             }

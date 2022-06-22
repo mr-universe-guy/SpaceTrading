@@ -6,6 +6,15 @@ import com.jme3.network.*
 import com.jme3.network.serializing.Serializer
 import com.simsilica.es.client.EntityDataClientService
 import com.simsilica.sim.AbstractGameSystem
+import com.simsilica.sim.SimTime
+import java.util.concurrent.TimeUnit
+
+const val NANOS_TO_SECONDS = 1.0/1_000_000_000.0
+
+@com.jme3.network.serializing.Serializable
+data class TimerMessage(var serverTime:Long, var lastUpdateTime:Long):AbstractMessage(true){
+    constructor():this(0,0)
+}
 
 class ServerSystem: AbstractGameSystem(){
     private val listeners = mutableListOf<ServerStatusListener>()
@@ -19,10 +28,12 @@ class ServerSystem: AbstractGameSystem(){
         }
 
     override fun initialize() {
-
     }
 
     override fun terminate() {
+    }
+
+    override fun update(time: SimTime?) {
     }
 
     fun startServer() {
@@ -33,6 +44,7 @@ class ServerSystem: AbstractGameSystem(){
                 server.broadcast(m)
             }
         }
+        server.addMessageListener(TimerListener(), TimerMessage::class.java)
         server.addConnectionListener(ConnListener())
         server.start()
         serverStatus = if(server.isRunning) ServerStatus.RUNNING else ServerStatus.CLOSED
@@ -46,21 +58,34 @@ class ServerSystem: AbstractGameSystem(){
     }
 
     private fun initSerializables() {
-        Serializer.registerClass(TextMessage::class.java)
+        Serializer.registerClasses(TextMessage::class.java, TimerMessage::class.java)
     }
 
     override fun stop() {
         stopServer()
     }
 
-    private class ConnListener: ConnectionListener{
-        override fun connectionAdded(server: Server?, conn: HostedConnection?) {
+    fun sendTimer(conn:HostedConnection){
+        //val serverTime = java.lang.System.nanoTime()
+        val unlocked = manager.stepTime.getUnlockedTime(java.lang.System.nanoTime())
+        conn.send(TimerMessage(unlocked, unlocked))
+    }
+
+    private inner class ConnListener: ConnectionListener{
+        override fun connectionAdded(server: Server?, conn: HostedConnection) {
             println("Connection established: $conn")
             server!!.broadcast(TextMessage("New Player: $conn"))
+            sendTimer(conn)
         }
 
         override fun connectionRemoved(server: Server?, conn: HostedConnection?) {
             println("$conn disconnected")
+        }
+    }
+
+    private inner class TimerListener: MessageListener<HostedConnection>{
+        override fun messageReceived(source: HostedConnection?, m: Message?) {
+            sendTimer(source!!)
         }
     }
 
@@ -85,12 +110,23 @@ class ServerSystem: AbstractGameSystem(){
 
 class ClientState: BaseAppState() {
     val client: NetworkClient
+    var lastServerUpdate = Long.MIN_VALUE
+    private var lastFrameTime = java.lang.System.nanoTime()
+    private var lastPingTime = lastFrameTime
+    @Volatile var approxSimTime = lastFrameTime
+
+    /**
+     * Time it takes for a message to go one way in millis
+     */
+    var ping = 0L
+
     init{
         val name = SpaceTraderApp.appProperties.getProperty("name")
         client = Network.createClient(name, 0)
         //add services before client starts
         val services = client.services
         services.addService(EntityDataClientService(MessageConnection.CHANNEL_DEFAULT_RELIABLE))
+        client.addMessageListener(TimerListener(), TimerMessage::class.java)
     }
     private val tcpPort = 6111
     private val udpPort = 6111
@@ -98,6 +134,13 @@ class ClientState: BaseAppState() {
     fun connectTo(dest:String){
         client.connectToServer(dest,tcpPort,udpPort)
         client.start()
+    }
+
+    override fun update(tpf: Float) {
+        val curTime = java.lang.System.nanoTime()
+        val delta = curTime-lastFrameTime
+        approxSimTime += delta
+        lastFrameTime=curTime
     }
 
     override fun initialize(app: Application?) {
@@ -113,6 +156,22 @@ class ClientState: BaseAppState() {
     override fun onDisable() {
         if(client.isStarted){
             client.close()
+        }
+    }
+
+    private inner class TimerListener:MessageListener<Client>{
+        override fun messageReceived(source: Client?, m: Message?) {
+            //we're gonna do some figuring out here
+            m as TimerMessage
+            lastServerUpdate = m.serverTime
+            val curTime = java.lang.System.nanoTime()
+            val deltaNanos = curTime-lastPingTime
+            val pingNanos = deltaNanos/2
+            ping = TimeUnit.NANOSECONDS.toMillis(pingNanos)
+            //println("ping:$ping")
+            source!!.send(m)
+            lastPingTime = curTime
+            approxSimTime = lastServerUpdate+pingNanos
         }
     }
 }

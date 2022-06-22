@@ -74,6 +74,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         //Game Systems
         serverManager = GameSystemManager()
         serverLoop = GameLoop(serverManager, SERVER_RATE)
+        serverManager.register(GameLoop::class.java, serverLoop)
         //manager.register(SimpleApplication::class.java, this)
         //manager.register(InputMapper::class.java, GuiGlobals.getInstance().inputMapper)
 
