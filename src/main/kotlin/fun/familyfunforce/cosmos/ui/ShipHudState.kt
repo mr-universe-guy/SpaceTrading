@@ -185,7 +185,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
-                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, focusedEntity!!, value))
+                focusedEntity?.let{
+                    EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, focusedEntity!!, value))
+                }
             }
         }
         popState.centerInGui(popup)
@@ -193,7 +195,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     fun approachSelection(){
-        EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(playerShip!!.id, focusedEntity!!, 0.0))
+        focusedEntity?.let {
+            EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(playerShip!!.id, focusedEntity!!, 0.0))
+        }
     }
 
     private fun updatePlayerGui(playerShip: WatchedEntity){
