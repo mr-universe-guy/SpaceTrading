@@ -23,7 +23,7 @@ object Serializers{
         Energy::class.java
     )
 
-    fun registerClasses(){
+    fun serializeComponents(){
         classes.forEach {
             Serializer.registerClass(it, FieldSerializer())
             println("$it registered")
@@ -174,8 +174,6 @@ data class TargetLock(var targetId: EntityId): EntityComponent{
 data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent{
     constructor() : this(0,0.0)
 }
-
-data class AttackStrength(var atk: Int): EntityComponent
 
 /**
  * Simple active/not active component

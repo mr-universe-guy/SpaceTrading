@@ -3,11 +3,21 @@ package `fun`.familyfunforce.cosmos
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
+import com.jme3.app.Application
+import com.jme3.app.state.BaseAppState
+import com.jme3.network.Client
+import com.jme3.network.service.rmi.RmiClientService
+import com.jme3.network.service.rmi.RmiHostedService
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+
+interface ActionRMI{
+    fun setAction(id:EntityId, action:Action)
+    fun setThrottle(id:EntityId, throttle:Double)
+}
 
 /**
  * Actions are the micro level AI decisions performed by units in a fleet. These will need to be very cheap as every fleet
@@ -19,11 +29,23 @@ class ActionSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle, ApproachOrderEvent.approachTarget)
+        val server = getSystem(ServerSystem::class.java).server
+        //register an rmi service for user input
+        val rmi = object: ActionRMI {
+            override fun setAction(id: EntityId, action: Action) {
+                manager.enqueue { unitActions[id] = action }
+            }
+
+            override fun setThrottle(id: EntityId, throttle: Double) {
+                manager.enqueue { unitActions[id]!!.setThrottle(throttle) }
+            }
+
+        }
+        server.services.getService(RmiHostedService::class.java).shareGlobal(rmi, ActionRMI::class.java)
     }
 
     override fun terminate() {
-        EventBus.removeListener(this, OrbitOrderEvent.orbitTarget)
+
     }
 
     override fun update(time: SimTime) {
@@ -53,19 +75,34 @@ class ActionSystem: AbstractGameSystem() {
         }
     }
 
-    fun orbitTarget(orb: OrbitOrderEvent){
-        setAction(orb.shipId, OrbitAction(orb.targetId, orb.range))
-    }
-
-    fun setThrottle(evt: ThrottleOrderEvent){
-        getAction(evt.shipId)?.setThrottle(evt.throttle)
-    }
-
-    fun approachTarget(evt: ApproachOrderEvent){
-        setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))
-    }
-
     fun getAction(id: EntityId): Action?{
         return unitActions[id]
     }
+}
+
+/**
+ * A class that listens to events intended to be forwarded to the server
+ */
+class ClientActionEventResponder: BaseAppState(){
+    private lateinit var rmiHandler: ActionRMI
+    private lateinit var client: Client
+
+    override fun initialize(app: Application?) {
+        client = getState(ClientState::class.java).client
+        rmiHandler = client.services.getService(RmiClientService::class.java).getRemoteObject(ActionRMI::class.java)
+    }
+
+    fun orbitTarget(orb: OrbitOrderEvent){rmiHandler.setAction(orb.shipId, OrbitAction(orb.targetId, orb.range))}
+
+    fun setThrottle(evt: ThrottleOrderEvent){rmiHandler.setThrottle(evt.shipId, evt.throttle)}
+
+    fun approachTarget(evt: ApproachOrderEvent){rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))}
+
+    override fun cleanup(app: Application?) {}
+
+    override fun onEnable() {
+        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle, ApproachOrderEvent.approachTarget)
+    }
+
+    override fun onDisable() {}
 }

@@ -4,6 +4,10 @@ import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.network.*
 import com.jme3.network.serializing.Serializer
+import com.jme3.network.service.rmi.RmiClientService
+import com.jme3.network.service.rmi.RmiHostedService
+import com.jme3.network.service.rpc.RpcClientService
+import com.jme3.network.service.rpc.RpcHostedService
 import com.simsilica.es.client.EntityDataClientService
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
@@ -21,6 +25,11 @@ class ServerSystem: AbstractGameSystem(){
     var tcpPort = 6111
     var udpPort = 6111
     val server:Server = Network.createServer(SpaceTraderApp.appProperties.getProperty("name"), 0, udpPort, tcpPort)
+    init{
+        val services = server.services
+        services.addService(RpcHostedService())
+        services.addService(RmiHostedService())
+    }
     var serverStatus = ServerStatus.CLOSED
         private set(value) {
             field = value
@@ -126,6 +135,8 @@ class ClientState: BaseAppState() {
         //add services before client starts
         val services = client.services
         services.addService(EntityDataClientService(MessageConnection.CHANNEL_DEFAULT_RELIABLE))
+        services.addService(RpcClientService())
+        services.addService(RmiClientService())
         client.addMessageListener(TimerListener(), TimerMessage::class.java)
     }
     private val tcpPort = 6111

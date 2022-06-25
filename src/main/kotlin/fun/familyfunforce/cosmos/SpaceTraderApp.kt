@@ -69,7 +69,8 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         //I/O
         //serializer stuff
         EntitySerializers.initialize()
-        Serializers.registerClasses()
+        Serializers.serializeComponents()
+        Actions.serializeActions()
         assetManager.registerLoader(VehicleLoader::class.java, "ship")
         //Game Systems
         serverManager = GameSystemManager()

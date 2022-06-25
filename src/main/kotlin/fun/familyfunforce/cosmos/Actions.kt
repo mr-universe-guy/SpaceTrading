@@ -1,14 +1,28 @@
 package `fun`.familyfunforce.cosmos
 
+import com.jme3.network.serializing.Serializer
+import com.jme3.network.serializing.serializers.EnumSerializer
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.SimTime
 
+object Actions{
+    private val actions = arrayOf(
+        MoveAction::class.java,
+        OrbitAction::class.java,
+        ApproachAction::class.java
+    )
+
+    fun serializeActions(){
+        Serializer.registerClasses(*actions)
+        Serializer.registerClass(ActionStatus::class.java, EnumSerializer())
+    }
+}
 /**
  * Actions are per unit, short term actions such as Idle, Move, Follow, Orbit, Align, etc.
  */
-
+@com.jme3.network.serializing.Serializable
 enum class ActionStatus{
     STARTING,
     ONGOING,
@@ -37,11 +51,12 @@ abstract class AbstractAction: Action{
 /**
  * Steer the engine to maneuver the entity towards the specified destination
  */
-class MoveAction(private val destination: Vec3d): AbstractAction() {
+@com.jme3.network.serializing.Serializable
+class MoveAction(private var destination: Vec3d): AbstractAction() {
+    constructor():this(Vec3d(0.0,0.0,0.0))
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
         val pos = data.getComponent(id, Position::class.java).position
         val diff = destination.subtract(pos)
-        //println("$id heading towards $pos, ${diff.length()}")
         if(diff.lengthSq() < 10){
             data.setComponents(id,
                 EngineDriver(Vec3d(0.0,0.0,0.0)),
@@ -57,7 +72,9 @@ class MoveAction(private val destination: Vec3d): AbstractAction() {
     }
 }
 
-class ApproachAction(private val targetId: EntityId, private val distance:Double): AbstractAction(){
+@com.jme3.network.serializing.Serializable
+class ApproachAction(var targetId: EntityId, var distance:Double): AbstractAction(){
+    constructor():this(EntityId.NULL_ID, 0.0)
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
         val pos = data.getComponent(id, Position::class.java).position
         val tgtPos = data.getComponent(targetId, Position::class.java)?.position ?: return ActionStatus.FAILED
@@ -72,7 +89,9 @@ class ApproachAction(private val targetId: EntityId, private val distance:Double
 
 }
 
-class OrbitAction(private val targetId: EntityId, private val distance: Double): AbstractAction(){
+@com.jme3.network.serializing.Serializable
+class OrbitAction(var targetId: EntityId, var distance: Double): AbstractAction(){
+    constructor():this(EntityId.NULL_ID, 0.0)
     override fun update(id: EntityId, data: EntityData, time: SimTime): ActionStatus {
         //if target or self are missing a position fail early
         val pos = data.getComponent(id, Position::class.java)?.position ?: return ActionStatus.FAILED
