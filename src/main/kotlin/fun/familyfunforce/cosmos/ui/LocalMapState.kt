@@ -110,11 +110,11 @@ class LocalMapState: BaseAppState() {
     }
 
     fun entityFocusLost(evt:EntityFocusEvent){
-        throw NotImplementedError("Focus was lost $evt")
+        println("Map focus lost")
     }
 
     fun entityFocusGained(evt:EntityFocusEvent){
-        throw NotImplementedError("Focus was gained $evt")
+        println("Map focus gained $evt")
     }
 
     override fun update(tpf: Float) {
@@ -263,6 +263,7 @@ class LocalMapState: BaseAppState() {
             event?.setConsumed()
             //un-focus whatever is focused
             getState(FocusManagerState::class.java).focus = null
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null))
         }
     }
 }

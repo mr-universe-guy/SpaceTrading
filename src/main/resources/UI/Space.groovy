@@ -10,26 +10,8 @@ import fun.familyfunforce.cosmos.ui.UIAudioEvent
 def outline = TbtQuadBackgroundComponent.create("UI/SimpleBorders.png",1f,6,6,27,27,0,false)
 def bg = new QuadBackgroundComponent(color(1,1,1,1))
 def brackets = TbtQuadBackgroundComponent.create("UI/Brackets.png",1f,4,4,8,8,0,false)
-def clickSound = new Command<Button>(){
-    void execute(Button source){
-        if(source.isPressed()){
-            EventBus.publish(UIAudioEvent.playAudio, UIAudioEvent.createUIAudioEvent("click.wav"))
-        }
-    }
-}
-def clickShift = new Command<Button>(){
-    void execute(Button source){
-        if(source.isPressed()){
-            source.move(1,-1,0)
-        } else{
-            source.move(-1,1,0)
-        }
-    }
-}
-def stdButtonCommands = [
-        (Button.ButtonAction.Down):[clickSound,clickShift],
-        (Button.ButtonAction.Up):[clickShift]
-]
+def activeColor = ColorRGBA.Orange
+def inactiveColor = ColorRGBA.DarkGray
 
 selector("space"){
     fontSize=16
@@ -37,12 +19,19 @@ selector("space"){
     font=font("UI/Orbitron12.fnt")
 }
 
+Command<Button> clickSound = {if(it.isPressed()){EventBus.publish(UIAudioEvent.playAudio, UIAudioEvent.createUIAudioEvent("click.wav"))}}
+Command<Button> clickShift = {if(it.isPressed()){it.move(1,-1,0)} else{it.move(-1,1,0)}}
+Command<Button> buttonFade = {Button it ->it.background.color=inactiveColor}
+Command<Button> buttonUnFade = {Button it ->it.background.color=activeColor}
+def stdButtonCommands = [
+        (Button.ButtonAction.Down):[clickSound,clickShift],
+        (Button.ButtonAction.Up):[clickShift],
+        (Button.ButtonAction.Enabled):[buttonUnFade],
+        (Button.ButtonAction.Disabled):[buttonFade]
+]
 selector("button", "space"){
-    background = bg.clone()
+    background = outline.clone()
     background.setColor(ColorRGBA.DarkGray)
-    background.setAlpha(0.5f)
-    border=outline.clone()
-    border.setColor(ColorRGBA.Orange)
     buttonCommands=stdButtonCommands
 }
 

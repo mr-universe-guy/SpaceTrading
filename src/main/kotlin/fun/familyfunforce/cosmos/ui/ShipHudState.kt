@@ -258,14 +258,17 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     private fun selectId(id: EntityId?){
-        focusedEntity = id
-        //we should wait for update to do this :/
-        val name:String = if(id == null) "" else data.getComponent(id, Name::class.java).name
-        (mapInfoContainer.getChild("NAME") as Label).text = name
-        //set actions that require a selection to enabled/disabled
-        val enabled = id != null
-        orbitAction.isEnabled = enabled
-        println("Map item $id selected")
+        application.enqueue {
+            focusedEntity = id
+            //we should wait for update to do this :/
+            val name: String = if (id == null) "" else data.getComponent(id, Name::class.java).name
+            (mapInfoContainer.getChild("NAME") as Label).text = name
+            //set actions that require a selection to enabled/disabled
+            val enabled = (id != null)
+            orbitAction.isEnabled = enabled
+            approachAction.isEnabled = enabled
+            println("Map item $id selected, buttons enabled:$enabled")
+        }
     }
 
     /**

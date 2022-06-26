@@ -37,7 +37,7 @@ class EntityFocusManager: BaseAppState(){
     }
 }
 
-data class EntityFocusEvent(val id:EntityId){
+data class EntityFocusEvent(val id:EntityId?){
     companion object{
         val entityFocusRequest: EventType<EntityFocusEvent> = EventType.create("entityFocusRequest", EntityFocusEvent::class.java)
         val entityFocusGained: EventType<EntityFocusEvent> = EventType.create("entityFocusGained", EntityFocusEvent::class.java)
