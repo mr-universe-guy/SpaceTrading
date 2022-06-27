@@ -1,6 +1,7 @@
 package `fun`.familyfunforce.cosmos
 
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
@@ -17,6 +18,7 @@ import com.simsilica.sim.SimTime
 interface ActionRMI{
     fun setAction(id:EntityId, action:Action)
     fun setThrottle(id:EntityId, throttle:Double)
+    fun setEquipmentActive(id:EntityId, active:Boolean)
 }
 
 /**
@@ -38,6 +40,10 @@ class ActionSystem: AbstractGameSystem() {
 
             override fun setThrottle(id: EntityId, throttle: Double) {
                 manager.enqueue { unitActions[id]!!.setThrottle(throttle) }
+            }
+
+            override fun setEquipmentActive(id: EntityId, active: Boolean) {
+                data.setComponent(id, Activate(active))
             }
 
         }
@@ -98,10 +104,13 @@ class ClientActionEventResponder: BaseAppState(){
 
     fun approachTarget(evt: ApproachOrderEvent){rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))}
 
+    fun setEquipmentActive(evt: EquipmentToggleEvent){rmiHandler.setEquipmentActive(evt.equipId, evt.active)}
+
     override fun cleanup(app: Application?) {}
 
     override fun onEnable() {
-        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle, ApproachOrderEvent.approachTarget)
+        EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle,
+            ApproachOrderEvent.approachTarget, EquipmentToggleEvent.setActive)
     }
 
     override fun onDisable() {}

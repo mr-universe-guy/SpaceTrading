@@ -3,6 +3,7 @@ package `fun`.familyfunforce.cosmos.ui
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.Name
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
@@ -296,8 +297,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
             eqpButton.isChecked = e.get(Activate::class.java)!!.active
-            //TODO:A form of client requests to the server to fix this
-            //eqpButton.addClickCommands { e.set(Activate(eqpButton.isChecked)) }
+            eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setActive, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
             val cycleTimer = e.get(CycleTimer::class.java)!!

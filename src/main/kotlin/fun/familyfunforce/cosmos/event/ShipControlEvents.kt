@@ -30,3 +30,9 @@ class ApproachOrderEvent(val shipId: EntityId, val targetId: EntityId, val range
         val approachTarget: EventType<ApproachOrderEvent> = EventType.create("approachTarget", ApproachOrderEvent::class.java)
     }
 }
+
+class EquipmentToggleEvent(val equipId: EntityId, val active:Boolean){
+    companion object{
+        val setActive: EventType<EquipmentToggleEvent> = EventType.create("setEquipmentActive", EquipmentToggleEvent::class.java)
+    }
+}
