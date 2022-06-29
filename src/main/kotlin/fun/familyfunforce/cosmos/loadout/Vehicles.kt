@@ -13,7 +13,7 @@ import kotlinx.serialization.modules.polymorphic
  * Polymorphic serializer for vehicle
  */
 private val VEHICLE_MOD = SerializersModule {
-    polymorphic(Equipment::class){
+    polymorphic(PassiveEquipment::class){
         subclass(EngineEquip::class, EngineEquip.serializer())
         subclass(CargoEquip::class, CargoEquip.serializer())
         subclass(EnergyGridEquip::class, EnergyGridEquip.serializer())

@@ -1,18 +1,26 @@
 package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.InspectEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.jme3.input.event.MouseButtonEvent
 import com.jme3.material.Material
+import com.jme3.renderer.RenderManager
+import com.jme3.renderer.ViewPort
 import com.jme3.scene.Geometry
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
+import com.jme3.scene.control.AbstractControl
 import com.jme3.scene.shape.Cylinder
 import com.jme3.scene.shape.Sphere
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
+import com.simsilica.event.EventBus
+import com.simsilica.lemur.event.DefaultMouseListener
+import com.simsilica.lemur.event.MouseEventControl
 import com.simsilica.mathd.Vec3d
 
 /**
@@ -31,7 +39,7 @@ class SystemMapState : BaseAppState(){
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         mat = Material(app.assetManager, "Common/MatDefs/Misc/Unshaded.j3md")
-        val data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        val data = getState(ClientDataState::class.java).entityData
         container = StellarContainer(data)
     }
 
@@ -67,7 +75,20 @@ class SystemMapState : BaseAppState(){
         val mesh = Sphere(12,12,orbital.size.toFloat())
         val geo = Geometry(orbital.name, mesh)
         geo.material = mat
-        geo.localTranslation = orbital.position.toVector3f()
+        geo.localTranslation = orbital.globalPos.toVector3f()
+        geo.addControl(object : AbstractControl(){
+            override fun controlUpdate(tpf: Float) {
+                spatial.localTranslation = orbital.globalPos.toVector3f()
+            }
+            override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
+        })
+        MouseEventControl.addListenersToSpatial(geo, object : DefaultMouseListener(){
+            override fun mouseButtonEvent(event: MouseButtonEvent?, target: Spatial?, capture: Spatial?) {
+                if(event?.isPressed == true){
+                    EventBus.publish(InspectEvent.InspectionRequest, InspectEvent(orbital))
+                }
+            }
+        })
         return geo
     }
 

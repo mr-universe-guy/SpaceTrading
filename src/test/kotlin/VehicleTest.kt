@@ -55,8 +55,9 @@ fun buildTestVehicle(): Vehicle {
 fun generateTestEquipment(){
     cacheEquipment(EngineEquip("Engine", "Engine", 3, 30, 100.0, 10.0))
     cacheEquipment(CargoEquip("Hold", "Cargo Hold", 3, 10, 10.0))
-    cacheEquipment(EnergyGridEquip("EnGrid", "Reactor", 3, 50, 100, 10, 3.0))
+    cacheEquipment(EnergyGridEquip("EnGrid", "Reactor", 3, 25, 100, 10, 3.0))
     cacheEquipment(SensorEquip("Sensor", "Radar", 1, 25, 1000.0))
+    cacheEquipment(WeaponEquip("Weapon", "Gun", 1, 15, 2500, 500.0, 2.5))
 }
 
 /**
@@ -71,6 +72,7 @@ fun generateTestLoadout(): Loadout{
     loadout.attachEquipment("Fuselage", getEquipmentFromId("Hold")!!)
     loadout.attachEquipment("Fuselage", getEquipmentFromId("EnGrid")!!)
     loadout.attachEquipment("Left Wing", getEquipmentFromId("Sensor")!!)
+    loadout.attachEquipment("Right Wing", getEquipmentFromId("Weapon")!!)
     return loadout
 }
 

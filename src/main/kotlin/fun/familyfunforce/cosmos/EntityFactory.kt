@@ -8,7 +8,7 @@ import `fun`.familyfunforce.cosmos.loadout.getVehicleFromId
 
 fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout): EntityId{
     val vehicle = getVehicleFromId(loadout.vehicleId)!!
-    val stats = loadout.getStats()
+    val stats = loadout.getStats().toMutableMap()
     val id = data.createEntity()
     data.setComponents(id,
         //vehicle specific data
@@ -25,6 +25,17 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
             stats[EN_CYCLE_TIME] as Double? ?: 1.0),
         Sensors(stats[SEN_RANGE_MAX] as Double? ?: 100.0)
     )
+    //spawn entities for all of the loadouts active equipment
+    //TODO: Section for each equipment needs to be accounted for
+    loadout.getEquipment().forEach {
+        val location = it.key
+        it.value.filterIsInstance<ActiveEquipment>().forEach { equip ->
+            val equipId = data.createEntity()
+            //default components
+            data.setComponents(equipId, Name(equip.name), CycleTimer(Long.MIN_VALUE, equip.duration),
+                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId), Name(equip.name))
+        }
+    }
     return id
 }
 

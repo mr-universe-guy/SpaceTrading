@@ -1,6 +1,6 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.ClientSystem
+import `fun`.familyfunforce.cosmos.ClientState
 import `fun`.familyfunforce.cosmos.ServerSystem
 import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import com.jme3.app.Application
@@ -27,17 +27,17 @@ class OnlineState: BaseAppState() {
         joinButton.addClickCommands {
             val ip = joinIp.documentModel.text.trim()
             println("Connecting to $ip")
-            app.manager.get(ClientSystem::class.java).connectTo(ip)
+            app.serverManager.get(ClientState::class.java).connectTo(ip)
         }
         joinTab.addChild(joinButton)
         menus.addTab("Join", joinTab)
         val hostTab = Container(BoxLayout(Axis.Y, FillMode.None))
-        val server = app.manager.get(ServerSystem::class.java)
+        val server = app.serverManager.get(ServerSystem::class.java)
         val hostButton = Button("Host")
         server.addServerStatusListener { hostButton.isEnabled = ServerSystem.ServerStatus.CLOSED == it }
         hostButton.addClickCommands {
             println("Hosting local server")
-            app.manager.get(ServerSystem::class.java).startServer()
+            app.serverManager.get(ServerSystem::class.java).startServer()
         }
         hostTab.addChild(hostButton)
         menus.addTab("Host", hostTab)

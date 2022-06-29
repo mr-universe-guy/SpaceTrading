@@ -1,122 +1,136 @@
 import `fun`.familyfunforce.cosmos.*
-import `fun`.familyfunforce.cosmos.ui.CameraManagerState
-import `fun`.familyfunforce.cosmos.ui.FlightUIState
-import `fun`.familyfunforce.cosmos.ui.OrbitController
-import com.jme3.app.StatsAppState
-import com.simsilica.es.EntityData
+import `fun`.familyfunforce.cosmos.ui.*
+import com.jme3.app.Application
+import com.jme3.app.state.BaseAppState
+import com.jme3.network.Client
+import com.jme3.network.ClientStateListener
+import com.jme3.system.AppSettings
 import com.simsilica.es.EntityId
-import com.simsilica.es.EntitySet
-import com.simsilica.mathd.Quatd
+import com.simsilica.es.WatchedEntity
+import com.simsilica.lemur.GuiGlobals
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
-/**
- * A demo of local space interaction. This demo should spawn several asteroids, a station and some destructible targets
- * to test the local space physics systems and combat systems.
+/*
+ * A simple demo for interacting with a randomly generated asteroid field
  */
 
-class LocalSpaceDemo: SpaceTraderApp(false) {
-    private val actionSys = ActionSystem()
-
+class LocalSpaceDemo: SpaceTraderApp(false){
+    lateinit var playerId: EntityId
     override fun simpleInitApp() {
+        println("Starting Asteroid Demo")
         super.simpleInitApp()
-        println("Starting local space demo")
-        val dataSystem = LocalDataSystem()
-        dataSystem.getItemDatabase().fromCSV("/TestItemDB.csv")
-        //create a list of test items purely for this demo
-        println(dataSystem.getItemDatabase())
-        //game systems
-        manager.register(DataSystem::class.java, dataSystem)
-        manager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
-        manager.addSystem(EngineSystem())
-        manager.addSystem(DragSystem())
-        //AI should be last
-        manager.register(ActionSystem::class.java, actionSys)
-        //app states
-        stateManager.attach(VisualState())
-        stateManager.attach(StatsAppState())
-        val camManager = CameraManagerState(cam)
-        camManager.activeController = OrbitController(10f,500f)
-        stateManager.attach(camManager)
-        val flightUiState = FlightUIState()
-        stateManager.attach(flightUiState)
-        //add this loop listener to test stuff
-        manager.addSystem(LoopListener())
-        //spawn player ship n stuff
-        manager.enqueue {
-            val playerId = spawnShip(dataSystem.getPhysicsData(), "Player Ship", Vec3d(0.0,0.0,0.0))
-            actionSys.setAction(playerId, MoveAction(randomVec3d(100.0)))
-            enqueue{
-                flightUiState.setPlayerId(playerId)
-            }
-        }
-        //---THREAD SAFETY ENDS HERE!---
-        //start the game stuff
-        loop.start()
-    }
+        //************************  SERVER  ************************
+        val server = ServerSystem()
+        serverManager.register(ServerSystem::class.java, server)
+        //data
+        val dataSystem = HostDataSystem(server.server)
+        dataSystem.itemData.fromCSV("/TestItemDB.csv")
+        serverManager.register(DataSystem::class.java, dataSystem)
+        serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
+        serverManager.addSystem(EngineSystem())
+        serverManager.register(EnergySystem::class.java, EnergySystem())
+        serverManager.register(SensorSystem::class.java, SensorSystem())
+        serverManager.addSystem(ActiveEquipmentSystem())
+        serverManager.register(ActionSystem::class.java,ActionSystem())
 
-    private fun randomVec3d(scalar: Double): Vec3d{
-        return Vec3d((Math.random()-0.5)*2*scalar, (Math.random()-0.5)*2*scalar, (Math.random()-0.5)*2*scalar)
-    }
-
-    private inner class LoopListener: AbstractGameSystem(){
-        private lateinit var data: EntityData
-        private lateinit var testEntities: EntitySet
-
-        override fun initialize() {
-            data = getSystem(DataSystem::class.java).getPhysicsData()
-            testEntities = data.getEntities(ActionInfo::class.java)
-            for(i in 1..100){
-                val rot = Math.random()*Math.PI*2
-                val dist = 10+Math.random()*10
-                val pos = Quatd().fromAngles(0.0, rot,0.0).mult(Vec3d(0.0,0.0,dist))
-                val id = spawnShip(data, "Ship $i", pos)
-                //assign a random move action
-                val dest = randomVec3d(100.0)
-                actionSys.setAction(id, MoveAction(dest))
-            }
-        }
-
-        override fun update(time: SimTime?) {
-            if(testEntities.applyChanges()){
-                testEntities.changedEntities.forEach {
-                    val info = it.get(ActionInfo::class.java)
-                    if(info.status != ActionStatus.COMPLETE) return
-                    //println("${it.id} has finished its action ${it.get(ActionInfo::class.java).text}.")
-                    val nextAction = MoveAction(randomVec3d(100.0))
-                    actionSys.setAction(it.id, nextAction)
-                    //println("${it.id} beginning new action $nextAction")
+        //***********************   CLIENT  *************************
+        //focus
+        //serverManager.register(EntityFocusManager::class.java, EntityFocusManager())
+        stateManager.attach(EntityFocusManager())
+        //
+        val client = ClientState()
+        client.client.addClientStateListener(object:ClientStateListener{
+            override fun clientConnected(c: Client?) {
+                //connect all states here
+                stateManager.attach(ClientDataState(client.client))
+                stateManager.attach(VisualState())
+                val cameraManagerState = CameraManagerState(cam)
+                cameraManagerState.activeController = OrbitController(5f,100f, 10f)
+                stateManager.attach(cameraManagerState)
+                stateManager.attach(LocalMapState())
+                stateManager.attach(ShipHudState())
+                stateManager.attach(UIAudioState())
+                stateManager.attach(ClientActionEventResponder())
+                println("Client initialized")
+                //register player to systems that care
+                val initListener =object: UpdateListener(){
+                    override fun onUpdate(tpf: Float) {
+                        if(!stateManager.getState(VisualState::class.java).isInitialized) return
+                        println("targetting player id $playerId")
+                        stateManager.getState(CameraManagerState::class.java).setTargetFromId(playerId)
+                        stateManager.getState(ShipHudState::class.java).playerId = playerId
+                        stateManager.getState(LocalMapState::class.java).playerId = playerId
+                        println("Camera target set to ${cameraManagerState.target}")
+                        stateManager.detach(this)
+                    }
                 }
+                stateManager.attach(initListener)
             }
+            override fun clientDisconnected(c: Client?, info: ClientStateListener.DisconnectInfo?) {}
+        })
+        stateManager.attach(client)
+        //
+        registerDefaults(GuiGlobals.getInstance().inputMapper)
+        //***********************   DEMO    *************************
+        //spawn a player ship and a couple of asteroids
+        val data = serverManager.get(DataSystem::class.java).entityData
+        val loadout = generateTestLoadout()
+        playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
+        println("Player Spawned")
+        //spawn asteroids
+        val asteroidID = spawnTestAsteroid(data, Vec3d(25.0,25.0,75.0))
+        spawnTestAsteroid(data, Vec3d(-25.0, -25.0, 75.0))
+        spawnTestAsteroid(data, Vec3d(0.0, 0.0, -100.0))
+        //order player to orbit asteroid for now
+        serverManager.enqueue {
+            serverManager.get(ActionSystem::class.java).setAction(playerId, OrbitAction(asteroidID, 50.0))
         }
+        serverManager.addSystem(LoopListener(playerId))
+        serverLoop.start()
 
-        override fun terminate() {
-
-        }
-
+        //finish client
+        server.startServer()
+        client.connectTo("localhost")
     }
 }
 
-private fun spawnShip(data:EntityData, name:String, position:Vec3d): EntityId{
-    val id = data.createEntity()
-    data.setComponents(id,
-        Name(name),
-        Position(position),
-        Mass(1.0),
-        Drag(0.1),
-        Velocity(Vec3d(0.0,0.0,0.0)),
-        CargoHold(10.0),
-        Cargo(arrayOf(ItemStack("ORE", 9), ItemStack("EN", 10))),
-        Engine(100.0, 10.0),
-        EngineDriver(Vec3d(0.0,0.0,0.0)),
-        VisualAsset("TestShip/Insurgent.gltf")
-    )
-    return id
+private abstract class UpdateListener: BaseAppState(){
+    abstract fun onUpdate(tpf:Float)
+
+    override fun initialize(app: Application?) {}
+    override fun cleanup(app: Application?) {}
+    override fun onEnable() {}
+    override fun onDisable() {}
+    override fun update(tpf: Float) {
+        onUpdate(tpf)
+    }
+}
+
+class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
+    private lateinit var player: WatchedEntity
+    override fun initialize() {
+        val data = getSystem(DataSystem::class.java).entityData
+        player = data.watchEntity(playerId, Energy::class.java, Position::class.java)
+    }
+
+    override fun update(time: SimTime?) {
+        if(player.applyChanges()){
+            //println(player.get(Energy::class.java))
+        }
+    }
+
+    override fun terminate() {
+
+    }
 }
 
 fun main(){
-    val demo = LocalSpaceDemo()
-    demo.isShowSettings = false
-    demo.start()
+    val app = LocalSpaceDemo()
+    val settings = AppSettings(true)
+    settings.setResolution(1280,720)
+    app.setSettings(settings)
+    app.isShowSettings = false
+    app.start()
 }

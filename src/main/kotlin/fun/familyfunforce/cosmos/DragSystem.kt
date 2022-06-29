@@ -10,7 +10,7 @@ class DragSystem: AbstractGameSystem() {
 
     override fun initialize() {
         physSystem = getSystem(LocalPhysicsSystem::class.java)
-        val data = getSystem(DataSystem::class.java).getPhysicsData()
+        val data = getSystem(DataSystem::class.java).entityData
         dragEntities = data.getEntities(Velocity::class.java, Drag::class.java)
     }
 

@@ -1,6 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import `fun`.familyfunforce.cosmos.VisualState
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
@@ -14,6 +13,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventListener
 import com.simsilica.event.EventType
+import com.simsilica.lemur.GuiGlobals
 import com.simsilica.lemur.input.*
 import com.simsilica.mathd.Vec3d
 
@@ -52,14 +52,14 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun onEnable() {
-        val mapper = (application as SpaceTraderApp).manager.get(InputMapper::class.java)
+        val mapper = GuiGlobals.getInstance().inputMapper
         mapper.addAnalogListener(this, CAM_INPUT_YAW, CAM_INPUT_PITCH, CAM_INPUT_ZOOM)
         mapper.addStateListener(this, CAM_INPUT_HOLDTOROTATE)
         mapper.activateGroup(CAM_INPUT_GROUP)
     }
 
     override fun onDisable() {
-        val mapper = (application as SpaceTraderApp).manager.get(InputMapper::class.java)
+        val mapper = GuiGlobals.getInstance().inputMapper
         mapper.removeAnalogListener(this, CAM_INPUT_YAW, CAM_INPUT_PITCH, CAM_INPUT_ZOOM)
         mapper.removeStateListener(this, CAM_INPUT_HOLDTOROTATE)
     }
@@ -103,7 +103,7 @@ interface CameraController{
     fun updateCamera(tpf:Float, inputRotation:Vector3f, camPressed:Boolean)
 }
 
-class OrbitController(private var minZoom:Float, private var maxZoom:Float): CameraController{
+class OrbitController(private val minZoom:Float, private val maxZoom:Float, val speed:Float): CameraController{
     override val targetPos = Vector3f()
     override var cam:Camera?=null
     private val offset = Vector3f(0f,0f,0.5f)
@@ -111,9 +111,9 @@ class OrbitController(private var minZoom:Float, private var maxZoom:Float): Cam
 
     override fun updateCamera(tpf: Float, inputRotation: Vector3f, camPressed: Boolean) {
         if(camPressed) {
-            offset.x = ((offset.x+inputRotation.x*tpf)% FastMath.TWO_PI)
-            offset.y = ((offset.y+inputRotation.y*tpf)%FastMath.TWO_PI)
-            offset.z = (offset.z+inputRotation.z*tpf).coerceIn(0f,1f)
+            offset.x = (offset.x+(inputRotation.x*tpf*speed)) % FastMath.TWO_PI
+            offset.y = (offset.y+(inputRotation.y*tpf*speed)) % FastMath.TWO_PI
+            offset.z = (offset.z+(inputRotation.z*tpf*speed)).coerceIn(0f,1f)
             rotation.fromAngles(offset.y, offset.x,0f)
         }
         cam?.location = targetPos.add(rotation.mult(Vector3f(0f,0f,-(minZoom+(offset.z*maxZoom)))))

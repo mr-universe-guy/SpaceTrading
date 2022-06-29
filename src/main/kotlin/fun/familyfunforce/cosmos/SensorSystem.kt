@@ -9,7 +9,7 @@ class SensorSystem: AbstractGameSystem() {
     private lateinit var sensors: EntitySet
 
     override fun initialize() {
-        data = getSystem(DataSystem::class.java).getPhysicsData()
+        data = getSystem(DataSystem::class.java).entityData
         sensors = data.getEntities(Position::class.java, Sensors::class.java, TargetLock::class.java)
     }
 

@@ -32,7 +32,7 @@ class VisualState: BaseAppState() {
         val app = _app as SpaceTraderApp
         am = app.assetManager
         debugMat = Material(am, "Common/MatDefs/Misc/Unshaded.j3md")
-        visContainer = VisualContainer(app.manager.get(DataSystem::class.java).getPhysicsData())
+        visContainer = VisualContainer(getState(ClientDataState::class.java)!!.entityData)
         app.rootNode.attachChild(sceneNode)
     }
 

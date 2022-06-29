@@ -14,6 +14,7 @@ import com.jme3.renderer.queue.RenderQueue
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
 import com.simsilica.es.*
+import com.simsilica.event.EventBus
 import com.simsilica.lemur.Panel
 import com.simsilica.lemur.component.IconComponent
 import com.simsilica.lemur.component.QuadBackgroundComponent
@@ -36,7 +37,6 @@ const val MAP_LAYER = "Map"
  * A map showing all entities in the local space as simple symbols and markers, good for a minimap or battle map
  */
 class LocalMapState: BaseAppState() {
-    private val listeners = mutableListOf<MapFocusListener>()
     private val mapNode = Node("Battle_Map")
     private val mapOffset = Node("Map_Offset")
     private var mapCam: Camera = Camera(0,0)
@@ -49,15 +49,12 @@ class LocalMapState: BaseAppState() {
     private var player: WatchedEntity? = null
     private var targetId: EntityId? = null
     var playerId: EntityId? = null
-    var focusedItem: EntityId? = null
-        private set(value) {
-            field = value
-            listeners.forEach { it.iconFocused(value) }
-        }
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
         //test input
+        //focus
+        EventBus.addListener(this, EntityFocusEvent.entityFocusLost,EntityFocusEvent.entityFocusGained)
         //initialize camera as top down
         mapNode.cullHint = Spatial.CullHint.Never
         mapNode.queueBucket = RenderQueue.Bucket.Transparent
@@ -73,7 +70,6 @@ class LocalMapState: BaseAppState() {
         val mouseState = app.stateManager.getState(MouseAppState::class.java)
         mouseState.addCollisionRoot(mapNode, mapViewport, MAP_LAYER)
         mouseState.setPickLayerOrder(MAP_LAYER, MouseAppState.PICK_LAYER_GUI, MouseAppState.PICK_LAYER_SCENE)
-        //println(mouseState.pickLayerOrder.contentToString())
         //map panel
         val panel = VersionedPanel()
         panel.addControl(MouseEventControl(MapPanelHandler()))
@@ -81,11 +77,12 @@ class LocalMapState: BaseAppState() {
         panel.localTranslation = Vector3f(0f,0f,10f)
         mapPanel = panel.createReference()
         //entities
-        data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        data = getState(ClientDataState::class.java).entityData
         mapObjects = MapObjectContainer(data)
     }
 
     override fun cleanup(app: Application) {
+        EventBus.removeListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusLost)
         app.renderManager.removeMainView(mapViewport)
         app.stateManager.getState(MouseAppState::class.java).removeCollisionRoot(mapViewport)
     }
@@ -110,6 +107,14 @@ class LocalMapState: BaseAppState() {
         mapCam.setViewPort(pos.x/camWidth, (pos.x+size.x)/camWidth, (pos.y-size.y)/camHeight, pos.y/camHeight)
         val mapHeight = mapRadius*aspect
         mapCam.setFrustum(-10f,10f,mapRadius, -mapRadius, mapHeight, -mapHeight)
+    }
+
+    fun entityFocusLost(evt:EntityFocusEvent){
+        println("Map focus lost")
+    }
+
+    fun entityFocusGained(evt:EntityFocusEvent){
+        println("Map focus gained $evt")
     }
 
     override fun update(tpf: Float) {
@@ -148,17 +153,8 @@ class LocalMapState: BaseAppState() {
         return mapPanel.get()
     }
 
-    fun addFocusListener(l: MapFocusListener){
-        listeners.add(l)
-    }
-
-    fun removeFocusListener(l: MapFocusListener){
-        listeners.remove(l)
-    }
-
     private inner class MapObject(val id: EntityId, pos:Vec3d, category: Category){
         private var flags = 0
-
         val icon = Panel()
 
         init{
@@ -244,7 +240,7 @@ class LocalMapState: BaseAppState() {
     private inner class IconFocusListener(val target: MapObject): FocusChangeListener{
         override fun focusGained(event: FocusChangeEvent?) {
             target.setFlag(HIGHLIGHTED)
-            focusedItem = target.id
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(target.id))
         }
 
         override fun focusLost(event: FocusChangeEvent?) {
@@ -267,12 +263,7 @@ class LocalMapState: BaseAppState() {
             event?.setConsumed()
             //un-focus whatever is focused
             getState(FocusManagerState::class.java).focus = null
-            //specifically un-focus our stuff
-            focusedItem = null
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null))
         }
-    }
-
-    interface MapFocusListener{
-        fun iconFocused(id: EntityId?)
     }
 }

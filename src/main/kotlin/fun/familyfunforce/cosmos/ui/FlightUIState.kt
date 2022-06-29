@@ -1,12 +1,10 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.DataSystem
-import `fun`.familyfunforce.cosmos.Position
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
-import `fun`.familyfunforce.cosmos.Velocity
+import `fun`.familyfunforce.cosmos.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.simsilica.es.*
+import com.simsilica.es.Name
 import com.simsilica.mathd.Vec3d
 import io.tlf.jme.jfx.JavaFxUI
 import javafx.collections.FXCollections
@@ -31,8 +29,7 @@ class FlightUIState: BaseAppState() {
     private var player: WatchedEntity? = null
 
     override fun initialize(_app: Application?) {
-        val app = _app as SpaceTraderApp
-        data = app.manager.get(DataSystem::class.java).getPhysicsData()
+        data = getState(ClientDataState::class.java).entityData
         JavaFxUI.getInstance().runInJavaFxThread {
             objects = TargetListContainer(data)
             val loader = FXMLLoader(javaClass.getResource("/UI/TestTargetsList.fxml" ))
