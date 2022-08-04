@@ -28,6 +28,7 @@ import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.lemur.style.ElementId
 import com.simsilica.mathd.Vec3d
 import kotlin.math.max
+import kotlin.math.sqrt
 
 /**
  * A state to manage the interactive ship Hud and UI.
@@ -175,9 +176,14 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                 target?.release()
                 target = if(tgtId == null) null else data.watchEntity(tgtId, Position::class.java, Name::class.java)
             }
+            target?.let {
+                it.applyChanges()
+                val track = playerShip!!.get(TargetTrack::class.java)
+                //might take a frame or two for the player tracking to come through
+                track?.let { println("dist:${sqrt(track.distance)}, angular:${Math.toDegrees(track.angVel)}") }
+            }
             updatePlayerGui(playerShip!!)
         }
-        target?.applyChanges()
         targetMap.update()
     }
 
@@ -214,7 +220,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
         playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
-            TargetLock::class.java)
+            TargetLock::class.java, TargetTrack::class.java)
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
         playerId = null
@@ -289,14 +295,14 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     private inner class EquipmentContainer(data:EntityData):EntityContainer<EquipmentUIElement>(data,
-        ParentFilter(null), Parent::class.java, Activate::class.java, Name::class.java, CycleTimer::class.java){
+        ParentFilter(null), Parent::class.java, EquipmentPower::class.java, Name::class.java, CycleTimer::class.java){
         override fun addObject(e: Entity): EquipmentUIElement {
             println("Adding $e")
             //make a mini container to hold the equipment and all it's data
             val eqpCont = Container(BorderLayout())
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
-            eqpButton.isChecked = e.get(Activate::class.java)!!.active
+            eqpButton.isChecked = e.get(EquipmentPower::class.java)!!.active
             eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setActive, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
@@ -308,7 +314,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 
         override fun updateObject(eqp: EquipmentUIElement, e: Entity) {
             //update checkbox and progress slider
-            eqp.activeButton.isChecked=e.get(Activate::class.java).active
+            eqp.activeButton.isChecked=e.get(EquipmentPower::class.java).active
             eqp.cycleEnd=e.get(CycleTimer::class.java).nextCycle
             //eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
         }

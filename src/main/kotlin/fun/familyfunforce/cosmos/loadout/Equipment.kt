@@ -1,10 +1,11 @@
 package `fun`.familyfunforce.cosmos.loadout
 
+import `fun`.familyfunforce.cosmos.LaserFocus
 import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
-import com.simsilica.es.EntityData
-import com.simsilica.es.EntityId
+import com.simsilica.es.EntityComponent
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 
@@ -66,8 +67,13 @@ abstract class PassiveEquipment: Equipment(){
  */
 abstract class ActiveEquipment: Equipment(){
     abstract val duration: Double
-    abstract fun activate(parentId: EntityId, data:EntityData)
+    abstract val requireTarget: Boolean
 }
+
+/**
+ * Equipment that adds components to the entity that it is attached to
+ */
+interface ComponentEquipment{val components: List<EntityComponent> }
 
 class EquipmentKey(name: String): AssetKey<Equipment>(name)
 
@@ -150,12 +156,9 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 
 @Serializable
 data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
-                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double): ActiveEquipment(){
+                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double): ActiveEquipment(), ComponentEquipment{
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
-
-    override fun activate(parentId: EntityId, data:EntityData) {
-        println("Weapon activated")
-        //TODO("Not yet implemented")
-    }
+    override val requireTarget: Boolean = true
+    override val components = listOf(LaserFocus(50.0,10.0))
 }
 

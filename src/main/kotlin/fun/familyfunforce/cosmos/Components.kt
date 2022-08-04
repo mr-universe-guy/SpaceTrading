@@ -16,10 +16,11 @@ object Serializers{
         Vec3d::class.java,
         ObjectCategory::class.java,
         Parent::class.java,
-        Activate::class.java,
+        EquipmentPower::class.java,
         CycleTimer::class.java,
         ParentFilter::class.java,
         TargetLock::class.java,
+        TargetTrack::class.java,
         Energy::class.java
     )
 
@@ -168,6 +169,14 @@ data class TargetLock(var targetId: EntityId): EntityComponent{
 }
 
 /**
+ * Store info turrets need to shoot at their target
+ */
+@com.jme3.network.serializing.Serializable
+data class TargetTrack(var distance:Double, var angVel:Double): EntityComponent{
+    constructor(): this(-1.0, 0.0)
+}
+
+/**
  * Store the time the next cycle is supposed to occur as well as the amount of time in seconds a cycle lasts
  */
 @com.jme3.network.serializing.Serializable
@@ -179,8 +188,15 @@ data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent
  * Simple active/not active component
  */
 @com.jme3.network.serializing.Serializable
-data class Activate(var active:Boolean): EntityComponent{
+data class EquipmentPower(var active:Boolean): EntityComponent{
     constructor() : this(false)
+}
+
+/**
+ * Marks an entity as being activated.
+ */
+data class Activated(var active:Boolean): EntityComponent{
+    constructor():this(false)
 }
 
 /**
@@ -213,4 +229,16 @@ class ParentFilter(private var parentId:EntityId?): ComponentFilter<Parent> {
         if(c !is Parent) return false
         return c.parentId==parentId
     }
+}
+
+//lets do the most basic weapon
+/**
+ * @param focalLength the distance at which the laser does maximum damage
+ * @param focalDepth the range from the focal length that the laser will do damage based on the global laser falloff
+ * TODO: laser falloff???
+ */
+@com.jme3.network.serializing.Serializable
+@kotlinx.serialization.Serializable
+data class LaserFocus(var focalLength:Double, var focalDepth:Double): EntityComponent {
+    constructor(): this(0.0,0.0)
 }

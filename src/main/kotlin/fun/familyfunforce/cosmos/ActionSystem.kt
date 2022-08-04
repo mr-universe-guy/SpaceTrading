@@ -43,7 +43,7 @@ class ActionSystem: AbstractGameSystem() {
             }
 
             override fun setEquipmentActive(id: EntityId, active: Boolean) {
-                data.setComponent(id, Activate(active))
+                data.setComponent(id, EquipmentPower(active))
             }
 
         }

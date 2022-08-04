@@ -34,6 +34,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.register(SensorSystem::class.java, SensorSystem())
         serverManager.addSystem(ActiveEquipmentSystem())
         serverManager.register(ActionSystem::class.java,ActionSystem())
+        serverManager.addSystem(WeaponSystem())
 
         //***********************   CLIENT  *************************
         //focus

@@ -27,13 +27,21 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
     )
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
-    loadout.getEquipment().forEach {
-        val location = it.key
-        it.value.filterIsInstance<ActiveEquipment>().forEach { equip ->
-            val equipId = data.createEntity()
-            //default components
-            data.setComponents(equipId, Name(equip.name), CycleTimer(Long.MIN_VALUE, equip.duration),
-                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId), Name(equip.name))
+    loadout.getEquipment().forEach { loc ->
+        val location = loc.key
+        //TODO: Fix this!!! ComponentEquipment should always be a new entity I think? much though should be given here
+        loc.value.forEach{
+            var equipId: EntityId? = null
+            if(it is ActiveEquipment){
+                equipId = data.createEntity()
+                //default components
+                data.setComponents(equipId, Name(it.name), CycleTimer(Long.MIN_VALUE, it.duration),
+                    EquipmentPower(true), Parent(id), EquipmentAsset(it.equipmentId), Name(it.name))
+            }
+            if(it is ComponentEquipment){
+                if(equipId == null) equipId=data.createEntity()
+                data.setComponents(equipId, *it.components.toTypedArray())
+            }
         }
     }
     return id
