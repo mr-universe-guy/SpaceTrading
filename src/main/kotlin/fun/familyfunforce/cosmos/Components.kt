@@ -1,3 +1,5 @@
+//please stop telling me about all the empty constructors that only get called via reflection
+@file:Suppress("unused")
 package `fun`.familyfunforce.cosmos
 
 import com.jme3.network.serializing.Serializer
