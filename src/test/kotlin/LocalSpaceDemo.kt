@@ -28,6 +28,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         val dataSystem = HostDataSystem(server.server)
         dataSystem.itemData.fromCSV("/TestItemDB.csv")
         serverManager.register(DataSystem::class.java, dataSystem)
+        serverManager.addSystem(DecaySystem())
         serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
         serverManager.addSystem(EngineSystem())
         serverManager.register(EnergySystem::class.java, EnergySystem())

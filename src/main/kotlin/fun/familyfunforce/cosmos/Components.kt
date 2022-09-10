@@ -115,7 +115,7 @@ data class VisualAsset(var asset:String): EntityComponent{
 }
 
 /**
- * Read published varues for an entities current action
+ * Read published values for an entities current action
  */
 data class ActionInfo(var text: String, var status: ActionStatus): EntityComponent
 
@@ -243,4 +243,20 @@ class ParentFilter(private var parentId:EntityId?): ComponentFilter<Parent> {
 @kotlinx.serialization.Serializable
 data class LaserFocus(var focalLength:Double, var focalDepth:Double): EntityComponent {
     constructor(): this(0.0,0.0)
+}
+
+/**
+ * Decay after a set number of ticks
+ */
+@com.jme3.network.serializing.Serializable
+data class DecayTicks(var endTick:Long, var durationTicks:Int): EntityComponent{
+    constructor(): this(0,0)
+}
+
+/**
+ * decay after a set number of seconds
+ */
+@com.jme3.network.serializing.Serializable
+data class Decay(var end:Long, var duration:Double): EntityComponent{
+    constructor(): this(0, 0.0)
 }
