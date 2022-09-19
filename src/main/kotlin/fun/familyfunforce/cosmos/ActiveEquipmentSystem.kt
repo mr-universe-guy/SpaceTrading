@@ -13,7 +13,8 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        actives = data.getEntities(EquipmentAsset::class.java, CycleTimer::class.java, EquipmentPower::class.java, Parent::class.java)
+        actives = data.getEntities(IsActiveEquipment::class.java, CycleTimer::class.java, EquipmentPower::class.java,
+            Parent::class.java)
     }
 
     override fun terminate() {
@@ -28,10 +29,9 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
             //we only care about active equipment that has completed its cycle
             if(!it.get(EquipmentPower::class.java).active || cycle.nextCycle>curTime){ it.set(Activated(false)); return}
             //increment next cycle and activate
-            val equip = getEquipmentFromId(it.get(EquipmentAsset::class.java).equipmentId)
-            //TODO: do this better?
-            if(equip !is ActiveEquipment) throw Exception("Equipment $equip is not an active equipment")
-            it.set(CycleTimer(time.getFutureTime(cycle.duration), cycle.duration))
+            val ct = CycleTimer(time.getFutureTime(cycle.duration), cycle.duration)
+            it.set(ct)
+            println("Cycle timer: $ct")
             //create a signal to inform other entities this equipment has activated
             it.set(Activated(true))
         }

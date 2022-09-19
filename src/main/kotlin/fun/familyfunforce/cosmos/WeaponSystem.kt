@@ -7,6 +7,9 @@ import com.simsilica.es.Filters
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
+/**
+ * A single system to handle default weapons
+ */
 class WeaponSystem: AbstractGameSystem() {
     private lateinit var data:EntityData
     private lateinit var lasers:EntitySet

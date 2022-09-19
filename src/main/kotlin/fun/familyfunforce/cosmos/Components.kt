@@ -206,12 +206,35 @@ data class Activated(var active:Boolean): EntityComponent{
  */
 data class EquipmentAsset(var equipmentId:String): EntityComponent
 
+data class IsActiveEquipment(var active:Boolean): EntityComponent
+
+class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsActiveEquipment>{
+    constructor() : this(false)
+
+    override fun getComponentType(): Class<IsActiveEquipment> {
+        return IsActiveEquipment::class.java
+    }
+
+    override fun evaluate(c: EntityComponent?): Boolean {
+        c ?: return false
+        if(c !is IsActiveEquipment) return false
+        return c.active == isActive
+    }
+}
+
 /**
  * Identifies an entity ID that acts as the parent to this entity
  */
 @com.jme3.network.serializing.Serializable
 data class Parent(var parentId:EntityId): EntityComponent{
     constructor() : this(EntityId.NULL_ID)
+}
+
+/**
+ * Store all known child entities in a simple array for much more efficient access
+ */
+data class Children(var childrenIds:Array<EntityId>): EntityComponent{
+    constructor() : this(emptyArray())
 }
 
 /**
