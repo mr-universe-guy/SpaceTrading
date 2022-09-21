@@ -18,6 +18,7 @@ import com.simsilica.sim.SimTime
 
 class LocalSpaceDemo: SpaceTraderApp(false){
     lateinit var playerId: EntityId
+    lateinit var targetId: EntityId
     override fun simpleInitApp() {
         println("Starting Asteroid Demo")
         super.simpleInitApp()
@@ -81,13 +82,17 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         val loadout = generateTestLoadout()
         playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
         println("Player Spawned")
+        //spawn something to shoot at
+        targetId = spawnLoadout(data, "Target", Vec3d(0.0, -50.0, 0.0), loadout)
         //spawn asteroids
         val asteroidID = spawnTestAsteroid(data, Vec3d(25.0,25.0,75.0))
         spawnTestAsteroid(data, Vec3d(-25.0, -25.0, 75.0))
         spawnTestAsteroid(data, Vec3d(0.0, 0.0, -100.0))
         //order player to orbit asteroid for now
         serverManager.enqueue {
-            serverManager.get(ActionSystem::class.java).setAction(playerId, OrbitAction(asteroidID, 50.0))
+            val actSys = serverManager.get(ActionSystem::class.java)
+            actSys.setAction(playerId, OrbitAction(asteroidID, 50.0))
+            actSys.setAction(targetId, OrbitAction(asteroidID, 100.0))
         }
         serverManager.addSystem(LoopListener(playerId))
         serverLoop.start()
