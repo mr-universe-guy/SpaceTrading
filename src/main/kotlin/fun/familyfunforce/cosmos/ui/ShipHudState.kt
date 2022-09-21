@@ -2,17 +2,16 @@ package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.Name
-import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
-import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
-import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
-import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
+import `fun`.familyfunforce.cosmos.event.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.jme3.input.event.MouseButtonEvent
 import com.jme3.math.Vector3f
 import com.jme3.renderer.Camera
 import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort
 import com.jme3.scene.Node
+import com.jme3.scene.Spatial
 import com.jme3.scene.control.AbstractControl
 import com.simsilica.es.*
 import com.simsilica.event.EventBus
@@ -20,6 +19,8 @@ import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.core.VersionedReference
+import com.simsilica.lemur.event.DefaultMouseListener
+import com.simsilica.lemur.event.MouseEventControl
 import com.simsilica.lemur.event.PopupState
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
@@ -341,6 +342,12 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private inner class TargetContainer(data:EntityData, val cam:Camera):EntityContainer<TargetUIElement>(data, Position::class.java){
         override fun addObject(e: Entity): TargetUIElement {
             val pane = HudBracket()
+            val eid = e.id
+            MouseEventControl.addListenersToSpatial(pane, object: DefaultMouseListener(){
+                override fun click(event: MouseButtonEvent?, target: Spatial?, capture: Spatial?) {
+                    EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(eid))
+                }
+            })
             val pos = e.get(Position::class.java)
             val tgt = TargetUIElement(e.id,pane,pos)
             pane.addControl(WorldToCamControl(tgt, cam))
@@ -403,4 +410,5 @@ class HudBracket:Panel(32f,32f, ElementId(ELEMENT_ID), null){
     companion object{
         const val ELEMENT_ID = "bracket"
     }
+
 }
