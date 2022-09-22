@@ -41,13 +41,14 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         //***********************   CLIENT  *************************
         //focus
         //serverManager.register(EntityFocusManager::class.java, EntityFocusManager())
-        stateManager.attach(EntityFocusManager())
+
         //
         val client = ClientState()
         client.client.addClientStateListener(object:ClientStateListener{
             override fun clientConnected(c: Client?) {
                 //connect all states here
                 stateManager.attach(ClientDataState(client.client))
+                stateManager.attach(PlayerFocusState())
                 stateManager.attach(VisualState())
                 val cameraManagerState = CameraManagerState(cam)
                 cameraManagerState.activeController = OrbitController(5f,100f, 10f)
@@ -65,6 +66,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
                         stateManager.getState(CameraManagerState::class.java).setTargetFromId(playerId)
                         stateManager.getState(ShipHudState::class.java).playerId = playerId
                         stateManager.getState(LocalMapState::class.java).playerId = playerId
+                        stateManager.getState(PlayerFocusState::class.java).setPlayerId(playerId)
                         println("Camera target set to ${cameraManagerState.target}")
                         stateManager.detach(this)
                     }

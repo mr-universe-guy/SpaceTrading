@@ -1,7 +1,5 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.loadout.ActiveEquipment
-import `fun`.familyfunforce.cosmos.loadout.getEquipmentFromId
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
@@ -31,7 +29,7 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
             //increment next cycle and activate
             val ct = CycleTimer(time.getFutureTime(cycle.duration), cycle.duration)
             it.set(ct)
-            println("Cycle timer: $ct")
+            //println("Cycle timer: $ct")
             //create a signal to inform other entities this equipment has activated
             it.set(Activated(true))
         }

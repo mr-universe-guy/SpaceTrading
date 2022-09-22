@@ -1,16 +1,26 @@
 package `fun`.familyfunforce.cosmos.ui
 
+import `fun`.familyfunforce.cosmos.ClientDataState
+import `fun`.familyfunforce.cosmos.TargetLock
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
+import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
 
-class EntityFocusManager: BaseAppState(){
+/**
+ * manages entities the player is focusing or targetting and sends events to alert ui elements of changes
+ */
+class PlayerFocusState: BaseAppState(){
     init{
         EventBus.addListener(this, EntityFocusEvent.entityFocusRequest)
     }
+    private lateinit var data:EntityData
     var focusedId: EntityId? = null
+    var targetId: EntityId? = null
+    var playerEntity:WatchedEntity? = null
 
     private fun entityFocusRequest(evt : EntityFocusEvent){
         setFocus(evt.id)
@@ -24,13 +34,29 @@ class EntityFocusManager: BaseAppState(){
         targetId?.let{ EventBus.publish(EntityFocusEvent.entityFocusGained, EntityFocusEvent(it)) }
     }
 
+    fun setPlayerId(id: EntityId){
+        playerEntity = data.watchEntity(id, TargetLock::class.java)
+    }
+
+    override fun update(tpf: Float) {
+        if(playerEntity?.applyChanges() != true){return}
+        val targetLock = playerEntity!!.get(TargetLock::class.java)
+        //clear old target
+        targetId?.let { EventBus.publish(TargetingEvent.targetLost, TargetingEvent(targetId));}
+        //acquire new target
+        targetId = targetLock?.targetId
+        targetLock?.let { EventBus.publish(TargetingEvent.targetAcquired, TargetingEvent(it.targetId)); targetId = it.targetId }
+    }
+
     override fun initialize(app: Application?) {
+        data = getState(ClientDataState::class.java).entityData
     }
 
     override fun cleanup(app: Application?) {
     }
 
     override fun onEnable() {
+
     }
 
     override fun onDisable() {
@@ -42,6 +68,13 @@ data class EntityFocusEvent(val id:EntityId?){
         val entityFocusRequest: EventType<EntityFocusEvent> = EventType.create("entityFocusRequest", EntityFocusEvent::class.java)
         val entityFocusGained: EventType<EntityFocusEvent> = EventType.create("entityFocusGained", EntityFocusEvent::class.java)
         val entityFocusLost: EventType<EntityFocusEvent> = EventType.create("entityFocusLost", EntityFocusEvent::class.java)
+    }
+}
+
+data class TargetingEvent(val id:EntityId?){
+    companion object{
+        val targetAcquired: EventType<TargetingEvent> = EventType.create("targetAcquired", TargetingEvent::class.java)
+        val targetLost: EventType<TargetingEvent> = EventType.create("targetLost", TargetingEvent::class.java)
     }
 }
 

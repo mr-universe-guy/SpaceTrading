@@ -12,6 +12,7 @@ def bg = new QuadBackgroundComponent(color(1,1,1,1))
 def brackets = TbtQuadBackgroundComponent.create("UI/Brackets.png",1f,4,4,8,8,0,false)
 def activeColor = ColorRGBA.Orange
 def inactiveColor = ColorRGBA.DarkGray
+def primaryColor = ColorRGBA.Red
 
 selector("space"){
     fontSize=16
@@ -44,6 +45,14 @@ selector("outline", "space"){
 }
 
 selector("bracket", "space"){
-    background=brackets.clone()
-    background.setColor(ColorRGBA.Green)
+    background = brackets.clone()
+    defaultColor = inactiveColor.clone()
+    focusColor = activeColor.clone()
+    targetColor = primaryColor.clone()
+    background.setColor(defaultColor)
 }
+/*
+selector("active", "bracket", "space"){
+    background.setColor(activeColor)
+}
+ */
