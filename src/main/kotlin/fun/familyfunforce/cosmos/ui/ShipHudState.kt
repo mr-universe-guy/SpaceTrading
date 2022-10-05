@@ -40,7 +40,7 @@ import kotlin.math.max
 class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
     private lateinit var shipEquipment: EquipmentContainer
-    private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, var pos:Position)
+    private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, val tgtSpatial:Spatial, var pos:Position)
     private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox,
                                           val cycleProg:ProgressBar, var cycleEnd:Long)
 
@@ -72,6 +72,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     //
     private lateinit var mapper: InputMapper
     private lateinit var data: EntityData
+    private lateinit var visuals: VisualState
     //TODO:Remove direct references to action and sensor systems, these should be server-side only
     private lateinit var sensorSys: SensorSystem
     //
@@ -84,6 +85,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val app = _app as SpaceTraderApp
         data = getState(ClientDataState::class.java).entityData
         sensorSys = app.serverManager.get(SensorSystem::class.java)
+        visuals = getState(VisualState::class.java)
         shipEquipment = EquipmentContainer(data)
         shipEquipment.start()
         //events
@@ -182,7 +184,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             }
             target?.let {
                 it.applyChanges()
-                val track = playerShip!!.get(TargetTrack::class.java)
+                //val track = playerShip!!.get(TargetTrack::class.java)
                 //might take a frame or two for the player tracking to come through
                 //track?.let { println("dist:${sqrt(track.distance)}, angular:${Math.toDegrees(track.angVel)}") }
             }
@@ -378,14 +380,16 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                 }
             })
             val pos = e.get(Position::class.java)
-            val tgt = TargetUIElement(e.id,pane,pos)
+            val spat = visuals.getSpatialFromId(eid)!!//hopefully we catch any failures here or I'ma be annoyed
+            val tgt = TargetUIElement(e.id,pane,spat,pos)
             pane.addControl(WorldToCamControl(tgt, cam))
             hudNode.attachChild(pane)
             return tgt
         }
 
         override fun updateObject(tgt: TargetUIElement, e: Entity) {
-            tgt.pos=e.get(Position::class.java)
+            //TODO:Have the HUD bracket attach to the target spatial!
+            //tgt.pos=e.get(Position::class.java)
         }
 
         override fun removeObject(tgt: TargetUIElement, e: Entity) {
@@ -428,7 +432,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private class WorldToCamControl(val tgt:TargetUIElement, val cam:Camera): AbstractControl(){
         private val offset:Vector3f = tgt.uiPane.preferredSize.mult(Vector3f(-0.5f,0.5f,1f))
         override fun controlUpdate(tpf: Float) {
-            spatial.localTranslation = cam.getScreenCoordinates(tgt.pos.position.toVector3f()).add(offset)
+            //spatial.localTranslation = cam.getScreenCoordinates(tgt.pos.position.toVector3f()).add(offset)
+            spatial.localTranslation = cam.getScreenCoordinates(tgt.tgtSpatial.worldTranslation).add(offset)
         }
 
         override fun controlRender(rm: RenderManager?, vp: ViewPort) {}
@@ -456,13 +461,13 @@ class HudBracket:Panel(32f,32f, ElementId(ELEMENT_ID), null){
     }
 
     fun setFlags(vararg selectors:HudSelector){
-        if(selectors.isNullOrEmpty()) return
+        if(selectors.isEmpty()) return
         hudSelection = hudSelection or selectors.fold(0) { total, it -> total or it.flag}
         evalColor()
     }
 
     fun unsetFlags(vararg selectors:HudSelector){
-        if(selectors.isNullOrEmpty()) return
+        if(selectors.isEmpty()) return
         hudSelection = hudSelection and selectors.fold(0) {total, it -> total or it.flag}.inv()
         evalColor()
     }
