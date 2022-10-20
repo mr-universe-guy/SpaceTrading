@@ -18,6 +18,8 @@ import io.tlf.jme.jfx.JavaFxUI
 import `fun`.familyfunforce.cosmos.loadout.VehicleLoader
 import `fun`.familyfunforce.cosmos.ui.UIAudioState
 import com.simsilica.es.net.EntitySerializers
+import com.simsilica.lemur.OptionPanelState
+import com.simsilica.lemur.event.PopupState
 import com.simsilica.lemur.style.BaseStyles
 import java.util.*
 
@@ -64,6 +66,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         //GuiGlobals.getInstance().styles.defaultStyle = BaseStyles.GLASS
         BaseStyles.loadStyleResources("UI/Space.groovy")
         GuiGlobals.getInstance().styles.defaultStyle = "space"
+        stateManager.attach(OptionPanelState())//prep for ui option panes
         //Controls
         registerDefaults(GuiGlobals.getInstance().inputMapper)
         //I/O

@@ -5,8 +5,10 @@ import `fun`.familyfunforce.cosmos.Name
 import `fun`.familyfunforce.cosmos.event.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
+import com.jme3.input.MouseInput
 import com.jme3.input.event.MouseButtonEvent
 import com.jme3.math.ColorRGBA
+import com.jme3.math.Vector2f
 import com.jme3.math.Vector3f
 import com.jme3.renderer.Camera
 import com.jme3.renderer.RenderManager
@@ -21,9 +23,7 @@ import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.component.ColoredComponent
 import com.simsilica.lemur.core.VersionedReference
-import com.simsilica.lemur.event.DefaultMouseListener
-import com.simsilica.lemur.event.MouseEventControl
-import com.simsilica.lemur.event.PopupState
+import com.simsilica.lemur.event.*
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
@@ -372,13 +372,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         }
 
         override fun addObject(e: Entity): TargetUIElement {
-            val pane = HudBracket()
             val eid = e.id
-            MouseEventControl.addListenersToSpatial(pane, object: DefaultMouseListener(){
-                override fun click(event: MouseButtonEvent?, target: Spatial?, capture: Spatial?) {
-                    EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(eid))
-                }
-            })
+            val pane = HudBracket(eid)
             val pos = e.get(Position::class.java)
             val spat = visuals.getSpatialFromId(eid)!!//hopefully we catch any failures here or I'ma be annoyed
             val tgt = TargetUIElement(e.id,pane,spat,pos)
@@ -440,7 +435,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 }
 
-class HudBracket:Panel(32f,32f, ElementId(ELEMENT_ID), null){
+class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null){
     var defaultColor:ColorRGBA? = null
         @StyleAttribute(value="defaultColor")
         set(value) {field=value}
@@ -450,6 +445,17 @@ class HudBracket:Panel(32f,32f, ElementId(ELEMENT_ID), null){
     var targetColor:ColorRGBA? = null
         @StyleAttribute(value = "targetColor")
         set(value) {field=value}
+    init {
+        MouseEventControl.addListenersToSpatial(this, object: DefaultMouseListener(){
+            override fun click(event: MouseButtonEvent, target: Spatial?, capture: Spatial?) {
+                when(event.buttonIndex){
+                    MouseInput.BUTTON_LEFT -> EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id))
+                    MouseInput.BUTTON_RIGHT -> EventBus.publish(InteractMenuEvent.requestInteractMenu, InteractMenuEvent(
+                        Vector2f(event.x.toFloat(), event.y.toFloat()),id))
+                }
+            }
+        })
+    }
 
     private var hudSelection = 0
     //var activeColor

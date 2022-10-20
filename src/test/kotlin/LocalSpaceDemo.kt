@@ -57,6 +57,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
                 stateManager.attach(ShipHudState())
                 stateManager.attach(UIAudioState())
                 stateManager.attach(ClientActionEventResponder())
+                stateManager.attach(InteractionMenuState())
                 println("Client initialized")
                 //register player to systems that care
                 val initListener =object: UpdateListener(){
