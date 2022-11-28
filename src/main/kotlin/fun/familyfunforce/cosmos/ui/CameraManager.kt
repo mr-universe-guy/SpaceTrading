@@ -31,8 +31,8 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
         }
 
     override fun initialize(app: Application?) {
-        EventBus.addListener(PlayerIdChangeEvent.PlayerIdCreated, this)
-        EventBus.addListener(PlayerIdChangeEvent.PlayerIdChanged, this)
+        EventBus.addListener(PlayerIdChangeEvent.playerIdCreated, this)
+        EventBus.addListener(PlayerIdChangeEvent.playerIdChanged, this)
     }
 
     override fun newEvent(type: EventType<PlayerIdChangeEvent>, event: PlayerIdChangeEvent) {
@@ -40,8 +40,8 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun cleanup(app: Application?) {
-        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdCreated, this)
-        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdChanged, this)
+        EventBus.removeListener(PlayerIdChangeEvent.playerIdCreated, this)
+        EventBus.removeListener(PlayerIdChangeEvent.playerIdChanged, this)
     }
 
     /**

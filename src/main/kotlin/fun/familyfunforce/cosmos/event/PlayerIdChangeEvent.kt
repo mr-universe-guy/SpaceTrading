@@ -10,12 +10,14 @@ class PlayerIdChangeEvent(val playerId:EntityId) {
     companion object {
         /**
          * Signals that a player entity has been created for the first time
+         * name: PlayerIdCreated
          */
-        val PlayerIdCreated: EventType<PlayerIdChangeEvent> = EventType.create("PlayerIdCreated", PlayerIdChangeEvent::class.java)
+        val playerIdCreated: EventType<PlayerIdChangeEvent> = EventType.create("PlayerIdCreated",PlayerIdChangeEvent::class.java)
 
         /**
          * Signals that a player entity has changed
+         * name: PlayerIdChanged
          */
-        val PlayerIdChanged: EventType<PlayerIdChangeEvent> = EventType.create("PlayerIdChanged", PlayerIdChangeEvent::class.java)
+        val playerIdChanged: EventType<PlayerIdChangeEvent> = EventType.create("PlayerIdChanged",PlayerIdChangeEvent::class.java)
     }
 }

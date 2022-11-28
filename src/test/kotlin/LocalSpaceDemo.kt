@@ -1,4 +1,5 @@
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import `fun`.familyfunforce.cosmos.ui.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -7,6 +8,7 @@ import com.jme3.network.ClientStateListener
 import com.jme3.system.AppSettings
 import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
+import com.simsilica.event.EventBus
 import com.simsilica.lemur.GuiGlobals
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
@@ -48,6 +50,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
             override fun clientConnected(c: Client?) {
                 //connect all states here
                 stateManager.attach(ClientDataState(client.client))
+                stateManager.attach(PlayerIdState())
                 stateManager.attach(PlayerFocusState())
                 stateManager.attach(VisualState())
                 val cameraManagerState = CameraManagerState(cam)
@@ -64,6 +67,8 @@ class LocalSpaceDemo: SpaceTraderApp(false){
                     override fun onUpdate(tpf: Float) {
                         if(!stateManager.getState(VisualState::class.java).isInitialized) return
                         println("targetting player id $playerId")
+                        //todo: fix the player id change alert here
+                        EventBus.publish(PlayerIdChangeEvent.playerIdCreated, PlayerIdChangeEvent(playerId))
                         stateManager.getState(CameraManagerState::class.java).setTargetFromId(playerId)
                         stateManager.getState(ShipHudState::class.java).playerId = playerId
                         stateManager.getState(LocalMapState::class.java).playerId = playerId

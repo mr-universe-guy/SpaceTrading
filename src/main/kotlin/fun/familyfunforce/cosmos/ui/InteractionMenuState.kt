@@ -1,20 +1,22 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.DataSystem
-import `fun`.familyfunforce.cosmos.Name
-import `fun`.familyfunforce.cosmos.Position
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.Vector2f
+import com.jme3.math.Vector3f
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
 import com.simsilica.lemur.*
+import com.simsilica.lemur.Action
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
+import com.simsilica.lemur.core.VersionedReference
 import com.simsilica.lemur.event.PopupState
 
 /**
@@ -24,40 +26,67 @@ import com.simsilica.lemur.event.PopupState
 class InteractionMenuState: BaseAppState() {
     private lateinit var data:EntityData
     private lateinit var popupState:PopupState
+    private lateinit var pid:VersionedReference<EntityId?>
     private var interactTarget:WatchedEntity? = null
-    private object NavMenuAction: Action("Navigation") {
-        override fun execute(source: Button?) {
-            TODO("Not yet implemented")
+    //nav
+    private val navMenu = Container(BoxLayout(Axis.Y, FillMode.Even))
+    private val navMenuAction:Action
+    init{
+        val approach = object:Action("Approach"){
+            override fun execute(source: Button?) {
+                println("Approach")
+                EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(pid.get()!!, interactTarget!!.id, 0.0))
+            }
+        }
+        navMenu.addChild(ActionButton(approach))
+        val orbit = object:Action("Orbit"){
+            override fun execute(source: Button?) {
+                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(pid.get()!!, interactTarget!!.id, 10.0))
+            }
+        }
+        navMenu.addChild(ActionButton(orbit))
+        navMenuAction = object:DisplaySubMenuAction("Navigation", navMenu){
+            override fun update() {
+                val hasPosition = interactTarget?.get(Position::class.java)?.position != null
+                pid.update()
+                val pidExists = pid.get() != null
+                approach.isEnabled = hasPosition && pidExists
+                orbit.isEnabled = hasPosition && pidExists
+            }
         }
     }
-    private object InteractMenuAction: Action("Interaction"){
-        override fun execute(source: Button?) {
-            TODO("Not yet implemented")
+
+    //interact
+    private val interactMenu = Container(BoxLayout(Axis.Y, FillMode.Even))
+    private val interactMenuAction:Action
+    init{
+        val nameLabel = Label("Name:Unknown")
+        interactMenu.addChild(nameLabel)
+        interactMenuAction=object: DisplaySubMenuAction("Interaction", interactMenu) {
+            override fun update() {
+                nameLabel.text = interactTarget?.get(Name::class.java)?.name ?: "UNKNOWN"
+            }
         }
     }
-    private object CommMenuAction: Action("Communication"){
-        override fun execute(source: Button?) {
+
+    //communications
+    private val commMenu = Container(BoxLayout(Axis.Y, FillMode.Even))
+    private val commMenuAction = object:DisplaySubMenuAction("Communication", commMenu){
+        override fun update() {
             TODO("Not yet implemented")
         }
     }
     //private val interactPanel = OptionPanel("", navMenuAction, interactMenuAction, commMenuAction);
-    private val interactPanel = InteractMenu("", NavMenuAction, InteractMenuAction, CommMenuAction)
+    private val interactPanel = InteractMenu("", navMenuAction, interactMenuAction, commMenuAction)
 
     override fun initialize(app: Application?) {
         data = (app as SpaceTraderApp).serverManager.get(DataSystem::class.java).entityData
         popupState = getState(PopupState::class.java)
+        pid = getState(PlayerIdState::class.java).watchPlayerId()
     }
 
     override fun update(tpf: Float) {
-        if(interactTarget?.applyChanges() != true) return
-        val tgt = interactTarget!!
-        //verify actions
-        val cName:Name? = tgt.get(Name::class.java)
-        interactPanel.setTitle(cName?.name ?:"Unknown")
-        val cPos = tgt.get(Position::class.java)
-        if(cPos != null){
-
-        }
+        interactTarget?.applyChanges() //keep the target up to date
     }
 
     fun requestInteractMenu(evt:InteractMenuEvent){
@@ -69,6 +98,8 @@ class InteractionMenuState: BaseAppState() {
             //fill in menu options as they become available
             interactPanel.setLocalTranslation(evt.pos.x, evt.pos.y, 0f)
             //popupState.centerInGui(interactPanel)//TODO: have the popup originate from click location
+            //populate interact panel
+            interactPanel.setTitle(interactTarget?.get(Name::class.java)?.name ?: "Unknown")
             popupState.showPopup(interactPanel)
             //optionState.show(interactPanel)
         }
@@ -101,6 +132,27 @@ class InteractionMenuState: BaseAppState() {
         fun setTitle(text:String){
             title.text = text
         }
+    }
+
+    private abstract inner class DisplaySubMenuAction(name:String, val menu:Panel): Action(name) {
+        override fun execute(source: Button?) {
+            source?.let{
+                update()
+                displaySubMenu(it, menu)
+            }
+        }
+
+        /**
+         * Called directly before the sub menu is displayed
+         */
+        abstract fun update()
+    }
+
+    private fun displaySubMenu(parent:Panel, subMenu:Panel){
+        //for now we're just gonna go overtop of parent
+        //translate to the right side of the parent
+        subMenu.localTranslation = parent.worldTranslation.add(Vector3f(parent.size.x,0f,0f))
+        popupState.showPopup(subMenu)
     }
 }
 
