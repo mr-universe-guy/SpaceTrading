@@ -48,10 +48,11 @@ class LocalMapState: BaseAppState() {
     private var zoomSpeed = 0.25f
     private var player: WatchedEntity? = null
     private var targetId: EntityId? = null
-    var playerId: EntityId? = null
+    private lateinit var playerId: VersionedReference<EntityId?>
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
+        playerId = getState(PlayerIdState::class.java).watchPlayerId()
         //test input
         //focus
         EventBus.addListener(this, EntityFocusEvent.entityFocusLost,EntityFocusEvent.entityFocusGained)
@@ -118,10 +119,9 @@ class LocalMapState: BaseAppState() {
     }
 
     override fun update(tpf: Float) {
-        if(playerId != null){
+        if(playerId.update()){
             player?.release()
-            player = data.watchEntity(playerId, Position::class.java, TargetLock::class.java)
-            playerId = null
+            if(playerId.get() != null) player = data.watchEntity(playerId.get(), Position::class.java, TargetLock::class.java)
         }
         if(player?.applyChanges() == true){
             val pos = player!!.get(Position::class.java).position

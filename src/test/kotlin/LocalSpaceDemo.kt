@@ -66,14 +66,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
                 val initListener =object: UpdateListener(){
                     override fun onUpdate(tpf: Float) {
                         if(!stateManager.getState(VisualState::class.java).isInitialized) return
-                        println("targetting player id $playerId")
-                        //todo: fix the player id change alert here
                         EventBus.publish(PlayerIdChangeEvent.playerIdCreated, PlayerIdChangeEvent(playerId))
-                        stateManager.getState(CameraManagerState::class.java).setTargetFromId(playerId)
-                        stateManager.getState(ShipHudState::class.java).playerId = playerId
-                        stateManager.getState(LocalMapState::class.java).playerId = playerId
-                        stateManager.getState(PlayerFocusState::class.java).setPlayerId(playerId)
-                        println("Camera target set to ${cameraManagerState.target}")
                         stateManager.detach(this)
                     }
                 }

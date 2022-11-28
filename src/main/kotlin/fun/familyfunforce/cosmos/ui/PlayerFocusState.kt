@@ -1,6 +1,7 @@
 package `fun`.familyfunforce.cosmos.ui
 
 import `fun`.familyfunforce.cosmos.ClientDataState
+import `fun`.familyfunforce.cosmos.PlayerIdState
 import `fun`.familyfunforce.cosmos.TargetLock
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -9,6 +10,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
+import com.simsilica.lemur.core.VersionedReference
 
 /**
  * manages entities the player is focusing or targetting and sends events to alert ui elements of changes
@@ -20,7 +22,8 @@ class PlayerFocusState: BaseAppState(){
     private lateinit var data:EntityData
     var focusedId: EntityId? = null
     var targetId: EntityId? = null
-    var playerEntity:WatchedEntity? = null
+    private lateinit var playerId : VersionedReference<EntityId?>
+    private var playerEntity:WatchedEntity? = null
 
     private fun entityFocusRequest(evt : EntityFocusEvent){
         setFocus(evt.id)
@@ -39,6 +42,10 @@ class PlayerFocusState: BaseAppState(){
     }
 
     override fun update(tpf: Float) {
+        if(playerId.update()){
+            val pid = playerId.get() ?: return
+            setPlayerId(pid)
+        }
         if(playerEntity?.applyChanges() != true){return}
         val targetLock = playerEntity!!.get(TargetLock::class.java)
         //clear old target
@@ -49,6 +56,7 @@ class PlayerFocusState: BaseAppState(){
     }
 
     override fun initialize(app: Application?) {
+        playerId = getState(PlayerIdState::class.java).watchPlayerId()
         data = getState(ClientDataState::class.java).entityData
     }
 

@@ -1,5 +1,6 @@
 package `fun`.familyfunforce.cosmos.ui
 
+import `fun`.familyfunforce.cosmos.PlayerIdState
 import `fun`.familyfunforce.cosmos.VisualState
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
@@ -14,6 +15,8 @@ import com.simsilica.event.EventBus
 import com.simsilica.event.EventListener
 import com.simsilica.event.EventType
 import com.simsilica.lemur.GuiGlobals
+import com.simsilica.lemur.core.VersionedObject
+import com.simsilica.lemur.core.VersionedReference
 import com.simsilica.lemur.input.*
 import com.simsilica.mathd.Vec3d
 
@@ -23,6 +26,7 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
      */
     private val camAxis = Vec3d()
     private var camPressed = false
+    lateinit var targetId: VersionedReference<EntityId?>
     var target: Spatial? = null
     var activeController: CameraController? = null
         set(value) {
@@ -31,6 +35,7 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
         }
 
     override fun initialize(app: Application?) {
+        targetId = getState(PlayerIdState::class.java).watchPlayerId()
         EventBus.addListener(PlayerIdChangeEvent.playerIdCreated, this)
         EventBus.addListener(PlayerIdChangeEvent.playerIdChanged, this)
     }
@@ -65,6 +70,13 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun update(tpf: Float) {
+        if(targetId.update()){
+            if(targetId.get() == null){
+                target = null
+            } else{
+                setTargetFromId(targetId.get()!!)
+            }
+        }
         activeController?.let { con ->
             target?.let { con.targetPos.set(it.worldTranslation) }
             con.updateCamera(tpf, camAxis.toVector3f(), camPressed)

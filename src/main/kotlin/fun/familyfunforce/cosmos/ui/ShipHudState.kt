@@ -76,12 +76,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     //TODO:Remove direct references to action and sensor systems, these should be server-side only
     private lateinit var sensorSys: SensorSystem
     //
-    var playerId : EntityId? = null
+    private lateinit var playerId : VersionedReference<EntityId?>
     private var playerShip: WatchedEntity? = null
     private var target: WatchedEntity? = null
     private var focusedEntity: EntityId? = null
 
     override fun initialize(_app: Application) {
+        playerId = getState(PlayerIdState::class.java).watchPlayerId()
         val app = _app as SpaceTraderApp
         data = getState(ClientDataState::class.java).entityData
         sensorSys = app.serverManager.get(SensorSystem::class.java)
@@ -163,7 +164,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     override fun update(tpf: Float) {
-        playerId?.let { watchPlayer(it) }
+        if(playerId.update()){
+            watchPlayer(playerId.get()!!)
+        }
         if(playerShip != null){
             //do things with gui input
             if(throttle.update()) {
@@ -182,12 +185,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                 target?.release()
                 target = if(tgtId == null) null else data.watchEntity(tgtId, Position::class.java, Name::class.java)
             }
-            target?.let {
-                it.applyChanges()
-                //val track = playerShip!!.get(TargetTrack::class.java)
-                //might take a frame or two for the player tracking to come through
-                //track?.let { println("dist:${sqrt(track.distance)}, angular:${Math.toDegrees(track.angVel)}") }
-            }
+            target?.applyChanges()
             updatePlayerGui(playerShip!!)
         }
         targetMap.update()
@@ -229,7 +227,6 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             TargetLock::class.java, TargetTrack::class.java)
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
-        playerId = null
     }
 
     /**
