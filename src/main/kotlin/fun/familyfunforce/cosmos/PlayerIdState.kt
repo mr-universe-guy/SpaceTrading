@@ -1,12 +1,12 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.lemur.core.VersionedHolder
 import com.simsilica.lemur.core.VersionedReference
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 
 /**
  * Tracks player id changes and makes them available for other states

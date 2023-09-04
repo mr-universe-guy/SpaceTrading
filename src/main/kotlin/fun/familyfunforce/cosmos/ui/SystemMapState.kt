@@ -1,7 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.*
-import `fun`.familyfunforce.cosmos.event.InspectEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.input.event.MouseButtonEvent
@@ -22,6 +20,8 @@ import com.simsilica.event.EventBus
 import com.simsilica.lemur.event.DefaultMouseListener
 import com.simsilica.lemur.event.MouseEventControl
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.InspectEvent
 
 /**
  * App state to view the current system and all the orbital bodies

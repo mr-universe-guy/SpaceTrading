@@ -1,7 +1,7 @@
-import `fun`.familyfunforce.cosmos.Category
-import `fun`.familyfunforce.cosmos.loadout.*
 import com.jme3.asset.DesktopAssetManager
 import com.jme3.asset.plugins.ClasspathLocator
+import `fun`.familyfunforce.cosmos.Category
+import `fun`.familyfunforce.cosmos.loadout.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import java.io.File

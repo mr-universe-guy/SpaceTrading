@@ -1,8 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.ClientDataState
-import `fun`.familyfunforce.cosmos.PlayerIdState
-import `fun`.familyfunforce.cosmos.TargetLock
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.simsilica.es.EntityData
@@ -11,6 +8,9 @@ import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
 import com.simsilica.lemur.core.VersionedReference
+import `fun`.familyfunforce.cosmos.ClientDataState
+import `fun`.familyfunforce.cosmos.PlayerIdState
+import `fun`.familyfunforce.cosmos.TargetLock
 
 /**
  * manages entities the player is focusing or targetting and sends events to alert ui elements of changes

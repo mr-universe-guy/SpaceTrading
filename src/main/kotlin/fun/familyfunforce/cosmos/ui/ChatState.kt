@@ -1,8 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.ClientState
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
-import `fun`.familyfunforce.cosmos.TextMessage
 import com.jme3.app.Application
 import com.jme3.app.SimpleApplication
 import com.jme3.app.state.BaseAppState
@@ -19,6 +16,10 @@ import com.simsilica.lemur.component.TextEntryComponent
 import com.simsilica.lemur.core.GuiControl
 import com.simsilica.lemur.event.KeyAction
 import com.simsilica.lemur.event.KeyActionListener
+import `fun`.familyfunforce.cosmos.ClientState
+import `fun`.familyfunforce.cosmos.SpaceTraderApp
+import `fun`.familyfunforce.cosmos.TextMessage
+import `fun`.familyfunforce.cosmos.ui.ChatState.ChatBoxListener
 
 /**
  * App State to handle chat ui, alerts and message history

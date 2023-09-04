@@ -1,10 +1,9 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.loadout.*
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
-import `fun`.familyfunforce.cosmos.loadout.getVehicleFromId
+import `fun`.familyfunforce.cosmos.loadout.*
 
 fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout): EntityId{
     val vehicle = getVehicleFromId(loadout.vehicleId)!!

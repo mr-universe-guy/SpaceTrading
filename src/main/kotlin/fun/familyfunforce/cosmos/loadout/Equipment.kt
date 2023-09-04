@@ -1,11 +1,10 @@
 package `fun`.familyfunforce.cosmos.loadout
 
-import `fun`.familyfunforce.cosmos.LaserFocus
 import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
 import com.simsilica.es.EntityComponent
-import kotlinx.serialization.ExperimentalSerializationApi
+import `fun`.familyfunforce.cosmos.LaserFocus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 

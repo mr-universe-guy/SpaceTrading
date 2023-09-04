@@ -1,8 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.*
-import `fun`.familyfunforce.cosmos.Name
-import `fun`.familyfunforce.cosmos.event.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.input.MouseInput
@@ -23,7 +20,9 @@ import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.component.ColoredComponent
 import com.simsilica.lemur.core.VersionedReference
-import com.simsilica.lemur.event.*
+import com.simsilica.lemur.event.DefaultMouseListener
+import com.simsilica.lemur.event.MouseEventControl
+import com.simsilica.lemur.event.PopupState
 import com.simsilica.lemur.input.FunctionId
 import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
@@ -31,6 +30,12 @@ import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.lemur.style.ElementId
 import com.simsilica.lemur.style.StyleAttribute
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.Name
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
+import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import kotlin.math.max
 
 /**

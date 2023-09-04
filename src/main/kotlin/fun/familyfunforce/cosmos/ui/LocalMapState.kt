@@ -1,6 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.input.event.MouseButtonEvent
@@ -28,6 +27,7 @@ import com.simsilica.lemur.focus.FocusChangeEvent
 import com.simsilica.lemur.focus.FocusChangeListener
 import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.*
 
 private const val CATEGORY_KEY = "Category"
 private const val HIGHLIGHTED = 1 shl 0

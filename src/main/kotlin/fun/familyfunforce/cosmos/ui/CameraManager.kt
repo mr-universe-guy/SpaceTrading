@@ -1,8 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.PlayerIdState
-import `fun`.familyfunforce.cosmos.VisualState
-import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.FastMath
@@ -15,10 +12,15 @@ import com.simsilica.event.EventBus
 import com.simsilica.event.EventListener
 import com.simsilica.event.EventType
 import com.simsilica.lemur.GuiGlobals
-import com.simsilica.lemur.core.VersionedObject
 import com.simsilica.lemur.core.VersionedReference
-import com.simsilica.lemur.input.*
+import com.simsilica.lemur.input.AnalogFunctionListener
+import com.simsilica.lemur.input.FunctionId
+import com.simsilica.lemur.input.InputState
+import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.PlayerIdState
+import `fun`.familyfunforce.cosmos.VisualState
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 
 class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener, StateFunctionListener, EventListener<PlayerIdChangeEvent>{
     /**

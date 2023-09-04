@@ -1,6 +1,3 @@
-import `fun`.familyfunforce.cosmos.*
-import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
-import `fun`.familyfunforce.cosmos.ui.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.network.Client
@@ -13,6 +10,9 @@ import com.simsilica.lemur.GuiGlobals
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
+import `fun`.familyfunforce.cosmos.ui.*
 
 /*
  * A simple demo for interacting with a randomly generated asteroid field
@@ -124,9 +124,9 @@ class LoopListener(private val playerId: EntityId): AbstractGameSystem(){
     }
 
     override fun update(time: SimTime?) {
-        if(player.applyChanges()){
+        //if(player.applyChanges()){
             //println(player.get(Energy::class.java))
-        }
+        //}
     }
 
     override fun terminate() {

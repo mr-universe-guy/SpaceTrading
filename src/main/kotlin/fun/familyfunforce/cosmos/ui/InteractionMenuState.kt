@@ -1,8 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.*
-import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
-import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.Vector2f
@@ -18,6 +15,9 @@ import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.core.VersionedReference
 import com.simsilica.lemur.event.PopupState
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 
 /**
  * Manages an interaction menu, it's hidden or visible status,

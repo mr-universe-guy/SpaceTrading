@@ -1,7 +1,7 @@
 package `fun`.familyfunforce.cosmos.event
 
-import `fun`.familyfunforce.cosmos.Orbital
 import com.simsilica.event.EventType
+import `fun`.familyfunforce.cosmos.Orbital
 
 class StellarTravelEvent(val target: Orbital){
     companion object{
