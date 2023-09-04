@@ -28,7 +28,7 @@ class ChatState: BaseAppState(){
     private var client: Client? = null
     private val chatBox = ChatBox(300f,200f)
     private val chatBoxListener = ChatBoxListener { text -> sendChatMessage(text) }
-    private val messageListener = MessageListener<Client> { s, m -> receiveChatMessage(m) }
+    private val messageListener = MessageListener<Client> { _, m -> receiveChatMessage(m) }
 
     override fun initialize(app: Application?) {
         app as SimpleApplication

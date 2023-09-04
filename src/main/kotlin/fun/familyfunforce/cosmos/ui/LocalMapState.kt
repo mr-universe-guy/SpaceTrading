@@ -111,7 +111,7 @@ class LocalMapState: BaseAppState() {
     }
 
     fun entityFocusLost(evt:EntityFocusEvent){
-        println("Map focus lost")
+        println("Map focus lost from $evt")
     }
 
     fun entityFocusGained(evt:EntityFocusEvent){

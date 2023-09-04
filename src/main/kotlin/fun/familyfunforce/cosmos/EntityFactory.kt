@@ -27,7 +27,7 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
     loadout.getEquipment().forEach { loc ->
-        val location = loc.key
+        //val location = loc.key
         //TODO: Fix this!!! ComponentEquipment should always be a new entity I think? much though should be given here
         loc.value.forEach{
             var equipId: EntityId? = null
