@@ -14,7 +14,13 @@ class SensorSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        sensors = data.getEntities(Position::class.java, Sensors::class.java, TargetLock::class.java, Velocity::class.java)
+        sensors = data.getEntities(
+            Position::class.java,
+            Sensors::class.java,
+            Target::class.java,
+            Velocity::class.java,
+            Parent::class.java
+        )
     }
 
     override fun terminate() {
@@ -24,7 +30,7 @@ class SensorSystem: AbstractGameSystem() {
     override fun update(time: SimTime?) {
         sensors.applyChanges()
         sensors.forEach {
-            val targetId = it.get(TargetLock::class.java).targetId
+            val targetId = it.get(TargetId::class.java).targetId
             //check if target exists
             val tgtPos = data.getComponent(targetId, Position::class.java)?.position
             if(tgtPos == null){
@@ -54,8 +60,10 @@ class SensorSystem: AbstractGameSystem() {
     }
 
     private fun breakLock(sensorId: EntityId){
-        data.removeComponent(sensorId, TargetLock::class.java)
+        data.removeComponent(sensorId, TargetId::class.java)
         data.removeComponent(sensorId, TargetTrack::class.java)
+        val parentId = data.getComponent(sensorId, Parent::class.java)?.parentId ?: return
+        data.removeComponent(parentId, TargetId::class.java)
     }
 
     fun acquireLock(sensorId: EntityId, targetId: EntityId) : Boolean{
@@ -67,7 +75,10 @@ class SensorSystem: AbstractGameSystem() {
         val sensorRange = data.getComponent(sensorId, Sensors::class.java)?.range ?: return false
         if(tgtPos.distanceSq(pos) > sensorRange*sensorRange) return false
         //we made it, establish the target lock
-        data.setComponent(sensorId, TargetLock(targetId))
+        data.setComponent(sensorId, TargetId(targetId))
+        //TODO: fix mirroring this component
+        val parentId = data.getComponent(sensorId, Parent::class.java)?.parentId ?: return false
+        data.setComponent(parentId, TargetId(targetId))
         return true
     }
 }

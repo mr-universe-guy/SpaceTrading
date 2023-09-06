@@ -16,7 +16,7 @@ class WeaponSystem: AbstractGameSystem() {
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
         lasers = data.getEntities(Filters.fieldEquals(Activated::class.java, "active", true),LaserFocus::class.java,
-            Activated::class.java, )
+            Activated::class.java, Parent::class.java)
     }
 
     override fun terminate() {
@@ -30,6 +30,15 @@ class WeaponSystem: AbstractGameSystem() {
     }
 
     private fun fireLaser(it: Entity) {
+        //first ensure the parent has a target, if not cancel this
+        val parentId = it.get(Parent::class.java).parentId
+        val targetId = data.getComponent(parentId, TargetId::class.java)?.targetId
+        if(targetId == null){
+            it.set(Activated(false))
+            println("Weapon has no target, disabling")
+            return
+        }
         println("Firing ma lazor $it")
+        data.setComponents(data.createEntity(), Attack(10), TargetId(targetId))
     }
 }

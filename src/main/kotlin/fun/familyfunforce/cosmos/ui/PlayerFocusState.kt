@@ -10,7 +10,7 @@ import com.simsilica.event.EventType
 import com.simsilica.lemur.core.VersionedReference
 import `fun`.familyfunforce.cosmos.ClientDataState
 import `fun`.familyfunforce.cosmos.PlayerIdState
-import `fun`.familyfunforce.cosmos.TargetLock
+import `fun`.familyfunforce.cosmos.TargetId
 
 /**
  * manages entities the player is focusing or targetting and sends events to alert ui elements of changes
@@ -38,7 +38,7 @@ class PlayerFocusState: BaseAppState(){
     }
 
     fun setPlayerId(id: EntityId){
-        playerEntity = data.watchEntity(id, TargetLock::class.java)
+        playerEntity = data.watchEntity(id, TargetId::class.java)
     }
 
     override fun update(tpf: Float) {
@@ -47,12 +47,12 @@ class PlayerFocusState: BaseAppState(){
             setPlayerId(pid)
         }
         if(playerEntity?.applyChanges() != true){return}
-        val targetLock = playerEntity!!.get(TargetLock::class.java)
+        val targetId = playerEntity!!.get(TargetId::class.java)
         //clear old target
-        targetId?.let { EventBus.publish(TargetingEvent.targetLost, TargetingEvent(targetId));}
+        this.targetId?.let { EventBus.publish(TargetingEvent.targetLost, TargetingEvent(this.targetId));}
         //acquire new target
-        targetId = targetLock?.targetId
-        targetLock?.let { EventBus.publish(TargetingEvent.targetAcquired, TargetingEvent(it.targetId)); targetId = it.targetId }
+        this.targetId = targetId?.targetId
+        targetId?.let { EventBus.publish(TargetingEvent.targetAcquired, TargetingEvent(it.targetId)); this.targetId = it.targetId }
     }
 
     override fun initialize(app: Application?) {

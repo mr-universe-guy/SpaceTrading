@@ -28,6 +28,7 @@ import com.simsilica.lemur.focus.FocusChangeListener
 import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
 import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.TargetId
 
 private const val CATEGORY_KEY = "Category"
 private const val HIGHLIGHTED = 1 shl 0
@@ -121,13 +122,13 @@ class LocalMapState: BaseAppState() {
     override fun update(tpf: Float) {
         if(playerId.update()){
             player?.release()
-            if(playerId.get() != null) player = data.watchEntity(playerId.get(), Position::class.java, TargetLock::class.java)
+            if(playerId.get() != null) player = data.watchEntity(playerId.get(), Position::class.java, TargetId::class.java)
         }
         if(player?.applyChanges() == true){
             val pos = player!!.get(Position::class.java).position
             mapOffset.localTranslation = Vector3f(pos.x.toFloat(), -pos.z.toFloat(), 9f)
             //TODO: Only set targetId once, un-set flags when target changes
-            val tgtId = player?.get(TargetLock::class.java)?.targetId
+            val tgtId = player?.get(TargetId::class.java)?.targetId
             if(targetId != tgtId) {
                 setPlayerTarget(tgtId)
             }

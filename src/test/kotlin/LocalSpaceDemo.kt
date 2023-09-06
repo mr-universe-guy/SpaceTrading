@@ -20,7 +20,7 @@ import `fun`.familyfunforce.cosmos.ui.*
 
 class LocalSpaceDemo: SpaceTraderApp(false){
     lateinit var playerId: EntityId
-    lateinit var targetId: EntityId
+    private lateinit var targetId: EntityId
     override fun simpleInitApp() {
         println("Starting Asteroid Demo")
         super.simpleInitApp()
@@ -39,6 +39,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.addSystem(ActiveEquipmentSystem())
         serverManager.register(ActionSystem::class.java,ActionSystem())
         serverManager.addSystem(WeaponSystem())
+        serverManager.addSystem(AttackSystem())
 
         //***********************   CLIENT  *************************
         //focus

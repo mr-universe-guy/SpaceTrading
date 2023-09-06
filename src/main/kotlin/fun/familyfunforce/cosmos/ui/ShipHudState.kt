@@ -184,7 +184,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         if(playerShip?.applyChanges() == true){
             //println("${shipEquipment.size}")
             //does player have a target
-            val tgtId = playerShip?.get(TargetLock::class.java)?.targetId
+            val tgtId = playerShip?.get(TargetId::class.java)?.targetId
             if(tgtId != target?.id){
                 //our target has changed or been lost
                 target?.release()
@@ -229,7 +229,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
         playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
-            TargetLock::class.java, TargetTrack::class.java)
+            TargetId::class.java, TargetTrack::class.java)
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
     }
@@ -440,13 +440,14 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null){
     var defaultColor:ColorRGBA? = null
         @StyleAttribute(value="defaultColor")
-        set(value) {field=value}
+        set
     var focusColor:ColorRGBA? = null
         @StyleAttribute(value="focusColor")
-        set(value) {field=value}
+        set
     var targetColor:ColorRGBA? = null
         @StyleAttribute(value = "targetColor")
-        set(value) {field=value}
+        set
+
     init {
         MouseEventControl.addListenersToSpatial(this, object: DefaultMouseListener(){
             override fun click(event: MouseButtonEvent, target: Spatial?, capture: Spatial?) {

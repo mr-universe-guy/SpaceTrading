@@ -21,7 +21,7 @@ object Serializers{
         EquipmentPower::class.java,
         CycleTimer::class.java,
         ParentFilter::class.java,
-        TargetLock::class.java,
+        TargetId::class.java,
         TargetTrack::class.java,
         Energy::class.java
     )
@@ -86,9 +86,7 @@ data class Cargo(var items: Array<ItemStack>): EntityComponent {
 
         other as Cargo
 
-        if (!items.contentEquals(other.items)) return false
-
-        return true
+        return items.contentEquals(other.items)
     }
 
     override fun hashCode(): Int {
@@ -166,7 +164,7 @@ data class Sensors(var range: Double): EntityComponent
  * Store target locks as a component so other systems can break locks, etc
  */
 @com.jme3.network.serializing.Serializable
-data class TargetLock(var targetId: EntityId): EntityComponent{
+data class TargetId(var targetId: EntityId): EntityComponent{
     constructor() : this(EntityId.NULL_ID)
 }
 
@@ -197,8 +195,17 @@ data class EquipmentPower(var active:Boolean): EntityComponent{
 /**
  * Marks an entity as being activated.
  */
+@com.jme3.network.serializing.Serializable
 data class Activated(var active:Boolean): EntityComponent{
     constructor():this(false)
+}
+
+/**
+ * The actual attack against another unit's hp.
+ */
+@com.jme3.network.serializing.Serializable
+data class Attack(var damage:Int): EntityComponent{
+    constructor():this(0)
 }
 
 /**
@@ -235,6 +242,19 @@ data class Parent(var parentId:EntityId): EntityComponent{
  */
 data class Children(var childrenIds:Array<EntityId>): EntityComponent{
     constructor() : this(emptyArray())
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Children
+
+        return childrenIds.contentEquals(other.childrenIds)
+    }
+
+    override fun hashCode(): Int {
+        return childrenIds.contentHashCode()
+    }
 }
 
 /**
