@@ -83,7 +83,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         val data = serverManager.get(DataSystem::class.java).entityData
         val loadout = generateTestLoadout()
         playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
-        println("Player Spawned")
+        println("Player Spawned as id $playerId")
         //spawn something to shoot at
         targetId = spawnLoadout(data, "Target", Vec3d(0.0, -50.0, 0.0), loadout)
         //spawn asteroids

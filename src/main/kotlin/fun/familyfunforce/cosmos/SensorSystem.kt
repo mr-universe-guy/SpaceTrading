@@ -17,9 +17,9 @@ class SensorSystem: AbstractGameSystem() {
         sensors = data.getEntities(
             Position::class.java,
             Sensors::class.java,
-            Target::class.java,
+            TargetId::class.java,
             Velocity::class.java,
-            Parent::class.java
+//            Parent::class.java
         )
     }
 
@@ -60,10 +60,8 @@ class SensorSystem: AbstractGameSystem() {
     }
 
     private fun breakLock(sensorId: EntityId){
-        data.removeComponent(sensorId, TargetId::class.java)
         data.removeComponent(sensorId, TargetTrack::class.java)
-        val parentId = data.getComponent(sensorId, Parent::class.java)?.parentId ?: return
-        data.removeComponent(parentId, TargetId::class.java)
+        data.removeComponent(sensorId, TargetId::class.java)
     }
 
     fun acquireLock(sensorId: EntityId, targetId: EntityId) : Boolean{
@@ -76,9 +74,7 @@ class SensorSystem: AbstractGameSystem() {
         if(tgtPos.distanceSq(pos) > sensorRange*sensorRange) return false
         //we made it, establish the target lock
         data.setComponent(sensorId, TargetId(targetId))
-        //TODO: fix mirroring this component
-        val parentId = data.getComponent(sensorId, Parent::class.java)?.parentId ?: return false
-        data.setComponent(parentId, TargetId(targetId))
+        println("$sensorId has locked onto target $targetId")
         return true
     }
 }

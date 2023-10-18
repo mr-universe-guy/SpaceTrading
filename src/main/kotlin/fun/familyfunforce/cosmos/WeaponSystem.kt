@@ -35,7 +35,7 @@ class WeaponSystem: AbstractGameSystem() {
         val targetId = data.getComponent(parentId, TargetId::class.java)?.targetId
         if(targetId == null){
             it.set(Activated(false))
-            println("Weapon has no target, disabling")
+            println("Weapon ${it.id} has no target, disabling")
             return
         }
         println("Firing ma lazor $it")
