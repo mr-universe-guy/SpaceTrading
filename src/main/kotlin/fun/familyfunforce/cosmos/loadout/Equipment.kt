@@ -4,7 +4,6 @@ import com.jme3.asset.AssetInfo
 import com.jme3.asset.AssetKey
 import com.jme3.asset.AssetLoader
 import com.simsilica.es.EntityComponent
-import `fun`.familyfunforce.cosmos.LaserFocus
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 
@@ -73,6 +72,12 @@ abstract class ActiveEquipment: Equipment(){
  * Equipment that adds components to the entity that it is attached to
  */
 interface ComponentEquipment{val components: List<EntityComponent> }
+
+/**
+ * Simple data class to hold a group of subcomponents to be used by other systems
+ */
+@Serializable
+data class ComponentStack(val components: List<EntityComponent>)
 
 class EquipmentKey(name: String): AssetKey<Equipment>(name)
 
@@ -155,9 +160,10 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 
 @Serializable
 data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
-                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double): ActiveEquipment(), ComponentEquipment{
+                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double,
+                       override val components: List<EntityComponent>):
+        ActiveEquipment(), ComponentEquipment{
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
     override val requireTarget: Boolean = true
-    override val components = listOf(LaserFocus(50.0,10.0))
 }
 

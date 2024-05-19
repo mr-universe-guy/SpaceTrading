@@ -1,6 +1,7 @@
 import com.jme3.asset.DesktopAssetManager
 import com.jme3.asset.plugins.ClasspathLocator
 import `fun`.familyfunforce.cosmos.Category
+import `fun`.familyfunforce.cosmos.LaserFocus
 import `fun`.familyfunforce.cosmos.loadout.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -57,7 +58,8 @@ fun generateTestEquipment(){
     cacheEquipment(CargoEquip("Hold", "Cargo Hold", 3, 10, 10.0))
     cacheEquipment(EnergyGridEquip("EnGrid", "Reactor", 3, 25, 100, 10, 3.0))
     cacheEquipment(SensorEquip("Sensor", "Radar", 1, 25, 1000.0))
-    cacheEquipment(WeaponEquip("Weapon", "Gun", 1, 15, 2500, 500.0, 2.5))
+    cacheEquipment(WeaponEquip("Weapon", "Lazor", 1, 15, 2500, 500.0,
+        2.5, listOf(LaserFocus(50.0,10.0))))
 }
 
 /**

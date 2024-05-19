@@ -17,6 +17,8 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         VisualAsset(vehicle.asset),
         ObjectCategory(Category.SHIP),
         EngineDriver(Vec3d(0.0,0.0,0.0)),
+        //temporary hp stuff, should be expanded in the future
+        HealthPoints(10,10),
         //loadout specific data
         Mass(stats[EMPTY_MASS] as Double? ?: 1.0),
         Engine(stats[MAX_SPEED] as Double? ?: 1.0, stats[MAX_THRUST] as Double? ?: 1.0),

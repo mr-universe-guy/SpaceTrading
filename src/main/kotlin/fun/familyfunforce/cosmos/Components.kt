@@ -23,7 +23,10 @@ object Serializers{
         ParentFilter::class.java,
         TargetId::class.java,
         TargetTrack::class.java,
-        Energy::class.java
+        Energy::class.java,
+        Attack::class.java,
+        Damage::class.java,
+        HealthPoints::class.java
     )
 
     fun serializeComponents(){
@@ -204,8 +207,18 @@ data class Activated(var active:Boolean): EntityComponent{
  * The actual attack against another unit's hp.
  */
 @com.jme3.network.serializing.Serializable
-data class Attack(var damage:Int): EntityComponent{
-    constructor():this(0)
+data class Attack(var armorDamage:Int, val shieldDamage:Int, val miningDamage:Int): EntityComponent{
+    constructor():this(0,0, 0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class HealthPoints(var shield:Int, var armor:Int): EntityComponent{
+    constructor():this(0,0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:Int): EntityComponent{
+    constructor():this(0,0,0)
 }
 
 /**
