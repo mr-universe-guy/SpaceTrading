@@ -40,10 +40,21 @@ selector("button", "space"){
 
 selector("outline", "space"){
     background=bg.clone()
-    background.setColor(color(0.5,0.5,0.5,0.5))
+    background.setColor(inactiveColor)
     border=outline.clone()
     border.setColor(ColorRGBA.Orange)
     insets = new Insets3f(6f,6f,6f,6f)
+}
+
+selector("windowpane", "space"){
+    background=bg.clone()
+    background.setColor(ColorRGBA.DarkGray)
+    border=outline.clone()
+    border.setColor(ColorRGBA.DarkGray)
+}
+
+selector("windowpane", "header", "space"){
+    color = ColorRGBA.Pink
 }
 
 selector("bracket", "space"){
@@ -53,6 +64,7 @@ selector("bracket", "space"){
     targetColor = primaryColor.clone()
     background.setColor(defaultColor)
 }
+
 /*
 selector("active", "bracket", "space"){
     background.setColor(activeColor)

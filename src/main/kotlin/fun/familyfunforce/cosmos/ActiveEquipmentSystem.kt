@@ -2,6 +2,7 @@ package `fun`.familyfunforce.cosmos
 
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
+import com.simsilica.es.Filters
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
@@ -11,8 +12,9 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        actives = data.getEntities(IsActiveEquipment::class.java, CycleTimer::class.java, EquipmentPower::class.java,
-            Parent::class.java)
+        actives = data.getEntities(
+            Filters.fieldEquals(Activated::class.java, "active", true), IsActiveEquipment::class.java, CycleTimer::class.java, EquipmentPower::class.java,
+            Parent::class.java, Activated::class.java)
     }
 
     override fun terminate() {

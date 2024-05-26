@@ -45,9 +45,11 @@ import kotlin.math.max
 class ShipHudState: BaseAppState(), StateFunctionListener{
     private lateinit var targetMap: TargetContainer
     private lateinit var shipEquipment: EquipmentContainer
+    private lateinit var localObjectEntityContainer: LocalObjectContainer
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, val tgtSpatial:Spatial, var pos:Position)
     private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox,
                                           val cycleProg:ProgressBar, var cycleEnd:Long)
+    private data class LocalObjectInfo(val id:EntityId, val uiRow:Container, var name:String, var pos: Vec3d)
 
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
@@ -68,6 +70,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val approachAction = object: com.simsilica.lemur.Action("Approach"){
         override fun execute(source: Button?) {approachSelection()}
     }
+    //Window Panes
+    private lateinit var localObjectsListContainer: Container
+
     init{
         dashboard.addChild(equipmentPanel, BorderLayout.Position.Center)
         dashboard.addChild(mapContainer, BorderLayout.Position.East)
@@ -94,6 +99,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         visuals = getState(VisualState::class.java)
         shipEquipment = EquipmentContainer(data)
         shipEquipment.start()
+
         //events
         EventBus.addListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusGained,
             TargetingEvent.targetLost, TargetingEvent.targetAcquired)
@@ -122,6 +128,25 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         mapContainer.addChild(mapPanel, BorderLayout.Position.Center)
         mapContainer.preferredSize = mapSize
         mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
+        //top toolbar
+        val toolbarContainer = Container(BoxLayout(Axis.X, FillMode.Even))
+        toolbarContainer.preferredSize = Vector3f(600f, 30f, 0f)
+        toolbarContainer.localTranslation = Vector3f(0f,screenHeight.toFloat(),0f)
+        //local objects
+        val localObjectsToggle = Button("Local Objects")
+        localObjectsListContainer = Container(BoxLayout(Axis.Y, FillMode.None))
+        val localObjectsWindow = WindowPane("Local Objects", localObjectsListContainer)
+        localObjectsWindow.localTranslation = Vector3f(screenWidth/2f, screenHeight/2f, 0f)
+        localObjectsToggle.addClickCommands {
+            hudNode.attachChild(localObjectsWindow)
+        }
+        localObjectEntityContainer = LocalObjectContainer(data, localObjectsListContainer)
+        localObjectEntityContainer.start()
+
+        toolbarContainer.addChild(localObjectsToggle)
+        //system objects
+        //end toolbar
+        hudNode.attachChild(toolbarContainer)
         //nav panel
         val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
         throttle = throttleModel.createReference()
@@ -194,6 +219,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             updatePlayerGui(playerShip!!)
         }
         targetMap.update()
+        localObjectEntityContainer.update()
     }
 
     //TODO: All event publishing is currently avoiding a client/server communication problem that needs fixed asap
@@ -353,6 +379,26 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 
         fun resetFilter(f:ComponentFilter<out EntityComponent>){
             this.setFilter(f)
+        }
+    }
+
+    private inner class LocalObjectContainer(data:EntityData, val list: Container): EntityContainer<LocalObjectInfo>(data, Position::class.java, Name::class.java){
+        override fun addObject(e: Entity): LocalObjectInfo {
+            val pos = e.get(Position::class.java).position
+            val name = e.get(Name::class.java).name
+            val row = Container(BoxLayout(Axis.X, FillMode.None))
+            row.addChild(Label(name))
+            list.addChild(row)
+            //TODO: add versioned object watcher to row as a control to update info as it changes
+            return LocalObjectInfo(e.id, row, name, pos)
+        }
+
+        override fun removeObject(info: LocalObjectInfo, e: Entity) {
+            info.uiRow.removeFromParent()
+        }
+
+        override fun updateObject(info: LocalObjectInfo, e: Entity) {
+
         }
     }
 
