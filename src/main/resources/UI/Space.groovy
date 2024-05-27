@@ -53,6 +53,17 @@ selector("windowpane", "space"){
     border.setColor(ColorRGBA.DarkGray)
 }
 
+selector("hudrow", "space"){
+    background=bg.clone()
+    background.setColor(ColorRGBA.Black)
+    insets = new Insets3f(2f,2f,2f,2f)
+}
+selector("hudrow", "cell", "space"){
+    background=bg.clone()
+    background.setColor(ColorRGBA.Magenta)
+    insets = new Insets3f(0f,5f,0f,5f)
+}
+
 selector("windowpane", "header", "space"){
     color = ColorRGBA.Pink
 }

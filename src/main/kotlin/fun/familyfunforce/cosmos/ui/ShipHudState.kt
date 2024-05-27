@@ -19,6 +19,7 @@ import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.component.ColoredComponent
+import com.simsilica.lemur.core.GuiControl
 import com.simsilica.lemur.core.VersionedReference
 import com.simsilica.lemur.event.DefaultMouseListener
 import com.simsilica.lemur.event.MouseEventControl
@@ -49,7 +50,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private data class TargetUIElement(val id:EntityId, val uiPane:HudBracket, val tgtSpatial:Spatial, var pos:Position)
     private data class EquipmentUIElement(val id:EntityId, val equipPane:Container, val activeButton:Checkbox,
                                           val cycleProg:ProgressBar, var cycleEnd:Long)
-    private data class LocalObjectInfo(val id:EntityId, val uiRow:Container, var name:String, var pos: Vec3d)
+    private data class LocalObjectInfo(val id:EntityId, val uiRow:HudRow, var name:String, var pos: Vec3d)
 
     //lemur hud elements
     private val hudNode = Node("Hud_Gui")
@@ -386,8 +387,14 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         override fun addObject(e: Entity): LocalObjectInfo {
             val pos = e.get(Position::class.java).position
             val name = e.get(Name::class.java).name
-            val row = Container(BoxLayout(Axis.X, FillMode.None))
-            row.addChild(Label(name))
+            val dist = if(playerShip == null){0.0} else{
+                e.get(Position::class.java).position.distance(playerShip!!.get(Position::class.java).position)
+            }
+            //TODO: names don't need to be stores per column, the name will be defined by the table
+            val columns = arrayOf<HudColumn<Any>>(HudColumn("Name", name), HudColumn("Distance", "$dist"))
+            val row = HudRow(e.id, columns)
+            //interaction buttons
+
             list.addChild(row)
             //TODO: add versioned object watcher to row as a control to update info as it changes
             return LocalObjectInfo(e.id, row, name, pos)
@@ -398,7 +405,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         }
 
         override fun updateObject(info: LocalObjectInfo, e: Entity) {
-
+//            val dist = e.get(Position::class.java).position.distance(playerShip!!.get(Position::class.java).position)
+//            val row = info.uiRow
+//            row.setColumn(1, dist)
         }
     }
 
@@ -482,6 +491,34 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         override fun controlRender(rm: RenderManager?, vp: ViewPort) {}
     }
 }
+
+class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): Panel(ELEMENT_ID,null){
+    private val labels:Array<Label>
+    companion object{
+        val ELEMENT_ID = ElementId("hudrow")
+        val CELL_ID = ELEMENT_ID.child("cell")
+    }
+    init {
+        val gui = getControl(GuiControl::class.java)
+        val layout = BoxLayout(Axis.X, FillMode.None)
+        gui.setLayout(layout)
+
+        labels = Array(dataColumns.size) { i ->
+            val col = dataColumns[i]
+            val label = Label("${col.label}: ${col.data}", CELL_ID)
+            layout.addChild(label)
+            return@Array label
+        }
+    }
+
+    fun setColumn(index:Int, data:Any){
+        val col = dataColumns[index]
+        col.data = data
+        labels[index].text = "${col.label}+:+${col.data}"
+    }
+}
+
+data class HudColumn<dataType>(var label:String, var data:dataType)
 
 class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null){
     var defaultColor:ColorRGBA? = null
