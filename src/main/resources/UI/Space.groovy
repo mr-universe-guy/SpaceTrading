@@ -26,12 +26,14 @@ Command<Button> clickSound = {if(it.isPressed()){EventBus.publish(UIAudioEvent.p
 Command<Button> clickShift = {if(it.isPressed()){it.move(1,-1,0)} else{it.move(-1,1,0)}}
 Command<Button> buttonFade = {Button it ->it.background.color=inactiveColor}
 Command<Button> buttonUnFade = {Button it ->it.background.color=activeColor}
+
 def stdButtonCommands = [
         (Button.ButtonAction.Down):[clickSound,clickShift],
         (Button.ButtonAction.Up):[clickShift],
         (Button.ButtonAction.Enabled):[buttonUnFade],
         (Button.ButtonAction.Disabled):[buttonFade]
 ]
+
 selector("button", "space"){
     background = outline.clone()
     background.setColor(ColorRGBA.DarkGray)
@@ -55,12 +57,12 @@ selector("windowpane", "space"){
 
 selector("hudrow", "space"){
     background=bg.clone()
-    background.setColor(ColorRGBA.Black)
+    background.setColor(inactiveColor.clone())
     insets = new Insets3f(2f,2f,2f,2f)
 }
 selector("hudrow", "cell", "space"){
-    background=bg.clone()
-    background.setColor(ColorRGBA.Magenta)
+//    background=bg.clone()
+//    background.setColor(ColorRGBA.Magenta)
     insets = new Insets3f(0f,5f,0f,5f)
 }
 
@@ -70,10 +72,13 @@ selector("windowpane", "header", "space"){
 
 selector("bracket", "space"){
     background = brackets.clone()
+    background.setColor(inactiveColor.clone())
+}
+
+selector("hudcolors", "space"){
     defaultColor = inactiveColor.clone()
     focusColor = activeColor.clone()
     targetColor = primaryColor.clone()
-    background.setColor(defaultColor)
 }
 
 /*

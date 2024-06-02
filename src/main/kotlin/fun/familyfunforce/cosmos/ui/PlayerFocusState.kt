@@ -31,10 +31,10 @@ class PlayerFocusState: BaseAppState(){
 
     private fun setFocus(targetId:EntityId?){
         //notify current focus it is being lost
-        focusedId?.let { EventBus.publish(EntityFocusEvent.entityFocusLost, EntityFocusEvent(it)) }
+        focusedId?.let { EventBus.publish(EntityFocusEvent.entityFocusChanged, EntityFocusEvent(it, false)) }
         //assign and publish the gained event
         focusedId = targetId
-        targetId?.let{ EventBus.publish(EntityFocusEvent.entityFocusGained, EntityFocusEvent(it)) }
+        targetId?.let{ EventBus.publish(EntityFocusEvent.entityFocusChanged, EntityFocusEvent(it, true)) }
     }
 
     fun setPlayerId(id: EntityId){
@@ -49,10 +49,10 @@ class PlayerFocusState: BaseAppState(){
         if(playerEntity?.applyChanges() != true){return}
         val targetId = playerEntity!!.get(TargetId::class.java)
         //clear old target
-        this.targetId?.let { EventBus.publish(TargetingEvent.targetLost, TargetingEvent(this.targetId));}
+        this.targetId?.let { EventBus.publish(TargetingEvent.targetChanged, TargetingEvent(this.targetId, false));}
         //acquire new target
         this.targetId = targetId?.targetId
-        targetId?.let { EventBus.publish(TargetingEvent.targetAcquired, TargetingEvent(it.targetId)); this.targetId = it.targetId }
+        targetId?.let { EventBus.publish(TargetingEvent.targetChanged, TargetingEvent(it.targetId, true)); this.targetId = it.targetId }
     }
 
     override fun initialize(app: Application?) {
@@ -71,18 +71,16 @@ class PlayerFocusState: BaseAppState(){
     }
 }
 
-data class EntityFocusEvent(val id:EntityId?){
+data class EntityFocusEvent(val id:EntityId?, val focused:Boolean){
     companion object{
         val entityFocusRequest: EventType<EntityFocusEvent> = EventType.create("entityFocusRequest", EntityFocusEvent::class.java)
-        val entityFocusGained: EventType<EntityFocusEvent> = EventType.create("entityFocusGained", EntityFocusEvent::class.java)
-        val entityFocusLost: EventType<EntityFocusEvent> = EventType.create("entityFocusLost", EntityFocusEvent::class.java)
+        val entityFocusChanged: EventType<EntityFocusEvent> = EventType.create("entityFocusChanged", EntityFocusEvent::class.java)
     }
 }
 
-data class TargetingEvent(val id:EntityId?){
+data class TargetingEvent(val id:EntityId?, val acquired:Boolean){
     companion object{
-        val targetAcquired: EventType<TargetingEvent> = EventType.create("targetAcquired", TargetingEvent::class.java)
-        val targetLost: EventType<TargetingEvent> = EventType.create("targetLost", TargetingEvent::class.java)
+        val targetChanged: EventType<TargetingEvent> = EventType.create("targetChanged", TargetingEvent::class.java)
     }
 }
 

@@ -29,7 +29,6 @@ import com.simsilica.lemur.input.InputMapper
 import com.simsilica.lemur.input.InputState
 import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.lemur.style.ElementId
-import com.simsilica.lemur.style.StyleAttribute
 import com.simsilica.mathd.Vec3d
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.Name
@@ -56,6 +55,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val hudNode = Node("Hud_Gui")
     private val energyGauge= Label("XXX% Energy")
     private val velocityIndicator= Label("XXXX m/s")
+
     //all panels go on the dash
     private val dashboard = Container(BorderLayout())
     //interaction panel
@@ -92,6 +92,26 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private var target: WatchedEntity? = null
     private var focusedEntity: EntityId? = null
 
+    companion object{
+        private const val HUD_COLORS_ID = "space.hudcolors"
+        lateinit var defaultColor:ColorRGBA
+        lateinit var focusColor:ColorRGBA
+        lateinit var targetColor:ColorRGBA
+
+        const val FOCUSED = 1
+        const val TARGETED = 2
+
+        fun getObjectTint(flags:Int): ColorRGBA{
+            val col = when(flags){
+                FOCUSED -> focusColor
+                TARGETED -> targetColor
+                TARGETED or FOCUSED -> targetColor
+                else -> defaultColor
+            }
+            return col
+        }
+    }
+
     override fun initialize(_app: Application) {
         playerId = getState(PlayerIdState::class.java).watchPlayerId()
         val app = _app as SpaceTraderApp
@@ -102,8 +122,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         shipEquipment.start()
 
         //events
-        EventBus.addListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusGained,
-            TargetingEvent.targetLost, TargetingEvent.targetAcquired)
+        EventBus.addListener(this, EntityFocusEvent.entityFocusChanged, TargetingEvent.targetChanged)
+        //prep lemur
+        val hudColors = GuiGlobals.getInstance().styles.getAttributes(ElementId(HUD_COLORS_ID))
+        defaultColor = hudColors.get("defaultColor")
+        focusColor = hudColors.get("focusColor")
+        targetColor = hudColors.get("targetColor")
+        println("SHIP HUD STATE INIT HUD COLORS:$hudColors, WITH VALUE:$focusColor")
         //build lemur hud
         val screenHeight = app.camera.height
         val screenWidth = app.camera.width
@@ -291,22 +316,20 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         if(!sensorSys.acquireLock(playerShip?.id!!, targetId!!)) return
     }
 
-    fun targetLost(evt:TargetingEvent){
-        targetMap.targetLost(evt)
+    fun targetChanged(evt: TargetingEvent){
+        if(evt.acquired){
+            targetMap.targetAcquired(evt, true)
+            localObjectEntityContainer.entityTargetAcquired(evt)
+        } else{
+            targetMap.targetAcquired(evt, false)
+            localObjectEntityContainer.entityTargetLost(evt)
+        }
     }
 
-    fun targetAcquired(evt:TargetingEvent){
-        targetMap.targetAcquired(evt)
-    }
-
-    fun entityFocusLost(evt:EntityFocusEvent){
-        focusId(null)
-        targetMap.entityFocusLost(evt)
-    }
-
-    fun entityFocusGained(evt:EntityFocusEvent){
+    fun entityFocusChanged(evt:EntityFocusEvent){
         focusId(evt.id)
-        targetMap.entityFocusGained(evt)
+        targetMap.entityFocusChanged(evt)
+        localObjectEntityContainer.entityFocusChanged(evt)
     }
 
     private fun focusId(id: EntityId?){
@@ -384,6 +407,23 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     private inner class LocalObjectContainer(data:EntityData, val list: Container): EntityContainer<LocalObjectInfo>(data, Position::class.java, Name::class.java){
+        fun entityFocusChanged(evt: EntityFocusEvent){
+            val row = getObject(evt.id)
+            if(evt.focused){
+                row.uiRow.setFlags(FOCUSED)
+            } else{
+                row.uiRow.unsetFlags(FOCUSED)
+            }
+        }
+
+        fun entityTargetAcquired(evt: TargetingEvent){
+            getObject(evt.id).uiRow.setFlags(TARGETED)
+        }
+
+        fun entityTargetLost(evt: TargetingEvent){
+            getObject(evt.id).uiRow.unsetFlags(TARGETED)
+        }
+
         override fun addObject(e: Entity): LocalObjectInfo {
             val pos = e.get(Position::class.java).position
             val name = e.get(Name::class.java).name
@@ -412,20 +452,21 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     private inner class TargetContainer(data:EntityData, val cam:Camera):EntityContainer<TargetUIElement>(data, Position::class.java){
-
-        fun targetAcquired(evt:TargetingEvent){
-            getObject(evt.id)!!.uiPane.setFlags(HudBracket.Companion.HudSelector.TARGETTED)
+        fun targetAcquired(evt:TargetingEvent, acquired:Boolean){
+            if(acquired) {
+                getObject(evt.id)!!.uiPane.setFlags(TARGETED)
+            } else{
+                getObject(evt.id)?.uiPane?.unsetFlags(TARGETED)
+            }
         }
 
-        fun targetLost(evt:TargetingEvent){
-            getObject(evt.id)?.uiPane?.unsetFlags(HudBracket.Companion.HudSelector.TARGETTED)
-        }
+        fun entityFocusChanged(evt:EntityFocusEvent){
+            if(evt.focused){
+                getObject(evt.id)!!.uiPane.setFlags(FOCUSED)
+            } else{
+                getObject(evt.id)?.uiPane?.unsetFlags(FOCUSED)
+            }
 
-        fun entityFocusGained(evt:EntityFocusEvent){
-            getObject(evt.id)!!.uiPane.setFlags(HudBracket.Companion.HudSelector.FOCUSED)
-        }
-        fun entityFocusLost(evt:EntityFocusEvent){
-            getObject(evt.id)?.uiPane?.unsetFlags(HudBracket.Companion.HudSelector.FOCUSED)
         }
 
         override fun addObject(e: Entity): TargetUIElement {
@@ -492,8 +533,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 }
 
-class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): Panel(ELEMENT_ID,null){
+class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): Panel(ELEMENT_ID,null), UIFlaggable{
     private val labels:Array<Label>
+    private var flags = 0
+
     companion object{
         val ELEMENT_ID = ElementId("hudrow")
         val CELL_ID = ELEMENT_ID.child("cell")
@@ -511,6 +554,16 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
         }
     }
 
+    override fun setFlags(vararg flags: Int) {
+        this.flags = UIFlaggable.setFlagState(this.flags, *flags)
+        (background as ColoredComponent).color = ShipHudState.getObjectTint(this.flags)
+    }
+
+    override fun unsetFlags(vararg flags: Int) {
+        this.flags = UIFlaggable.unsetFlagState(this.flags, *flags)
+        (background as ColoredComponent).color = ShipHudState.getObjectTint(this.flags)
+    }
+
     fun setColumn(index:Int, data:Any){
         val col = dataColumns[index]
         col.data = data
@@ -520,22 +573,18 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
 
 data class HudColumn<dataType>(var label:String, var data:dataType)
 
-class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null){
-    var defaultColor:ColorRGBA? = null
-        @StyleAttribute(value="defaultColor")
-        set
-    var focusColor:ColorRGBA? = null
-        @StyleAttribute(value="focusColor")
-        set
-    var targetColor:ColorRGBA? = null
-        @StyleAttribute(value = "targetColor")
-        set
+class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null), UIFlaggable{
+    private var bracketFlags = 0
+
+    companion object{
+        const val ELEMENT_ID = "bracket"
+    }
 
     init {
         MouseEventControl.addListenersToSpatial(this, object: DefaultMouseListener(){
             override fun click(event: MouseButtonEvent, target: Spatial?, capture: Spatial?) {
                 when(event.buttonIndex){
-                    MouseInput.BUTTON_LEFT -> EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id))
+                    MouseInput.BUTTON_LEFT -> EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id, true))
                     MouseInput.BUTTON_RIGHT -> EventBus.publish(InteractMenuEvent.requestInteractMenu, InteractMenuEvent(
                         Vector2f(event.x.toFloat(), event.y.toFloat()),id))
                 }
@@ -543,35 +592,30 @@ class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null){
         })
     }
 
-    private var hudSelection = 0
-    //var activeColor
+    override fun setFlags(vararg flags: Int) {
+        bracketFlags = UIFlaggable.setFlagState(bracketFlags, *flags)
+        (background as ColoredComponent).color = ShipHudState.getObjectTint(bracketFlags)
+    }
+
+    override fun unsetFlags(vararg flags: Int) {
+        bracketFlags = UIFlaggable.unsetFlagState(bracketFlags, *flags)
+        (background as ColoredComponent).color = ShipHudState.getObjectTint(bracketFlags)
+    }
+}
+
+interface UIFlaggable{
     companion object{
-        const val ELEMENT_ID = "bracket"
-        enum class HudSelector(val flag:Int){
-            FOCUSED(1), TARGETTED(2)
+        fun setFlagState(state:Int, vararg flags:Int): Int{
+            if(flags.isEmpty()) return state
+            return state or flags.fold(0) {total, f -> total or f}
+        }
+
+        fun unsetFlagState(state:Int, vararg flags:Int): Int{
+            if(flags.isEmpty()) return state
+            return state and flags.fold(0) {total, f -> total or f}.inv()
         }
     }
 
-    fun setFlags(vararg selectors:HudSelector){
-        if(selectors.isEmpty()) return
-        hudSelection = hudSelection or selectors.fold(0) { total, it -> total or it.flag}
-        evalColor()
-    }
-
-    fun unsetFlags(vararg selectors:HudSelector){
-        if(selectors.isEmpty()) return
-        hudSelection = hudSelection and selectors.fold(0) {total, it -> total or it.flag}.inv()
-        evalColor()
-    }
-
-    private fun evalColor(){
-        val color = when(hudSelection){
-            HudSelector.FOCUSED.flag -> focusColor
-            HudSelector.TARGETTED.flag -> targetColor
-            HudSelector.FOCUSED.flag or HudSelector.TARGETTED.flag -> targetColor
-            else -> defaultColor
-        }
-        println("Setting color to $color")
-        (background as ColoredComponent).color = color
-    }
+    fun setFlags(vararg flags:Int)
+    fun unsetFlags(vararg flags:Int)
 }

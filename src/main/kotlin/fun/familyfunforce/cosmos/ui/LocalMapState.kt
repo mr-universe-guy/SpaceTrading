@@ -56,7 +56,7 @@ class LocalMapState: BaseAppState() {
         playerId = getState(PlayerIdState::class.java).watchPlayerId()
         //test input
         //focus
-        EventBus.addListener(this, EntityFocusEvent.entityFocusLost,EntityFocusEvent.entityFocusGained)
+        EventBus.addListener(this, EntityFocusEvent.entityFocusChanged)
         //initialize camera as top down
         mapNode.cullHint = Spatial.CullHint.Never
         mapNode.queueBucket = RenderQueue.Bucket.Transparent
@@ -84,7 +84,7 @@ class LocalMapState: BaseAppState() {
     }
 
     override fun cleanup(app: Application) {
-        EventBus.removeListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusLost)
+        EventBus.removeListener(this, EntityFocusEvent.entityFocusChanged)
         app.renderManager.removeMainView(mapViewport)
         app.stateManager.getState(MouseAppState::class.java).removeCollisionRoot(mapViewport)
     }
@@ -111,12 +111,14 @@ class LocalMapState: BaseAppState() {
         mapCam.setFrustum(-10f,10f,mapRadius, -mapRadius, mapHeight, -mapHeight)
     }
 
-    fun entityFocusLost(evt:EntityFocusEvent){
+    fun entityFocusChanged(evt:EntityFocusEvent){
         println("Map focus lost from $evt")
-    }
-
-    fun entityFocusGained(evt:EntityFocusEvent){
-        println("Map focus gained $evt")
+        if(evt.id == null) return
+        if(evt.focused){
+            mapObjects.getObject(evt.id).setFlag(HIGHLIGHTED)
+        } else{
+            mapObjects.getObject(evt.id).unsetFlag(HIGHLIGHTED)
+        }
     }
 
     override fun update(tpf: Float) {
@@ -241,7 +243,7 @@ class LocalMapState: BaseAppState() {
     private inner class IconFocusListener(val target: MapObject): FocusChangeListener{
         override fun focusGained(event: FocusChangeEvent?) {
             target.setFlag(HIGHLIGHTED)
-            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(target.id))
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(target.id, true))
         }
 
         override fun focusLost(event: FocusChangeEvent?) {
@@ -264,7 +266,7 @@ class LocalMapState: BaseAppState() {
             event?.setConsumed()
             //un-focus whatever is focused
             getState(FocusManagerState::class.java).focus = null
-            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null))
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null, false))
         }
     }
 }
