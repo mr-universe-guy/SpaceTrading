@@ -552,6 +552,12 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
             layout.addChild(label)
             return@Array label
         }
+
+        addMouseListener(object: DefaultMouseListener(){
+            override fun mouseButtonEvent(event: MouseButtonEvent, target: Spatial?, capture: Spatial?) {
+                EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id, true))
+            }
+        })
     }
 
     override fun setFlags(vararg flags: Int) {
