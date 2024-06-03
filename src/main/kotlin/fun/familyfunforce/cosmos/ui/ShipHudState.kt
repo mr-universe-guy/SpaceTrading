@@ -445,9 +445,19 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         }
 
         override fun updateObject(info: LocalObjectInfo, e: Entity) {
-//            val dist = e.get(Position::class.java).position.distance(playerShip!!.get(Position::class.java).position)
-//            val row = info.uiRow
-//            row.setColumn(1, dist)
+            info.pos = e.get(Position::class.java).position
+        }
+
+        override fun update(): Boolean {
+            val updatesAvailable = super.update()
+            if(playerShip != null){
+                val playerPos = playerShip?.get(Position::class.java)?.position
+                for(obj in array){
+                    val dist = "%.0f".format(obj.pos.distance(playerPos))
+                    obj.uiRow.setColumn(1, dist)
+                }
+            }
+            return updatesAvailable
         }
     }
 
