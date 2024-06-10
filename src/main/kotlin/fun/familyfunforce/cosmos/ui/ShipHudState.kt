@@ -5,7 +5,6 @@ import com.jme3.app.state.BaseAppState
 import com.jme3.input.MouseInput
 import com.jme3.input.event.MouseButtonEvent
 import com.jme3.math.ColorRGBA
-import com.jme3.math.Vector2f
 import com.jme3.math.Vector3f
 import com.jme3.renderer.Camera
 import com.jme3.renderer.RenderManager
@@ -66,10 +65,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     //navigation panel
     private val navContainer = Container(BorderLayout())
     private val orbitAction = object: com.simsilica.lemur.Action("Orbit") {
-        override fun execute(source: Button?) {orbitSelection()}
+        override fun execute(source: Button?) {focusedEntity?.let { orbitId(it) }}
     }
     private val approachAction = object: com.simsilica.lemur.Action("Approach"){
-        override fun execute(source: Button?) {approachSelection()}
+        override fun execute(source: Button?) {focusedEntity?.let { approachId(it) }}
     }
     //Window Panes
     private lateinit var localObjectsListContainer: Container
@@ -249,23 +248,19 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
 
     //TODO: All event publishing is currently avoiding a client/server communication problem that needs fixed asap
-    fun orbitSelection(){
+    fun orbitId(targetId: EntityId){
         val popState = getState(PopupState::class.java)
         val popup = object: RangePopup(0.0,100.0,25.0){
             override fun accept(value: Double) {
-                focusedEntity?.let{
-                    EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(playerShip!!.id, focusedEntity!!, value))
-                }
+                playerShip?.let {EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(it.id, targetId, value))}
             }
         }
         popState.centerInGui(popup)
         popState.showModalPopup(popup)
     }
 
-    fun approachSelection(){
-        focusedEntity?.let {
-            EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(playerShip!!.id, focusedEntity!!, 0.0))
-        }
+    fun approachId(targetId: EntityId){
+        playerShip?.let {EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(it.id, targetId, 0.0))}
     }
 
     private fun updatePlayerGui(playerShip: WatchedEntity){
@@ -565,7 +560,11 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
 
         addMouseListener(object: DefaultMouseListener(){
             override fun mouseButtonEvent(event: MouseButtonEvent, target: Spatial?, capture: Spatial?) {
-                EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id, true))
+                if(event.buttonIndex == MouseInput.BUTTON_LEFT){
+                    EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id, true))
+                } else if(event.buttonIndex == MouseInput.BUTTON_RIGHT){
+                    EventBus.publish(InteractMenuEvent.requestInteractMenu, InteractMenuEvent(worldTranslation, id))
+                }
             }
         })
     }
@@ -602,7 +601,7 @@ class HudBracket(val id:EntityId):Panel(32f,32f, ElementId(ELEMENT_ID), null), U
                 when(event.buttonIndex){
                     MouseInput.BUTTON_LEFT -> EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(id, true))
                     MouseInput.BUTTON_RIGHT -> EventBus.publish(InteractMenuEvent.requestInteractMenu, InteractMenuEvent(
-                        Vector2f(event.x.toFloat(), event.y.toFloat()),id))
+                        Vector3f(event.x.toFloat(), event.y.toFloat(), 0f),id))
                 }
             }
         })
@@ -635,3 +634,7 @@ interface UIFlaggable{
     fun setFlags(vararg flags:Int)
     fun unsetFlags(vararg flags:Int)
 }
+
+/**
+ * A menu that updates in real time and displays all the ways in which you may interact with the given entity
+ */

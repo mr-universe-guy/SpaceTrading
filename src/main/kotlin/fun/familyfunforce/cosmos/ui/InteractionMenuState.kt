@@ -2,7 +2,6 @@ package `fun`.familyfunforce.cosmos.ui
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
-import com.jme3.math.Vector2f
 import com.jme3.math.Vector3f
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
@@ -18,6 +17,7 @@ import com.simsilica.lemur.event.PopupState
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
+import java.util.function.Consumer
 
 /**
  * Manages an interaction menu, it's hidden or visible status,
@@ -31,19 +31,22 @@ class InteractionMenuState: BaseAppState() {
     //nav
     private val navMenu = Container(BoxLayout(Axis.Y, FillMode.Even))
     private val navMenuAction:Action
+    val approach = object:Action("Approach"){
+        override fun execute(source: Button?) {
+            if(pid.get() == null || interactTarget == null) return
+            val consumer = Consumer<Double> { EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(pid.get()!!, interactTarget!!.id, it)) }
+            getRangeFromPopup(consumer)
+        }
+    }
+    val orbit = object:Action("Orbit"){
+        override fun execute(source: Button?) {
+            if(pid.get() == null || interactTarget == null) return
+            val consumer = Consumer<Double> { EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(pid.get()!!, interactTarget!!.id, it)) }
+            getRangeFromPopup(consumer)
+        }
+    }
     init{
-        val approach = object:Action("Approach"){
-            override fun execute(source: Button?) {
-                println("Approach")
-                EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(pid.get()!!, interactTarget!!.id, 0.0))
-            }
-        }
         navMenu.addChild(ActionButton(approach))
-        val orbit = object:Action("Orbit"){
-            override fun execute(source: Button?) {
-                EventBus.publish(OrbitOrderEvent.orbitTarget, OrbitOrderEvent(pid.get()!!, interactTarget!!.id, 10.0))
-            }
-        }
         navMenu.addChild(ActionButton(orbit))
         navMenuAction = object:DisplaySubMenuAction("Navigation", navMenu){
             override fun update() {
@@ -105,6 +108,16 @@ class InteractionMenuState: BaseAppState() {
         }
     }
 
+    private fun getRangeFromPopup(consumer: Consumer<Double>){
+        val rangePopup = object:RangePopup(0.0, 100.0, 50.0){
+            override fun accept(value: Double) {
+                consumer.accept(value)
+            }
+        }
+        popupState.centerInGui(rangePopup)
+        popupState.showModalPopup(rangePopup)
+    }
+
     override fun cleanup(app: Application?) {
     }
 
@@ -156,7 +169,7 @@ class InteractionMenuState: BaseAppState() {
     }
 }
 
-class InteractMenuEvent(val pos:Vector2f, val id:EntityId){
+class InteractMenuEvent(val pos:Vector3f, val id:EntityId){
     companion object{
         val requestInteractMenu: EventType<InteractMenuEvent> = EventType.create("requestInteractMenu",InteractMenuEvent::class.java)
     }
