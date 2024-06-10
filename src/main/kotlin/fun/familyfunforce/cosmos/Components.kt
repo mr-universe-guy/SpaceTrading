@@ -1,3 +1,5 @@
+//please stop telling me about all the empty constructors that only get called via reflection
+@file:Suppress("unused")
 package `fun`.familyfunforce.cosmos
 
 import com.jme3.network.serializing.Serializer
@@ -16,11 +18,15 @@ object Serializers{
         Vec3d::class.java,
         ObjectCategory::class.java,
         Parent::class.java,
-        Activate::class.java,
+        EquipmentPower::class.java,
         CycleTimer::class.java,
         ParentFilter::class.java,
-        TargetLock::class.java,
-        Energy::class.java
+        TargetId::class.java,
+        TargetTrack::class.java,
+        Energy::class.java,
+        Attack::class.java,
+        Damage::class.java,
+        HealthPoints::class.java
     )
 
     fun serializeComponents(){
@@ -83,9 +89,7 @@ data class Cargo(var items: Array<ItemStack>): EntityComponent {
 
         other as Cargo
 
-        if (!items.contentEquals(other.items)) return false
-
-        return true
+        return items.contentEquals(other.items)
     }
 
     override fun hashCode(): Int {
@@ -112,7 +116,7 @@ data class VisualAsset(var asset:String): EntityComponent{
 }
 
 /**
- * Read published varues for an entities current action
+ * Read published values for an entities current action
  */
 data class ActionInfo(var text: String, var status: ActionStatus): EntityComponent
 
@@ -163,8 +167,16 @@ data class Sensors(var range: Double): EntityComponent
  * Store target locks as a component so other systems can break locks, etc
  */
 @com.jme3.network.serializing.Serializable
-data class TargetLock(var targetId: EntityId): EntityComponent{
+data class TargetId(var targetId: EntityId): EntityComponent{
     constructor() : this(EntityId.NULL_ID)
+}
+
+/**
+ * Store info turrets need to shoot at their target
+ */
+@com.jme3.network.serializing.Serializable
+data class TargetTrack(var distance:Double, var angVel:Double): EntityComponent{
+    constructor(): this(-1.0, 0.0)
 }
 
 /**
@@ -179,8 +191,34 @@ data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent
  * Simple active/not active component
  */
 @com.jme3.network.serializing.Serializable
-data class Activate(var active:Boolean): EntityComponent{
+data class EquipmentPower(var active:Boolean): EntityComponent{
     constructor() : this(false)
+}
+
+/**
+ * Marks an entity as being activated.
+ */
+@com.jme3.network.serializing.Serializable
+data class Activated(var active:Boolean): EntityComponent{
+    constructor():this(false)
+}
+
+/**
+ * The actual attack against another unit's hp.
+ */
+@com.jme3.network.serializing.Serializable
+data class Attack(var armorDamage:Int, val shieldDamage:Int, val miningDamage:Int): EntityComponent{
+    constructor():this(0,0, 0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class HealthPoints(var shield:Int, var armor:Int): EntityComponent{
+    constructor():this(0,0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:Int): EntityComponent{
+    constructor():this(0,0,0)
 }
 
 /**
@@ -188,12 +226,48 @@ data class Activate(var active:Boolean): EntityComponent{
  */
 data class EquipmentAsset(var equipmentId:String): EntityComponent
 
+data class IsActiveEquipment(var active:Boolean): EntityComponent
+
+class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsActiveEquipment>{
+    constructor() : this(false)
+
+    override fun getComponentType(): Class<IsActiveEquipment> {
+        return IsActiveEquipment::class.java
+    }
+
+    override fun evaluate(c: EntityComponent?): Boolean {
+        c ?: return false
+        if(c !is IsActiveEquipment) return false
+        return c.active == isActive
+    }
+}
+
 /**
  * Identifies an entity ID that acts as the parent to this entity
  */
 @com.jme3.network.serializing.Serializable
 data class Parent(var parentId:EntityId): EntityComponent{
     constructor() : this(EntityId.NULL_ID)
+}
+
+/**
+ * Store all known child entities in a simple array for much more efficient access
+ */
+data class Children(var childrenIds:Array<EntityId>): EntityComponent{
+    constructor() : this(emptyArray())
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Children
+
+        return childrenIds.contentEquals(other.childrenIds)
+    }
+
+    override fun hashCode(): Int {
+        return childrenIds.contentHashCode()
+    }
 }
 
 /**
@@ -213,4 +287,32 @@ class ParentFilter(private var parentId:EntityId?): ComponentFilter<Parent> {
         if(c !is Parent) return false
         return c.parentId==parentId
     }
+}
+
+//lets do the most basic weapon
+/**
+ * @param focalLength the distance at which the laser does maximum damage
+ * @param focalDepth the range from the focal length that the laser will do damage based on the global laser falloff
+ * TODO: laser falloff???
+ */
+@com.jme3.network.serializing.Serializable
+@kotlinx.serialization.Serializable
+data class LaserFocus(var focalLength:Double, var focalDepth:Double): EntityComponent {
+    constructor(): this(0.0,0.0)
+}
+
+/**
+ * Decay after a set number of ticks
+ */
+@com.jme3.network.serializing.Serializable
+data class DecayTicks(var endTick:Long, var durationTicks:Int): EntityComponent{
+    constructor(): this(0,0)
+}
+
+/**
+ * decay after a set number of seconds
+ */
+@com.jme3.network.serializing.Serializable
+data class Decay(var end:Long, var duration:Double): EntityComponent{
+    constructor(): this(0, 0.0)
 }

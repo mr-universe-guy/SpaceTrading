@@ -1,6 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.loadout.*
 import com.jme3.app.Application
 import com.jme3.app.SimpleApplication
 import com.jme3.app.state.BaseAppState
@@ -8,7 +7,6 @@ import com.jme3.math.Vector3f
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
 import com.simsilica.lemur.*
-import com.simsilica.lemur.Action
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.core.GuiControl
@@ -16,6 +14,7 @@ import com.simsilica.lemur.core.VersionedList
 import com.simsilica.lemur.event.CursorButtonEvent
 import com.simsilica.lemur.event.CursorEventControl
 import com.simsilica.lemur.event.DragHandler
+import `fun`.familyfunforce.cosmos.loadout.*
 import javax.swing.JFileChooser
 
 class LoadoutEditorState: BaseAppState() {

@@ -1,9 +1,5 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
-import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
-import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
-import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.network.Client
@@ -14,6 +10,10 @@ import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
+import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
+import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
+import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 
 interface ActionRMI{
     fun setAction(id:EntityId, action:Action)
@@ -43,7 +43,7 @@ class ActionSystem: AbstractGameSystem() {
             }
 
             override fun setEquipmentActive(id: EntityId, active: Boolean) {
-                data.setComponent(id, Activate(active))
+                data.setComponent(id, EquipmentPower(active))
             }
 
         }

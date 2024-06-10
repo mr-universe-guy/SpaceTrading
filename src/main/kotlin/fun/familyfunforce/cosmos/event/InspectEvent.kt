@@ -1,7 +1,7 @@
 package `fun`.familyfunforce.cosmos.event
 
-import `fun`.familyfunforce.cosmos.ui.Inspectable
 import com.simsilica.event.EventType
+import `fun`.familyfunforce.cosmos.ui.Inspectable
 
 /**
  * Used when focus is brought to an inspect-able item in the game. This will notify the inspector window to update with

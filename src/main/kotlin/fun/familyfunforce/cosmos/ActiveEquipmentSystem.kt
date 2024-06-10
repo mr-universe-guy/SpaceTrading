@@ -1,9 +1,8 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.loadout.ActiveEquipment
-import `fun`.familyfunforce.cosmos.loadout.getEquipmentFromId
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
+import com.simsilica.es.Filters
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
@@ -13,7 +12,9 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        actives = data.getEntities(EquipmentAsset::class.java, CycleTimer::class.java, Activate::class.java, Parent::class.java)
+        actives = data.getEntities(
+            Filters.fieldEquals(Activated::class.java, "active", true), IsActiveEquipment::class.java, CycleTimer::class.java, EquipmentPower::class.java,
+            Parent::class.java, Activated::class.java)
     }
 
     override fun terminate() {
@@ -26,13 +27,13 @@ class ActiveEquipmentSystem: AbstractGameSystem() {
         actives.forEach {
             val cycle = it.get(CycleTimer::class.java)
             //we only care about active equipment that has completed its cycle
-            if(!it.get(Activate::class.java).active || cycle.nextCycle>curTime) return
+            if(!it.get(EquipmentPower::class.java).active || cycle.nextCycle>curTime){ it.set(Activated(false)); return}
             //increment next cycle and activate
-            val equip = getEquipmentFromId(it.get(EquipmentAsset::class.java).equipmentId)
-            //TODO: do this better?
-            if(equip !is ActiveEquipment) throw Exception("Equipment $equip is not an active equipment")
-            it.set(CycleTimer(time.getFutureTime(cycle.duration), cycle.duration))
-            equip.activate(it.get(Parent::class.java)!!.parentId, data)
+            val ct = CycleTimer(time.getFutureTime(cycle.duration), cycle.duration)
+            it.set(ct)
+            //println("Cycle timer: $ct")
+            //create a signal to inform other entities this equipment has activated
+            it.set(Activated(true))
         }
     }
 }

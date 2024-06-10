@@ -1,9 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.Orbital
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
-import `fun`.familyfunforce.cosmos.event.InspectEvent
-import `fun`.familyfunforce.cosmos.event.StellarTravelEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.scene.Node
@@ -14,6 +10,10 @@ import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BorderLayout
 import com.simsilica.lemur.component.BoxLayout
 import com.simsilica.lemur.style.ElementId
+import `fun`.familyfunforce.cosmos.Orbital
+import `fun`.familyfunforce.cosmos.SpaceTraderApp
+import `fun`.familyfunforce.cosmos.event.InspectEvent
+import `fun`.familyfunforce.cosmos.event.StellarTravelEvent
 
 class InspectionState:BaseAppState(), EventListener<InspectEvent> {
     private lateinit var guiNode: Node

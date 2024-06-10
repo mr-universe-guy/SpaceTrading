@@ -52,9 +52,8 @@ data class Loadout(var name: String, val vehicleId: String){
         //this section and this equipment exist, now see if they fit
         //get remaining space in section
         val freeSlots = getFreeSlots(section)
-        if(freeSlots < equipment.size) return false
+        return freeSlots >= equipment.size
         //check bays and other stuff
-        return true
     }
 
     fun getEquipmentInSection(sect: String): List<String>{

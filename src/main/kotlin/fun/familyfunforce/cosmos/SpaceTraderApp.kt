@@ -5,20 +5,20 @@
  */
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.ui.CameraManagerState
-import `fun`.familyfunforce.cosmos.ui.OrbitController
-import `fun`.familyfunforce.cosmos.ui.registerDefaults
 import com.jme3.app.SimpleApplication
 import com.jme3.system.AppSettings
 import com.jme3.system.JmeContext
+import com.simsilica.es.net.EntitySerializers
 import com.simsilica.lemur.GuiGlobals
+import com.simsilica.lemur.OptionPanelState
+import com.simsilica.lemur.style.BaseStyles
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
-import io.tlf.jme.jfx.JavaFxUI
 import `fun`.familyfunforce.cosmos.loadout.VehicleLoader
+import `fun`.familyfunforce.cosmos.ui.CameraManagerState
+import `fun`.familyfunforce.cosmos.ui.OrbitController
 import `fun`.familyfunforce.cosmos.ui.UIAudioState
-import com.simsilica.es.net.EntitySerializers
-import com.simsilica.lemur.style.BaseStyles
+import `fun`.familyfunforce.cosmos.ui.registerDefaults
 import java.util.*
 
 /**
@@ -57,13 +57,14 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
 
     override fun simpleInitApp() {
         //jfx initialization
-        JavaFxUI.initialize(this)
+        //JavaFxUI.initialize(this)
         //lemur
         GuiGlobals.initialize(this)
         //BaseStyles.loadGlassStyle()
         //GuiGlobals.getInstance().styles.defaultStyle = BaseStyles.GLASS
         BaseStyles.loadStyleResources("UI/Space.groovy")
         GuiGlobals.getInstance().styles.defaultStyle = "space"
+        stateManager.attach(OptionPanelState())//prep for ui option panes
         //Controls
         registerDefaults(GuiGlobals.getInstance().inputMapper)
         //I/O

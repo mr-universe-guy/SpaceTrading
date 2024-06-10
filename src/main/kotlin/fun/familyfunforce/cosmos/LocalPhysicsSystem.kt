@@ -1,6 +1,9 @@
 package `fun`.familyfunforce.cosmos
 
-import com.simsilica.es.*
+import com.simsilica.es.Entity
+import com.simsilica.es.EntityContainer
+import com.simsilica.es.EntityData
+import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime

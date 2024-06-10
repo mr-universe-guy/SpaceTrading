@@ -1,6 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.*
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.input.event.MouseButtonEvent
@@ -28,6 +27,8 @@ import com.simsilica.lemur.focus.FocusChangeEvent
 import com.simsilica.lemur.focus.FocusChangeListener
 import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.*
+import `fun`.familyfunforce.cosmos.TargetId
 
 private const val CATEGORY_KEY = "Category"
 private const val HIGHLIGHTED = 1 shl 0
@@ -48,13 +49,14 @@ class LocalMapState: BaseAppState() {
     private var zoomSpeed = 0.25f
     private var player: WatchedEntity? = null
     private var targetId: EntityId? = null
-    var playerId: EntityId? = null
+    private lateinit var playerId: VersionedReference<EntityId?>
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
+        playerId = getState(PlayerIdState::class.java).watchPlayerId()
         //test input
         //focus
-        EventBus.addListener(this, EntityFocusEvent.entityFocusLost,EntityFocusEvent.entityFocusGained)
+        EventBus.addListener(this, EntityFocusEvent.entityFocusChanged)
         //initialize camera as top down
         mapNode.cullHint = Spatial.CullHint.Never
         mapNode.queueBucket = RenderQueue.Bucket.Transparent
@@ -82,7 +84,7 @@ class LocalMapState: BaseAppState() {
     }
 
     override fun cleanup(app: Application) {
-        EventBus.removeListener(this, EntityFocusEvent.entityFocusLost, EntityFocusEvent.entityFocusLost)
+        EventBus.removeListener(this, EntityFocusEvent.entityFocusChanged)
         app.renderManager.removeMainView(mapViewport)
         app.stateManager.getState(MouseAppState::class.java).removeCollisionRoot(mapViewport)
     }
@@ -109,25 +111,26 @@ class LocalMapState: BaseAppState() {
         mapCam.setFrustum(-10f,10f,mapRadius, -mapRadius, mapHeight, -mapHeight)
     }
 
-    fun entityFocusLost(evt:EntityFocusEvent){
-        println("Map focus lost")
-    }
-
-    fun entityFocusGained(evt:EntityFocusEvent){
-        println("Map focus gained $evt")
+    fun entityFocusChanged(evt:EntityFocusEvent){
+        println("Map focus lost from $evt")
+        if(evt.id == null) return
+        if(evt.focused){
+            mapObjects.getObject(evt.id).setFlag(HIGHLIGHTED)
+        } else{
+            mapObjects.getObject(evt.id).unsetFlag(HIGHLIGHTED)
+        }
     }
 
     override fun update(tpf: Float) {
-        if(playerId != null){
+        if(playerId.update()){
             player?.release()
-            player = data.watchEntity(playerId, Position::class.java, TargetLock::class.java)
-            playerId = null
+            if(playerId.get() != null) player = data.watchEntity(playerId.get(), Position::class.java, TargetId::class.java)
         }
         if(player?.applyChanges() == true){
             val pos = player!!.get(Position::class.java).position
             mapOffset.localTranslation = Vector3f(pos.x.toFloat(), -pos.z.toFloat(), 9f)
             //TODO: Only set targetId once, un-set flags when target changes
-            val tgtId = player?.get(TargetLock::class.java)?.targetId
+            val tgtId = player?.get(TargetId::class.java)?.targetId
             if(targetId != tgtId) {
                 setPlayerTarget(tgtId)
             }
@@ -240,7 +243,7 @@ class LocalMapState: BaseAppState() {
     private inner class IconFocusListener(val target: MapObject): FocusChangeListener{
         override fun focusGained(event: FocusChangeEvent?) {
             target.setFlag(HIGHLIGHTED)
-            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(target.id))
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(target.id, true))
         }
 
         override fun focusLost(event: FocusChangeEvent?) {
@@ -263,7 +266,7 @@ class LocalMapState: BaseAppState() {
             event?.setConsumed()
             //un-focus whatever is focused
             getState(FocusManagerState::class.java).focus = null
-            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null))
+            EventBus.publish(EntityFocusEvent.entityFocusRequest, EntityFocusEvent(null, false))
         }
     }
 }

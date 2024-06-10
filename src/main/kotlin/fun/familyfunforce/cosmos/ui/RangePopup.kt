@@ -4,7 +4,6 @@ import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort
 import com.jme3.scene.control.AbstractControl
 import com.simsilica.lemur.*
-import com.simsilica.lemur.Action
 import com.simsilica.lemur.text.DocumentModelFilter
 import com.simsilica.lemur.text.TextFilters
 

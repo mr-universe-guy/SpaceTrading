@@ -1,13 +1,13 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.ClientState
-import `fun`.familyfunforce.cosmos.ServerSystem
-import `fun`.familyfunforce.cosmos.SpaceTraderApp
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.scene.Node
 import com.simsilica.lemur.*
 import com.simsilica.lemur.component.BoxLayout
+import `fun`.familyfunforce.cosmos.ClientState
+import `fun`.familyfunforce.cosmos.ServerSystem
+import `fun`.familyfunforce.cosmos.SpaceTraderApp
 
 /**
  * Menu for joining or hosting online games

@@ -1,7 +1,5 @@
 package `fun`.familyfunforce.cosmos.ui
 
-import `fun`.familyfunforce.cosmos.VisualState
-import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
 import com.jme3.math.FastMath
@@ -14,8 +12,15 @@ import com.simsilica.event.EventBus
 import com.simsilica.event.EventListener
 import com.simsilica.event.EventType
 import com.simsilica.lemur.GuiGlobals
-import com.simsilica.lemur.input.*
+import com.simsilica.lemur.core.VersionedReference
+import com.simsilica.lemur.input.AnalogFunctionListener
+import com.simsilica.lemur.input.FunctionId
+import com.simsilica.lemur.input.InputState
+import com.simsilica.lemur.input.StateFunctionListener
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.PlayerIdState
+import `fun`.familyfunforce.cosmos.VisualState
+import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 
 class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener, StateFunctionListener, EventListener<PlayerIdChangeEvent>{
     /**
@@ -23,6 +28,7 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
      */
     private val camAxis = Vec3d()
     private var camPressed = false
+    lateinit var targetId: VersionedReference<EntityId?>
     var target: Spatial? = null
     var activeController: CameraController? = null
         set(value) {
@@ -31,8 +37,9 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
         }
 
     override fun initialize(app: Application?) {
-        EventBus.addListener(PlayerIdChangeEvent.PlayerIdCreated, this)
-        EventBus.addListener(PlayerIdChangeEvent.PlayerIdChanged, this)
+        targetId = getState(PlayerIdState::class.java).watchPlayerId()
+        EventBus.addListener(PlayerIdChangeEvent.playerIdCreated, this)
+        EventBus.addListener(PlayerIdChangeEvent.playerIdChanged, this)
     }
 
     override fun newEvent(type: EventType<PlayerIdChangeEvent>, event: PlayerIdChangeEvent) {
@@ -40,8 +47,8 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun cleanup(app: Application?) {
-        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdCreated, this)
-        EventBus.removeListener(PlayerIdChangeEvent.PlayerIdChanged, this)
+        EventBus.removeListener(PlayerIdChangeEvent.playerIdCreated, this)
+        EventBus.removeListener(PlayerIdChangeEvent.playerIdChanged, this)
     }
 
     /**
@@ -65,6 +72,13 @@ class CameraManagerState(val cam:Camera): BaseAppState(), AnalogFunctionListener
     }
 
     override fun update(tpf: Float) {
+        if(targetId.update()){
+            if(targetId.get() == null){
+                target = null
+            } else{
+                setTargetFromId(targetId.get()!!)
+            }
+        }
         activeController?.let { con ->
             target?.let { con.targetPos.set(it.worldTranslation) }
             con.updateCamera(tpf, camAxis.toVector3f(), camPressed)

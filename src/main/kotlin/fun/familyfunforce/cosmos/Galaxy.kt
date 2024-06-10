@@ -1,9 +1,9 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.ui.Inspectable
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.ui.Inspectable
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.cos

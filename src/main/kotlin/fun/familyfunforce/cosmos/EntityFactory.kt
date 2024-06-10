@@ -1,10 +1,9 @@
 package `fun`.familyfunforce.cosmos
 
-import `fun`.familyfunforce.cosmos.loadout.*
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
-import `fun`.familyfunforce.cosmos.loadout.getVehicleFromId
+import `fun`.familyfunforce.cosmos.loadout.*
 
 fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout): EntityId{
     val vehicle = getVehicleFromId(loadout.vehicleId)!!
@@ -18,6 +17,8 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         VisualAsset(vehicle.asset),
         ObjectCategory(Category.SHIP),
         EngineDriver(Vec3d(0.0,0.0,0.0)),
+        //temporary hp stuff, should be expanded in the future
+        HealthPoints(10,10),
         //loadout specific data
         Mass(stats[EMPTY_MASS] as Double? ?: 1.0),
         Engine(stats[MAX_SPEED] as Double? ?: 1.0, stats[MAX_THRUST] as Double? ?: 1.0),
@@ -27,13 +28,21 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
     )
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
-    loadout.getEquipment().forEach {
-        val location = it.key
-        it.value.filterIsInstance<ActiveEquipment>().forEach { equip ->
-            val equipId = data.createEntity()
-            //default components
-            data.setComponents(equipId, Name(equip.name), CycleTimer(Long.MIN_VALUE, equip.duration),
-                Activate(true), Parent(id), EquipmentAsset(equip.equipmentId), Name(equip.name))
+    loadout.getEquipment().forEach { loc ->
+        //val location = loc.key
+        //TODO: Fix this!!! ComponentEquipment should always be a new entity I think? much though should be given here
+        loc.value.forEach{
+            var equipId: EntityId? = null
+            if(it is ActiveEquipment){
+                equipId = data.createEntity()
+                //default components
+                data.setComponents(equipId, Name(it.name), CycleTimer(Long.MIN_VALUE, it.duration),
+                    EquipmentPower(true), Parent(id),  Name(it.name), IsActiveEquipment(true))
+            }
+            if(it is ComponentEquipment){
+                if(equipId == null) equipId=data.createEntity()
+                data.setComponents(equipId, *it.components.toTypedArray(), IsActiveEquipment(false))
+            }
         }
     }
     return id
