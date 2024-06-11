@@ -331,7 +331,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         application.enqueue {
             focusedEntity = id
             //we should wait for update to do this :/
-            val name: String = if (id == null) "" else data.getComponent(id, Name::class.java).name
+            val name: String = if (id == null) "" else data.getComponent(id, Name::class.java)?.name ?: ""
             (mapInfoContainer.getChild("NAME") as Label).text = name
             //set actions that require a selection to enabled/disabled
             val enabled = (id != null)
@@ -446,7 +446,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         override fun update(): Boolean {
             val updatesAvailable = super.update()
             if(playerShip != null){
-                val playerPos = playerShip?.get(Position::class.java)?.position
+                val playerPos = playerShip?.get(Position::class.java)?.position ?: Vec3d(0.0,0.0,0.0)
                 for(obj in array){
                     val dist = "%.0f".format(obj.pos.distance(playerPos))
                     obj.uiRow.setColumn(1, dist)

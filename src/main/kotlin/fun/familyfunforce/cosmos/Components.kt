@@ -223,6 +223,11 @@ data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:In
     constructor():this(0,0,0)
 }
 
+@com.jme3.network.serializing.Serializable
+data class Destroyed(var isDestroyed:Boolean): EntityComponent{
+    constructor():this(true)
+}
+
 /**
  * Component holding the EquipmentId of a given piece of equipment
  */

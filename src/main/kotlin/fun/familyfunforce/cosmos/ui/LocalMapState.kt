@@ -127,7 +127,7 @@ class LocalMapState: BaseAppState() {
             if(playerId.get() != null) player = data.watchEntity(playerId.get(), Position::class.java, TargetId::class.java)
         }
         if(player?.applyChanges() == true){
-            val pos = player!!.get(Position::class.java).position
+            val pos = player?.get(Position::class.java)?.position ?: Vec3d(0.0, 0.0, 0.0)
             mapOffset.localTranslation = Vector3f(pos.x.toFloat(), -pos.z.toFloat(), 9f)
             //TODO: Only set targetId once, un-set flags when target changes
             val tgtId = player?.get(TargetId::class.java)?.targetId

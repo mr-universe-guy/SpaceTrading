@@ -1,24 +1,28 @@
 package `fun`.familyfunforce.cosmos
 
+import com.simsilica.es.Entity
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 
-class AttackSystem : AbstractGameSystem() {
+class CombatSystem : AbstractGameSystem() {
     private lateinit var data : EntityData
     private lateinit var attacks : EntitySet
+    private lateinit var damagedEntities : EntitySet
 
     private val attackMap = mutableMapOf<EntityId, Accumulator>()
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
         attacks = data.getEntities(Attack::class.java, TargetId::class.java)
+        damagedEntities = data.getEntities(Damage::class.java, HealthPoints::class.java)
     }
 
     override fun terminate() {
         attacks.release()
+        damagedEntities.release()
     }
 
     override fun update(time: SimTime?) {
@@ -47,6 +51,17 @@ class AttackSystem : AbstractGameSystem() {
             println("Entity Id ${entry.key} has received $sum total damage")
             //cleanup
             iterator.remove()
+        }
+        damagedEntities.applyChanges()
+        damagedEntities.addedEntities.forEach { evalEntityDestruction(it) }
+        damagedEntities.changedEntities.forEach { evalEntityDestruction(it) }
+    }
+
+    private fun evalEntityDestruction(entity: Entity){
+        val hp = entity.get(HealthPoints::class.java).armor
+        val damage = entity.get(Damage::class.java).armorDamage
+        if(damage > hp){
+            entity.set(Destroyed(true))
         }
     }
 
