@@ -36,12 +36,19 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
             if(it is PoweredEquipment){
                 equipId = data.createEntity()
                 //default components
-                data.setComponents(equipId, Name(it.name), CycleTimer(simTime, it.duration),
-                    EquipmentPower(false), Parent(id),  Name(it.name), IsPoweredEquipment(true))
+                data.setComponents(equipId,
+                    Name(it.name),
+                    CycleTimer(simTime, it.duration),
+                    EquipmentPower(false),
+                    Parent(id),
+                    Name(it.name),
+                    Activated(false),
+                    ActivationConsumed(false)
+                )
             }
             if(it is ComponentEquipment){
                 if(equipId == null) equipId=data.createEntity()
-                data.setComponents(equipId, *it.components.toTypedArray(), IsPoweredEquipment(false))
+                data.setComponents(equipId, *it.components.toTypedArray())
             }
         }
     }

@@ -187,6 +187,8 @@ data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent
     constructor() : this(0,0.0)
 }
 
+data class ActivationConsumed(val consumed:Boolean): EntityComponent
+
 /**
  * Simple active/not active component
  */
@@ -225,22 +227,6 @@ data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:In
  * Component holding the EquipmentId of a given piece of equipment
  */
 data class EquipmentAsset(var equipmentId:String): EntityComponent
-
-data class IsPoweredEquipment(var active:Boolean): EntityComponent
-
-class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsPoweredEquipment>{
-    constructor() : this(false)
-
-    override fun getComponentType(): Class<IsPoweredEquipment> {
-        return IsPoweredEquipment::class.java
-    }
-
-    override fun evaluate(c: EntityComponent?): Boolean {
-        c ?: return false
-        if(c !is IsPoweredEquipment) return false
-        return c.active == isActive
-    }
-}
 
 /**
  * Identifies an entity ID that acts as the parent to this entity
