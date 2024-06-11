@@ -365,8 +365,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             val eqpCont = Container(BorderLayout())
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
-            eqpButton.isChecked = e.get(EquipmentPower::class.java)!!.active
-            eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setActive, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
+            eqpButton.isChecked = e.get(EquipmentPower::class.java)?.powered ?: false
+            eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setEquipmentPower, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
             val cycleTimer = e.get(CycleTimer::class.java)!!
@@ -377,7 +377,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 
         override fun updateObject(eqp: EquipmentUIElement, e: Entity) {
             //update checkbox and progress slider
-            eqp.activeButton.isChecked=e.get(EquipmentPower::class.java).active
+            eqp.activeButton.isChecked=e.get(EquipmentPower::class.java).powered
             eqp.cycleEnd=e.get(CycleTimer::class.java).nextCycle
             //eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
         }

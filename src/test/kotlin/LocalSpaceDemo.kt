@@ -36,7 +36,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.addSystem(EngineSystem())
         serverManager.register(EnergySystem::class.java, EnergySystem())
         serverManager.register(SensorSystem::class.java, SensorSystem())
-        serverManager.addSystem(ActiveEquipmentSystem())
+        serverManager.addSystem(PoweredEquipmentSystem())
         serverManager.register(ActionSystem::class.java,ActionSystem())
         serverManager.addSystem(WeaponSystem())
         serverManager.addSystem(AttackSystem())
@@ -82,10 +82,11 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         //spawn a player ship and a couple of asteroids
         val data = serverManager.get(DataSystem::class.java).entityData
         val loadout = generateTestLoadout()
-        playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout)
+        val curTime = serverLoop.stepTime.time
+        playerId = spawnLoadout(data, "Player", Vec3d(0.0,0.0,0.0), loadout, curTime)
         println("Player Spawned as id $playerId")
         //spawn something to shoot at
-        targetId = spawnLoadout(data, "Target", Vec3d(0.0, -50.0, 0.0), loadout)
+        targetId = spawnLoadout(data, "Target", Vec3d(0.0, -50.0, 0.0), loadout, curTime)
         //spawn asteroids
         val asteroidID = spawnTestAsteroid(data, Vec3d(25.0,25.0,75.0))
         spawnTestAsteroid(data, Vec3d(-25.0, -25.0, 75.0))

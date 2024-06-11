@@ -5,7 +5,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 import `fun`.familyfunforce.cosmos.loadout.*
 
-fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout): EntityId{
+fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loadout, simTime:Long): EntityId{
     val vehicle = getVehicleFromId(loadout.vehicleId)!!
     val stats = loadout.getStats().toMutableMap()
     val id = data.createEntity()
@@ -33,15 +33,15 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         //TODO: Fix this!!! ComponentEquipment should always be a new entity I think? much though should be given here
         loc.value.forEach{
             var equipId: EntityId? = null
-            if(it is ActiveEquipment){
+            if(it is PoweredEquipment){
                 equipId = data.createEntity()
                 //default components
-                data.setComponents(equipId, Name(it.name), CycleTimer(Long.MIN_VALUE, it.duration),
-                    EquipmentPower(true), Parent(id),  Name(it.name), IsActiveEquipment(true))
+                data.setComponents(equipId, Name(it.name), CycleTimer(simTime, it.duration),
+                    EquipmentPower(false), Parent(id),  Name(it.name), IsPoweredEquipment(true))
             }
             if(it is ComponentEquipment){
                 if(equipId == null) equipId=data.createEntity()
-                data.setComponents(equipId, *it.components.toTypedArray(), IsActiveEquipment(false))
+                data.setComponents(equipId, *it.components.toTypedArray(), IsPoweredEquipment(false))
             }
         }
     }

@@ -63,7 +63,7 @@ abstract class PassiveEquipment: Equipment(){
 /**
  * Active equipment need to be activated to function. These will create entities when spawned and can be turned on/off
  */
-abstract class ActiveEquipment: Equipment(){
+abstract class PoweredEquipment: Equipment(){
     abstract val duration: Double
     abstract val requireTarget: Boolean
 }
@@ -162,7 +162,7 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
                        val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double,
                        override val components: List<EntityComponent>):
-        ActiveEquipment(), ComponentEquipment{
+        PoweredEquipment(), ComponentEquipment{
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
     override val requireTarget: Boolean = true
 }

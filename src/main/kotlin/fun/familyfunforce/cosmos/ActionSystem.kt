@@ -18,7 +18,7 @@ import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 interface ActionRMI{
     fun setAction(id:EntityId, action:Action)
     fun setThrottle(id:EntityId, throttle:Double)
-    fun setEquipmentActive(id:EntityId, active:Boolean)
+    fun setEquipmentPower(id:EntityId, powered:Boolean)
 }
 
 /**
@@ -42,8 +42,9 @@ class ActionSystem: AbstractGameSystem() {
                 manager.enqueue { unitActions[id]!!.setThrottle(throttle) }
             }
 
-            override fun setEquipmentActive(id: EntityId, active: Boolean) {
-                data.setComponent(id, EquipmentPower(active))
+            override fun setEquipmentPower(id: EntityId, powered: Boolean) {
+                println("Server is setting equipment for $id to power:$powered")
+                data.setComponent(id, EquipmentPower(powered))
             }
 
         }
@@ -104,13 +105,15 @@ class ClientActionEventResponder: BaseAppState(){
 
     fun approachTarget(evt: ApproachOrderEvent){rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))}
 
-    fun setEquipmentActive(evt: EquipmentToggleEvent){rmiHandler.setEquipmentActive(evt.equipId, evt.active)}
+    fun setEquipmentPower(evt: EquipmentToggleEvent){
+        rmiHandler.setEquipmentPower(evt.equipId, evt.powered)
+    }
 
     override fun cleanup(app: Application?) {}
 
     override fun onEnable() {
         EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle,
-            ApproachOrderEvent.approachTarget, EquipmentToggleEvent.setActive)
+            ApproachOrderEvent.approachTarget, EquipmentToggleEvent.setEquipmentPower)
     }
 
     override fun onDisable() {}

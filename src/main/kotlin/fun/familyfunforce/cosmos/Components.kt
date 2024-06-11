@@ -191,7 +191,7 @@ data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent
  * Simple active/not active component
  */
 @com.jme3.network.serializing.Serializable
-data class EquipmentPower(var active:Boolean): EntityComponent{
+data class EquipmentPower(var powered:Boolean): EntityComponent{
     constructor() : this(false)
 }
 
@@ -226,18 +226,18 @@ data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:In
  */
 data class EquipmentAsset(var equipmentId:String): EntityComponent
 
-data class IsActiveEquipment(var active:Boolean): EntityComponent
+data class IsPoweredEquipment(var active:Boolean): EntityComponent
 
-class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsActiveEquipment>{
+class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsPoweredEquipment>{
     constructor() : this(false)
 
-    override fun getComponentType(): Class<IsActiveEquipment> {
-        return IsActiveEquipment::class.java
+    override fun getComponentType(): Class<IsPoweredEquipment> {
+        return IsPoweredEquipment::class.java
     }
 
     override fun evaluate(c: EntityComponent?): Boolean {
         c ?: return false
-        if(c !is IsActiveEquipment) return false
+        if(c !is IsPoweredEquipment) return false
         return c.active == isActive
     }
 }
