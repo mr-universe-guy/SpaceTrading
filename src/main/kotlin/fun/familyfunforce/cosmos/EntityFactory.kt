@@ -12,8 +12,10 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
     data.setComponents(id,
         //vehicle specific data
         Name(name),
+        Destroyed(false),
         Position(position),
         Velocity(0.0,0.0,0.0),
+        Drag(0.01),
         VisualAsset(vehicle.asset),
         ObjectCategory(Category.SHIP),
         EngineDriver(Vec3d(0.0,0.0,0.0)),

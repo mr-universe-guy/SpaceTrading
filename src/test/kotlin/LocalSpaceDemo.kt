@@ -33,6 +33,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.register(DataSystem::class.java, dataSystem)
         serverManager.addSystem(DecaySystem())
         serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
+        serverManager.addSystem(DragSystem())
         serverManager.addSystem(EngineSystem())
         serverManager.register(EnergySystem::class.java, EnergySystem())
         serverManager.register(SensorSystem::class.java, SensorSystem())
@@ -40,7 +41,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.register(ActionSystem::class.java,ActionSystem())
         serverManager.addSystem(WeaponSystem())
         serverManager.addSystem(CombatSystem())
-        serverManager.addSystem(DestructionSystem())
+//        serverManager.addSystem(DestructionSystem())
 
         //***********************   CLIENT  *************************
         //focus

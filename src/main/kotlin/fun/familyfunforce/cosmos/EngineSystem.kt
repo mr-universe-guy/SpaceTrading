@@ -16,7 +16,14 @@ class EngineSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        engines = data.getEntities(Velocity::class.java, Engine::class.java, EngineDriver::class.java)
+        engines = data.getEntities(
+            //TODO: have a system that handles entity death and correctly removes components based on entity type
+            DestroyedFilter(false),
+            Destroyed::class.java,
+            Velocity::class.java,
+            Engine::class.java,
+            EngineDriver::class.java
+        )
         physicsSystem = getSystem(LocalPhysicsSystem::class.java)
     }
 

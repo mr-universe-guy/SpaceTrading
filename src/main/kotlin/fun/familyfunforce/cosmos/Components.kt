@@ -228,6 +228,24 @@ data class Destroyed(var isDestroyed:Boolean): EntityComponent{
     constructor():this(true)
 }
 
+class DestroyedFilter(private val isDestroyed: Boolean): ComponentFilter<Destroyed>{
+    override fun getComponentType(): Class<Destroyed> {
+        return Destroyed::class.java
+    }
+
+    override fun evaluate(c: EntityComponent?): Boolean {
+        return when (c) {
+            null -> false
+            is Destroyed -> {
+                isDestroyed == c.isDestroyed
+            }
+            else -> {
+                false
+            }
+        }
+    }
+}
+
 /**
  * Component holding the EquipmentId of a given piece of equipment
  */
