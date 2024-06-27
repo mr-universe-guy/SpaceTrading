@@ -7,6 +7,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.lemur.GuiGlobals
+import com.simsilica.lemur.anim.AnimationState
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
@@ -55,6 +56,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
                 stateManager.attach(ClientDataState(client.client))
                 stateManager.attach(PlayerIdState())
                 stateManager.attach(PlayerFocusState())
+                stateManager.attach(AnimationState())
                 stateManager.attach(VisualState())
                 val cameraManagerState = CameraManagerState(cam)
                 cameraManagerState.activeController = OrbitController(5f,100f, 10f)

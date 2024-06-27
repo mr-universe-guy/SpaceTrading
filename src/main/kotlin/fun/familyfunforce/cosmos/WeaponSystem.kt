@@ -52,7 +52,8 @@ class WeaponSystem: AbstractGameSystem() {
             Parent(parentId),
             Attack(10, 10, 0),
             TargetId(targetId),
-            Decay(time.toSimTime(1.0))
+            Decay(time.toSimTime(1.0)),
+            VisualAsset("Laser")
         )
         it.set(ActivationConsumed(true))
     }
