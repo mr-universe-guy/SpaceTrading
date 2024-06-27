@@ -85,13 +85,16 @@ class VisualState: BaseAppState() {
                 val parentId = it.get(Parent::class.java).parentId
                 val targetId = it.get(TargetId::class.java).targetId
                 //get locations
-                val parentPos = getSpatialFromId(parentId)?.localTranslation ?: Vector3f.NAN
-                val targetPos = getSpatialFromId(targetId)?.localTranslation ?: Vector3f.NAN
-                if(parentPos == Vector3f.NAN || targetPos == Vector3f.NAN){
+                val parentSpatial = getSpatialFromId(parentId)
+                val targetSpatial = getSpatialFromId(targetId)
+                if(parentSpatial == null || targetSpatial == null){
                     return@forEach
                 }
+                val parentPos = parentSpatial.localTranslation
+                val targetPos = targetSpatial.localTranslation
                 //get weapon type to draw
                 if("Laser" == asset){
+                    val laserDuration = 0.5
                     //draw a cylinder from parent to target for now
                     val length = targetPos.distance(parentPos)
                     val mesh = Cylinder(8,8,1f,length)
@@ -99,13 +102,12 @@ class VisualState: BaseAppState() {
                     val mat = debugMat.clone()
                     //tween to change colors and erase spatial
                     val color = ColorRGBA()
-                    val colorTween = ColorTweener(ColorRGBA.White, ColorRGBA.Red, color, 1.0)
+                    val colorTween = ColorTweener(ColorRGBA.White, ColorRGBA.Red, color, laserDuration)
                     mat.setColor("Color", color)
                     geo.material = mat
+                    geo.addControl(HalfwayBetweenControl(parentSpatial, targetSpatial))
                     val removeTween = Tweens.callMethod(geo, "removeFromParent")
                     animationState.add(colorTween, removeTween)
-                    geo.setLocalTranslation(parentPos.add(targetPos).multLocal(0.5f))
-                    geo.lookAt(targetPos, Vector3f.UNIT_Y)
                     sceneNode.attachChild(geo)
                 }
             }
@@ -204,5 +206,14 @@ class VisualState: BaseAppState() {
             visualizer.nextPos=nextPos.toVector3f()
             setVelocity(velocity)
         }
+    }
+
+    private inner class HalfwayBetweenControl(val a:Spatial, val b:Spatial): AbstractControl(){
+        override fun controlUpdate(tpf: Float) {
+            spatial.localTranslation = a.localTranslation.add(b.localTranslation).multLocal(0.5f)
+            spatial.lookAt(b.localTranslation, Vector3f.UNIT_Y)
+        }
+
+        override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
     }
 }
