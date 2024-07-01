@@ -23,8 +23,8 @@ fun getEquipmentFromId(id: String): Equipment?{
 /**
  * Adds this piece of equipment to the cache
  */
-fun cacheEquipment(Equipment: Equipment){
-    EQUIPMENT_CACHE[Equipment.equipmentId] = Equipment
+fun cacheEquipment(equipment: Equipment){
+    EQUIPMENT_CACHE[equipment.equipmentId] = equipment
 }
 
 @Serializable
@@ -66,6 +66,7 @@ abstract class PassiveEquipment: Equipment(){
 abstract class PoweredEquipment: Equipment(){
     abstract val duration: Double
     abstract val requireTarget: Boolean
+    abstract val heat: Int
 }
 
 /**
@@ -159,9 +160,17 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 }
 
 @Serializable
-data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
-                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double,
-                       override val components: List<EntityComponent>):
+data class WeaponEquip(
+    override val equipmentId: String,
+    override val name:String,
+    override val size:Int,
+    override val power:Int,
+    val cycleTimeMillis:Long,
+    val maxRange:Double,
+    override val duration: Double,
+    override val heat: Int,
+    override val components: List<EntityComponent>
+):
         PoweredEquipment(), ComponentEquipment{
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
     override val requireTarget: Boolean = true

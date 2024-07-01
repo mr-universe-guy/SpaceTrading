@@ -21,12 +21,16 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         EngineDriver(Vec3d(0.0,0.0,0.0)),
         //temporary hp stuff, should be expanded in the future
         HealthPoints(10,10),
+        Damage(0,0,0),
         //loadout specific data
         Mass(stats[EMPTY_MASS] as Double? ?: 1.0),
         Engine(stats[MAX_SPEED] as Double? ?: 1.0, stats[MAX_THRUST] as Double? ?: 1.0),
         EnergyGridInfo(stats[EN_STORAGE] as Long? ?: 10, stats[EN_RECHARGE] as Long? ?: 10,
             stats[EN_CYCLE_TIME] as Double? ?: 1.0),
-        Sensors(stats[SEN_RANGE_MAX] as Double? ?: 100.0)
+        Sensors(stats[SEN_RANGE_MAX] as Double? ?: 100.0),
+        HeatLimit(20),
+        Heat(0),
+        Overheated(false)
     )
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
@@ -45,7 +49,8 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
                     Parent(id),
                     Name(it.name),
                     Activated(false),
-                    ActivationConsumed(false)
+                    ActivationConsumed(false),
+                    Heat(it.heat)
                 )
             }
             if(it is ComponentEquipment){

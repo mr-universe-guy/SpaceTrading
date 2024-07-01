@@ -96,7 +96,7 @@ class VisualState: BaseAppState() {
                 if("Laser" == asset){
                     val laserDuration = 0.5
                     //draw a cylinder from parent to target for now
-                    val length = targetPos.distance(parentPos)
+                    val length = targetPos.distance(parentPos).coerceAtLeast(0.1f)
                     val mesh = Cylinder(8,8,1f,length)
                     val geo = Geometry("Attack@${it.id.id}", mesh)
                     val mat = debugMat.clone()

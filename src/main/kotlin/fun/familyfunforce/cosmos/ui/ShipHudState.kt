@@ -59,6 +59,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val dashboard = Container(BorderLayout())
     //interaction panel
     private val equipmentPanel = Container(BoxLayout(Axis.X, FillMode.None))
+    //status panel
+    private val statusPanel = Container(BoxLayout(Axis.X, FillMode.None))
+    private val healthBar = ProgressBar()
+    private val heatBar = ProgressBar()
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
@@ -77,6 +81,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         dashboard.addChild(equipmentPanel, BorderLayout.Position.Center)
         dashboard.addChild(mapContainer, BorderLayout.Position.East)
         dashboard.addChild(navContainer, BorderLayout.Position.West)
+        dashboard.addChild(statusPanel, BorderLayout.Position.North)
     }
     private lateinit var throttle : VersionedReference<Double>
     //
@@ -172,6 +177,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         //system objects
         //end toolbar
         hudNode.attachChild(toolbarContainer)
+        //Status Panel
+        statusPanel.addChild(heatBar)
+        statusPanel.addChild(healthBar)
+        //end status
         //nav panel
         val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
         throttle = throttleModel.createReference()
@@ -271,12 +280,32 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         energyGauge.text = "$energy% Energy"
         //val targetName = target?.get(Name::class.java)?.name ?: ""
         //(equipmentPanel.getChild(HUD_SELECTION_NAME) as Label).text = targetName
+        val hp = playerShip.get(HealthPoints::class.java)
+        val dmg = playerShip.get(Damage::class.java)
+        healthBar.message = "${hp.armor-dmg.armorDamage}/${hp.armor}"
+        healthBar.progressPercent = (hp.armor-dmg.armorDamage).toDouble()/hp.armor.toDouble()
+
+        val heat = playerShip.get(Heat::class.java).heat
+        val heatLimit = playerShip.get(HeatLimit::class.java).limit
+        heatBar.message = "$heat/$heatLimit"
+        heatBar.progressPercent = heat.toDouble()/heatLimit.toDouble()
     }
 
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
-        playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
-            TargetId::class.java, TargetTrack::class.java)
+        //todo: clear hud related things
+        playerShip = data.watchEntity(
+            id,
+            Position::class.java,
+            Energy::class.java,
+            Velocity::class.java,
+            TargetId::class.java,
+            TargetTrack::class.java,
+            HealthPoints::class.java,
+            Damage::class.java,
+            Heat::class.java,
+            HeatLimit::class.java
+        )
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
     }

@@ -26,7 +26,10 @@ object Serializers{
         Energy::class.java,
         Attack::class.java,
         Damage::class.java,
-        HealthPoints::class.java
+        HealthPoints::class.java,
+        Heat::class.java,
+        HeatLimit::class.java,
+        Overheated::class.java
     )
 
     fun serializeComponents(){
@@ -324,4 +327,29 @@ data class DecayTicks(var endTick:Long, var durationTicks:Int): EntityComponent{
 @com.jme3.network.serializing.Serializable
 data class Decay(var end:Long, var duration:Double): EntityComponent{
     constructor(): this(0, 0.0)
+}
+
+/**
+ * The amount of heat an entity currently has
+ */
+@com.jme3.network.serializing.Serializable
+data class Heat(var heat: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+/**
+ * The amount of heat an entity can accrue before it will overheat
+ */
+@com.jme3.network.serializing.Serializable
+data class HeatLimit(var limit: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+data class HeatChange(var heat: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class Overheated(var overheat: Boolean): EntityComponent{
+    constructor(): this(false)
 }

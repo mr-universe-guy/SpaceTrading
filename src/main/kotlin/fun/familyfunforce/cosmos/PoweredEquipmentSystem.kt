@@ -17,7 +17,8 @@ class PoweredEquipmentSystem: AbstractGameSystem() {
             CycleTimer::class.java,
             EquipmentPower::class.java,
             Parent::class.java,
-            ActivationConsumed::class.java
+            ActivationConsumed::class.java,
+            Heat::class.java
         )
     }
 
@@ -36,6 +37,13 @@ class PoweredEquipmentSystem: AbstractGameSystem() {
                     CycleTimer(time.getFutureTime(cycle.duration), cycle.duration),
                     Activated(false),
                     ActivationConsumed(false)
+                )
+                //accumulate heat
+                data.setComponents(
+                    data.createEntity(),
+                    HeatChange(it.get(Heat::class.java).heat),
+                    Decay(time.getFutureTime(1.0), 1.0),
+                    TargetId(it.get(Parent::class.java).parentId)
                 )
             } else{
                 if(cycle.nextCycle<=curTime){

@@ -42,6 +42,7 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         serverManager.register(ActionSystem::class.java,ActionSystem())
         serverManager.addSystem(WeaponSystem())
         serverManager.addSystem(CombatSystem())
+        serverManager.addSystem(HeatSystem())
 //        serverManager.addSystem(DestructionSystem())
 
         //***********************   CLIENT  *************************
