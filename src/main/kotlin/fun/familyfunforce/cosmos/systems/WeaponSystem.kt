@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityData
@@ -7,12 +7,13 @@ import com.simsilica.es.Filters
 import com.simsilica.es.common.Decay
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 
 /**
  * A single system to handle default weapons
  */
 class WeaponSystem: AbstractGameSystem() {
-    private lateinit var server:ServerSystem
+    private lateinit var server: ServerSystem
     private lateinit var data:EntityData
     private lateinit var lasers:EntitySet
 

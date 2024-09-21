@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -10,13 +10,14 @@ import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 
 interface ActionRMI{
-    fun setAction(id:EntityId, action:Action)
+    fun setAction(id:EntityId, action: Action)
     fun setThrottle(id:EntityId, throttle:Double)
     fun setEquipmentPower(id:EntityId, powered:Boolean)
 }

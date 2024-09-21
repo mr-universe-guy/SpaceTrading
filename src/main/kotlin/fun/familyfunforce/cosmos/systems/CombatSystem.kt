@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityData
@@ -6,6 +6,7 @@ import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 
 class CombatSystem : AbstractGameSystem() {
     private lateinit var data : EntityData
@@ -72,7 +73,7 @@ class CombatSystem : AbstractGameSystem() {
             mining += m
         }
 
-        fun sumDamages(damageA:Damage): Damage{
+        fun sumDamages(damageA: Damage): Damage {
             return Damage(damageA.armorDamage+armor, damageA.shieldDamage+shield, damageA.miningDamage+mining)
         }
     }

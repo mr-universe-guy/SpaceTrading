@@ -2,6 +2,7 @@ import com.jme3.asset.DesktopAssetManager
 import com.jme3.asset.plugins.ClasspathLocator
 import `fun`.familyfunforce.cosmos.Category
 import `fun`.familyfunforce.cosmos.LaserFocus
+import `fun`.familyfunforce.cosmos.MiningPower
 import `fun`.familyfunforce.cosmos.loadout.*
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -55,11 +56,13 @@ fun buildTestVehicle(): Vehicle {
  */
 fun generateTestEquipment(){
     cacheEquipment(EngineEquip("Engine", "Engine", 3, 30, 100.0, 10.0))
-    cacheEquipment(CargoEquip("Hold", "Cargo Hold", 3, 10, 10.0))
+    cacheEquipment(CargoEquip("Hold", "Cargo Hold", 3, 10, 100.0))
     cacheEquipment(EnergyGridEquip("EnGrid", "Reactor", 3, 25, 100, 10, 3.0))
     cacheEquipment(SensorEquip("Sensor", "Radar", 1, 25, 1000.0))
     cacheEquipment(WeaponEquip("Weapon", "Lazor", 1, 15, 2500, 500.0,
         2.5, 1,listOf(LaserFocus(50.0,10.0))))
+    cacheEquipment(MiningEquip("Mining", "Mine Lazor", 1, 15, 2500, 500.0,
+        2.5, 1, listOf(MiningPower(10))))
 }
 
 /**
@@ -75,6 +78,7 @@ fun generateTestLoadout(): Loadout{
     loadout.attachEquipment("Fuselage", getEquipmentFromId("EnGrid")!!)
     loadout.attachEquipment("Left Wing", getEquipmentFromId("Sensor")!!)
     loadout.attachEquipment("Right Wing", getEquipmentFromId("Weapon")!!)
+    loadout.attachEquipment("Right Wing", getEquipmentFromId("Mining")!!)
     return loadout
 }
 
@@ -83,7 +87,7 @@ fun testLoadout() {
     val testVic = buildTestVehicle()
     //attach some equipment to this vic
     val engine = EngineEquip("Engine1","TestEngine", 3,30, 100.0, 10.0)
-    val cargoHold = CargoEquip("CargoPod","TestCargoHold", 3, 10, 10.0)
+    val cargoHold = CargoEquip("CargoPod","TestCargoHold", 3, 10, 100.0)
     val energyGrid = EnergyGridEquip("Reactor","TestEnergyGrid", 3, 30, 100, 10, 3.0)
     cacheEquipment(engine)
     cacheEquipment(cargoHold)

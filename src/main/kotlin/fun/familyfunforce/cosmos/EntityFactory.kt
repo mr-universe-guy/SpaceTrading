@@ -30,7 +30,9 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
         Sensors(stats[SEN_RANGE_MAX] as Double? ?: 100.0),
         HeatLimit(20),
         Heat(0),
-        Overheated(false)
+        Overheated(false),
+        CargoHold(stats[CARGO_VOLUME] as Double? ?: 0.0),
+        Cargo(0.0)
     )
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
@@ -70,7 +72,7 @@ fun spawnTestShip(data: EntityData, name: String, position: Vec3d): EntityId{
         Mass(1.0),
         Velocity(0.0,0.0,0.0),
         CargoHold(10.0),
-        Cargo(arrayOf()),
+        Cargo(0.0),
         Engine(100.0, 10.0),
         EngineDriver(Vec3d(0.0,0.0,0.0)),
         VisualAsset("TestShip/Insurgent.gltf"),
@@ -88,7 +90,8 @@ fun spawnTestAsteroid(data: EntityData, position: Vec3d): EntityId{
         Position(position),
         Velocity(0.0,0.0,0.0),
         VisualAsset("ASTEROID"),
-        ObjectCategory(Category.ASTEROID)
+        ObjectCategory(Category.ASTEROID),
+        Mineral(ItemId("ORE"))
     )
     return id
 }

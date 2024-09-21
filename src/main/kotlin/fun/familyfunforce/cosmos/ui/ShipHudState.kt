@@ -35,6 +35,8 @@ import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
+import `fun`.familyfunforce.cosmos.systems.SensorSystem
 import kotlin.math.max
 
 /**

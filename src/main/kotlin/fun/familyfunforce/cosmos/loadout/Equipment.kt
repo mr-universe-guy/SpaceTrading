@@ -29,7 +29,7 @@ fun cacheEquipment(equipment: Equipment){
 
 @Serializable
 enum class EquipmentType{
-    WEAPON, ENGINE, CARGO, ENERGY, SENSOR
+    WEAPON, MINING, ENGINE, CARGO, ENERGY, SENSOR
 }
 
 /**
@@ -150,8 +150,13 @@ data class EnergyGridEquip(override val equipmentId: String, override val name: 
 }
 
 @Serializable
-data class SensorEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
-                       val range:Double): PassiveEquipment(){
+data class SensorEquip(
+    override val equipmentId: String,
+    override val name: String,
+    override val size:Int,
+    override val power: Int,
+    val range:Double
+): PassiveEquipment(){
     override val equipmentType = EquipmentType.SENSOR
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout){
         val senMax = inStats[SEN_RANGE_MAX] as Double? ?: 0.0
@@ -176,3 +181,18 @@ data class WeaponEquip(
     override val requireTarget: Boolean = true
 }
 
+@Serializable
+data class MiningEquip(
+    override val equipmentId: String,
+    override val name:String,
+    override val size:Int,
+    override val power:Int,
+    val cycleTimeMillis:Long,
+    val maxRange:Double,
+    override val duration: Double,
+    override val heat: Int,
+    override val components: List<EntityComponent>
+): PoweredEquipment(), ComponentEquipment{
+    override val equipmentType: EquipmentType = EquipmentType.MINING
+    override val requireTarget: Boolean = true
+}

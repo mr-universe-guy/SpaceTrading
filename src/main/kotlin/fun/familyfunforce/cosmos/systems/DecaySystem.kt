@@ -1,9 +1,11 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.Decay
+import `fun`.familyfunforce.cosmos.DecayTicks
 
 /**
  * Removes entities after the time or tick decay expires
@@ -40,7 +42,7 @@ class DecaySystem: AbstractGameSystem() {
         tickDecays.release()
     }
 
-    fun decayInSeconds(seconds:Double): Decay{
+    fun decayInSeconds(seconds:Double): Decay {
         val future = manager.stepTime.getFutureTime(seconds)
         return Decay(future, seconds)
     }

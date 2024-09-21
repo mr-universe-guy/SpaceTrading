@@ -13,6 +13,7 @@ import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
+import `fun`.familyfunforce.cosmos.systems.*
 import `fun`.familyfunforce.cosmos.ui.*
 
 /*
@@ -33,15 +34,17 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         dataSystem.itemData.fromCSV("/TestItemDB.csv")
         serverManager.register(DataSystem::class.java, dataSystem)
         serverManager.addSystem(DecaySystem())
+        serverManager.register(InventorySystem::class.java, InventorySystem())
         serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
         serverManager.addSystem(DragSystem())
         serverManager.addSystem(EngineSystem())
         serverManager.register(EnergySystem::class.java, EnergySystem())
         serverManager.register(SensorSystem::class.java, SensorSystem())
         serverManager.addSystem(PoweredEquipmentSystem())
-        serverManager.register(ActionSystem::class.java,ActionSystem())
+        serverManager.register(ActionSystem::class.java, ActionSystem())
         serverManager.addSystem(WeaponSystem())
         serverManager.addSystem(CombatSystem())
+        serverManager.addSystem(MiningSystem())
         serverManager.addSystem(HeatSystem())
 //        serverManager.addSystem(DestructionSystem())
 

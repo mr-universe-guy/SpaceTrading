@@ -24,6 +24,8 @@ import com.simsilica.es.EntitySet
 import com.simsilica.lemur.anim.AnimationState
 import com.simsilica.lemur.anim.Tweens
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
+import `fun`.familyfunforce.cosmos.systems.EPSILON
 import java.lang.System
 
 const val ID_KEY = "EID"

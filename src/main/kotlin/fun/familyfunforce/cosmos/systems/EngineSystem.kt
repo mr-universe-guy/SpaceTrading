@@ -1,9 +1,10 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 import kotlin.math.sqrt
 
 /**

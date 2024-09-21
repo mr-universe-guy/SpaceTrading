@@ -29,6 +29,7 @@ import com.simsilica.lemur.focus.FocusManagerState
 import com.simsilica.mathd.Vec3d
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.TargetId
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
 
 private const val CATEGORY_KEY = "Category"
 private const val HIGHLIGHTED = 1 shl 0

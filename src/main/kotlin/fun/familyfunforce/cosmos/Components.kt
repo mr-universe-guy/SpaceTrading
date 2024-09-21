@@ -83,22 +83,12 @@ data class StellarObject(var radius:Double): EntityComponent
 /**
  * Size of an entities inventory in cubic meters
  */
-data class CargoHold(var volume:Double): EntityComponent
+data class CargoHold(var maxVolume:Double): EntityComponent
 
-data class Cargo(var items: Array<ItemStack>): EntityComponent {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Cargo
-
-        return items.contentEquals(other.items)
-    }
-
-    override fun hashCode(): Int {
-        return items.contentHashCode()
-    }
-}
+/**
+ * The volume of a cargo hold currently occupied
+ */
+data class Cargo(var volume: Double): EntityComponent
 
 /**
  * Apply thrust in direction until throttle percentage of max speed is met
@@ -352,4 +342,17 @@ data class HeatChange(var heat: Int): EntityComponent{
 @com.jme3.network.serializing.Serializable
 data class Overheated(var overheat: Boolean): EntityComponent{
     constructor(): this(false)
+}
+
+/**
+ * The mineral that makes up a deposit
+ * Bauxite(Aluminum) Hematite(Iron) Quartz(Silica) Gold?
+ */
+@com.jme3.network.serializing.Serializable
+data class Mineral(var type:ItemId): EntityComponent{
+    constructor(): this(ItemId(""))
+}
+
+data class MiningPower(var power: Int): EntityComponent{
+    constructor(): this(0)
 }
