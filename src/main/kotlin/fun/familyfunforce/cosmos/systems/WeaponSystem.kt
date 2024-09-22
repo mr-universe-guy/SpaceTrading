@@ -24,7 +24,8 @@ class WeaponSystem: AbstractGameSystem() {
             Filters.fieldEquals(Activated::class.java, "active", true),
             LaserFocus::class.java,
             Activated::class.java,
-            Parent::class.java
+            Parent::class.java,
+            TargetId::class.java
         )
     }
 
@@ -41,12 +42,7 @@ class WeaponSystem: AbstractGameSystem() {
     private fun fireLaser(it: Entity, time:SimTime) {
         //first ensure the parent has a target, if not cancel this
         val parentId = it.get(Parent::class.java).parentId
-        val targetId = data.getComponent(parentId, TargetId::class.java)?.targetId
-        if(targetId == null){
-            it.set(EquipmentPower(false))
-            println("Weapon ${it.id} has no target, disabling")
-            return
-        }
+        val targetId = it.get(TargetId::class.java).targetId
         println("Firing ma lazor $it")
         //The attack should last long enough that clients can see it, so we can share attack information
         data.setComponents(data.createEntity(),

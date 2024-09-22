@@ -1,5 +1,6 @@
 package `fun`.familyfunforce.cosmos.systems
 
+import com.simsilica.es.Entity
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
@@ -20,6 +21,7 @@ class SensorSystem: AbstractGameSystem() {
             Sensors::class.java,
             TargetId::class.java,
             Velocity::class.java,
+            Children::class.java
 //            Parent::class.java
         )
     }
@@ -35,7 +37,7 @@ class SensorSystem: AbstractGameSystem() {
             //check if target exists
             val tgtPos = data.getComponent(targetId, Position::class.java)?.position
             if(tgtPos == null){
-                breakLock(it.id)
+                breakLock(it)
                 return@forEach
             }
             val pos = it.get(Position::class.java).position
@@ -44,7 +46,7 @@ class SensorSystem: AbstractGameSystem() {
             //check if target is within range
             if(distance > sensorRange*sensorRange) {
                 //target not in range, break lock
-                breakLock(it.id)
+                breakLock(it)
                 return@forEach
             }
             //we're good, get tracking info
@@ -56,13 +58,24 @@ class SensorSystem: AbstractGameSystem() {
             //acos(DOT(A,B)/len(A)*len(B)) = angle between 2 3d vectors
             val angV = acos(posOffB.dot(posOffA)/(posOffA.length()*posOffB.length()))
             //valid track, fill in info
-            it.set(TargetTrack(distance, angV))
+            val tracking = TargetTrack(distance, angV)
+            it.set(tracking)
+            val children = it.get(Children::class.java).childrenIds
+            for(child in children){
+                data.setComponent(child, tracking)
+            }
         }
     }
 
-    private fun breakLock(sensorId: EntityId){
+    private fun breakLock(sensor: Entity){
+        val sensorId = sensor.id
         data.removeComponent(sensorId, TargetTrack::class.java)
         data.removeComponent(sensorId, TargetId::class.java)
+        val children = sensor.get(Children::class.java).childrenIds
+        for(child in children){
+            data.removeComponent(child, TargetTrack::class.java)
+            data.removeComponent(child, TargetId::class.java)
+        }
     }
 
     fun acquireLock(sensorId: EntityId, targetId: EntityId) : Boolean{
@@ -74,7 +87,12 @@ class SensorSystem: AbstractGameSystem() {
         val sensorRange = data.getComponent(sensorId, Sensors::class.java)?.range ?: return false
         if(tgtPos.distanceSq(pos) > sensorRange*sensorRange) return false
         //we made it, establish the target lock
-        data.setComponent(sensorId, TargetId(targetId))
+        val target = TargetId(targetId)
+        data.setComponent(sensorId, target)
+        val children = data.getComponent(sensorId, Children::class.java)?.childrenIds
+        children?.forEach {
+            data.setComponent(it, target)
+        }
         println("$sensorId has locked onto target $targetId")
         return true
     }

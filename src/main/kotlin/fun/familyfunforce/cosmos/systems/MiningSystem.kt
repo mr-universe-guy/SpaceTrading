@@ -17,11 +17,11 @@ class MiningSystem: AbstractGameSystem() {
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
         miners = data.getEntities(
-            Filters.fieldEquals(
-                Activated::class.java, "active", true),
-                MiningPower::class.java,
-                Activated::class.java,
-                Parent::class.java
+            Filters.fieldEquals(Activated::class.java, "active", true),
+            MiningPower::class.java,
+            Activated::class.java,
+            Parent::class.java,
+            TargetId::class.java
         )
         inventorySystem = getSystem(InventorySystem::class.java)
     }
@@ -38,13 +38,7 @@ class MiningSystem: AbstractGameSystem() {
 
     private fun createMiningAttack(it: Entity, time: SimTime) {
         val parentId = it.get(Parent::class.java).parentId
-        //TODO: Verifying targets should be it's own system!!!
-        val targetId = data.getComponent(parentId, TargetId::class.java)?.targetId
-        if(targetId == null){
-            it.set(EquipmentPower(false))
-            println("Mining Equipment ${it.id} has no target, disabling")
-            return
-        }
+        val targetId = it.get(TargetId::class.java).targetId
         //ensure target is an asteroid
         val mineral = data.getComponent(targetId, Mineral::class.java)
         if(mineral == null){

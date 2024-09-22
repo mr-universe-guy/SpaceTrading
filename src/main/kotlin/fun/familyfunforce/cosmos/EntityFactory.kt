@@ -36,6 +36,7 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
     )
     //spawn entities for all of the loadouts active equipment
     //TODO: Section for each equipment needs to be accounted for
+    val childList = mutableListOf<EntityId>()
     loadout.getEquipment().forEach { loc ->
         //val location = loc.key
         //TODO: Fix this!!! ComponentEquipment should always be a new entity I think? much though should be given here
@@ -52,14 +53,17 @@ fun spawnLoadout(data: EntityData, name: String, position: Vec3d, loadout: Loado
                     Name(it.name),
                     Activated(false),
                     ActivationConsumed(false),
-                    Heat(it.heat)
+                    Heat(it.heat),
+                    RequireTarget(it.requireTarget)
                 )
+                childList.add(equipId)
             }
             if(it is ComponentEquipment){
                 if(equipId == null) equipId=data.createEntity()
                 data.setComponents(equipId, *it.components.toTypedArray())
             }
         }
+        data.setComponent(id, Children(childList.toTypedArray()))
     }
     return id
 }

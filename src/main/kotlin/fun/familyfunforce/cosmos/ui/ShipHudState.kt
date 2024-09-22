@@ -318,7 +318,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             Heat::class.java,
             HeatLimit::class.java,
             CargoHold::class.java,
-            Cargo::class.java
+            Cargo::class.java,
+            Children::class.java
         )
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
@@ -351,7 +352,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
      * Set the active target to the given id
      */
     private fun selectTarget(targetId: EntityId?){
-        if(!sensorSys.acquireLock(playerShip?.id!!, targetId!!)) return
+        if(!sensorSys.acquireLock(playerShip!!.id, targetId!!)) return
     }
 
     fun targetChanged(evt: TargetingEvent){

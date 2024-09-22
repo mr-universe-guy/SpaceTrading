@@ -31,7 +31,8 @@ object Serializers{
         HeatLimit::class.java,
         Overheated::class.java,
         CargoHold::class.java,
-        Cargo::class.java
+        Cargo::class.java,
+        Children::class.java
     )
 
     fun serializeComponents(){
@@ -198,6 +199,10 @@ data class EquipmentPower(var powered:Boolean): EntityComponent{
     constructor() : this(false)
 }
 
+data class RequireTarget(var required: Boolean): EntityComponent{
+    constructor():this(false)
+}
+
 /**
  * Marks an entity as being activated.
  */
@@ -263,6 +268,7 @@ data class Parent(var parentId:EntityId): EntityComponent{
 /**
  * Store all known child entities in a simple array for much more efficient access
  */
+@com.jme3.network.serializing.Serializable
 data class Children(var childrenIds:Array<EntityId>): EntityComponent{
     constructor() : this(emptyArray())
 
