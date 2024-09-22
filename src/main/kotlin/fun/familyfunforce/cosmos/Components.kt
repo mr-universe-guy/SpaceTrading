@@ -29,7 +29,9 @@ object Serializers{
         HealthPoints::class.java,
         Heat::class.java,
         HeatLimit::class.java,
-        Overheated::class.java
+        Overheated::class.java,
+        CargoHold::class.java,
+        Cargo::class.java
     )
 
     fun serializeComponents(){
@@ -83,12 +85,18 @@ data class StellarObject(var radius:Double): EntityComponent
 /**
  * Size of an entities inventory in cubic meters
  */
-data class CargoHold(var maxVolume:Double): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class CargoHold(var maxVolume:Double): EntityComponent{
+    constructor(): this(0.0)
+}
 
 /**
  * The volume of a cargo hold currently occupied
  */
-data class Cargo(var volume: Double): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class Cargo(var volume: Double): EntityComponent{
+    constructor(): this(0.0)
+}
 
 /**
  * Apply thrust in direction until throttle percentage of max speed is met

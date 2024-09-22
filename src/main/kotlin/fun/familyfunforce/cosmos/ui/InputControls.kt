@@ -12,6 +12,9 @@ val CAM_INPUT_HOLDTOROTATE = FunctionId(CAM_INPUT_GROUP, "hold_to_rot_cam")
 const val SHIP_INPUT_GROUP = "ShipInput"
 val SHIP_NEXT_TARGET = FunctionId(SHIP_INPUT_GROUP, "next_target")
 
+const val UI_INPUT_GROUP = "UiInput"
+val INVENTORY_OPEN = FunctionId(UI_INPUT_GROUP)
+
 fun registerDefaults(mapper: InputMapper){
     //CAMERA
     mapper.map(CAM_INPUT_YAW, Axis.MOUSE_X)
@@ -20,4 +23,6 @@ fun registerDefaults(mapper: InputMapper){
     mapper.map(CAM_INPUT_HOLDTOROTATE, Button.MOUSE_BUTTON2)
     //ship shortcuts
     mapper.map(SHIP_NEXT_TARGET, InputState.Positive, KeyInput.KEY_T)
+    //UI shortcuts
+    mapper.map(INVENTORY_OPEN, InputState.Positive, KeyInput.KEY_I)
 }

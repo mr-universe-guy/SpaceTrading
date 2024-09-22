@@ -65,6 +65,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val statusPanel = Container(BoxLayout(Axis.X, FillMode.None))
     private val healthBar = ProgressBar()
     private val heatBar = ProgressBar()
+    private val cargoBar = ProgressBar()
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
@@ -182,6 +183,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         //Status Panel
         statusPanel.addChild(heatBar)
         statusPanel.addChild(healthBar)
+        statusPanel.addChild(cargoBar)
         //end status
         //nav panel
         val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
@@ -274,6 +276,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         playerShip?.let {EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(it.id, targetId, 0.0))}
     }
 
+    /**
+     * TODO: Only update relevant changes, but how?
+     */
     private fun updatePlayerGui(playerShip: WatchedEntity){
         val velocity = playerShip.get(Velocity::class.java)?.velocity ?: Vec3d(0.0,0.0,0.0)
         val floatFormat = "%.1f"
@@ -291,6 +296,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         val heatLimit = playerShip.get(HeatLimit::class.java).limit
         heatBar.message = "$heat/$heatLimit"
         heatBar.progressPercent = heat.toDouble()/heatLimit.toDouble()
+
+        val cargo = playerShip.get(Cargo::class.java).volume
+        val cargoLimit = playerShip.get(CargoHold::class.java).maxVolume
+        cargoBar.message = "$cargo/$cargoLimit"
+        cargoBar.progressPercent = cargo/cargoLimit
     }
 
     private fun watchPlayer(id: EntityId){
@@ -306,7 +316,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             HealthPoints::class.java,
             Damage::class.java,
             Heat::class.java,
-            HeatLimit::class.java
+            HeatLimit::class.java,
+            CargoHold::class.java,
+            Cargo::class.java
         )
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
@@ -384,6 +396,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                 } else{
                     selectTarget(focusedEntity)
                 }
+            }
+            INVENTORY_OPEN -> {
+                if(InputState.Positive != value) return
+
             }
         }
     }
@@ -575,7 +591,7 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
 
     companion object{
         val ELEMENT_ID = ElementId("hudrow")
-        val CELL_ID = ELEMENT_ID.child("cell")
+        val CELL_ID: ElementId = ELEMENT_ID.child("cell")
     }
     init {
         val gui = getControl(GuiControl::class.java)
@@ -665,7 +681,3 @@ interface UIFlaggable{
     fun setFlags(vararg flags:Int)
     fun unsetFlags(vararg flags:Int)
 }
-
-/**
- * A menu that updates in real time and displays all the ways in which you may interact with the given entity
- */

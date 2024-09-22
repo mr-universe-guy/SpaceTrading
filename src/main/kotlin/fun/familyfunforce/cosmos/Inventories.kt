@@ -28,11 +28,19 @@ enum class TransactionStatus{
 }
 
 //TODO: Don't store the database reference in the inventory, pass it as a parameter
-data class Inventory(val id:Long, var maxVolume: Double, val items: MutableMap<ItemId, Long>, private val database: ItemDatabase){
+data class Inventory(
+    val id:Long,
+    var maxVolume: Double,
+    val items: MutableMap<ItemId, Long>,
+    private val database: ItemDatabase,
+    var currentVolume: Double){
     //TODO: only update current volume when inventory changes
-    var currentVolume: Double = calculateCurrentVolume()
 
-    constructor(id:Long, maxVolume: Double, database: ItemDatabase) : this(id, maxVolume, mutableMapOf(), database)
+    init{
+        currentVolume = calculateCurrentVolume()
+    }
+
+    constructor(id:Long, maxVolume: Double, database: ItemDatabase) : this(id, maxVolume, mutableMapOf(), database, 0.0)
 
     private fun calculateCurrentVolume(): Double{
         return items.entries.sumOf{
@@ -211,6 +219,7 @@ class InventorySystem: AbstractGameSystem(){
         val canAdd = inventory.canAddItem(item, quantity)
         if(canAdd != TransactionStatus.SUCCESS) return canAdd
         inventory.addItem(item, quantity)
+        //This is probably the best way to ensure anyone watching an entity will see inventory changes, I think...
         data.setComponent(EntityId(targetId), Cargo(inventory.currentVolume))
         return TransactionStatus.SUCCESS
     }
