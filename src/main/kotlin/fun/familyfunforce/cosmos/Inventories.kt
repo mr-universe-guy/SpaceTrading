@@ -1,24 +1,47 @@
 package `fun`.familyfunforce.cosmos
 
 import com.github.doyaaaaaken.kotlincsv.client.CsvReader
+import com.jme3.network.serializing.Serializer
+import com.jme3.network.serializing.serializers.EnumSerializer
+import com.jme3.network.serializing.serializers.StringSerializer
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 import `fun`.familyfunforce.cosmos.systems.DataSystem
+import java.nio.ByteBuffer
 
 //The currently active item database, atm this is dangerous as it relies on being set from outside
 //late init var activeDatabase: ItemDatabase
 
-data class ItemId(val id: String)
+object Inventories{
+    fun serializeInventories(){
+        Serializer.registerClasses(
+            ItemId::class.java,
+            Item::class.java
+        )
+        Serializer.registerClass(Inventory::class.java, InventorySerializer())
+        Serializer.registerClass(TransactionStatus::class.java, EnumSerializer())
+    }
+}
+
+
+@com.jme3.network.serializing.Serializable
+data class ItemId(val id: String){
+    constructor() : this("")
+}
 
 /**
  * Items are the basis of all trade and crafting. Items are identified by their unique id. Volume is in cubic meters.
  * Display names do NOT have to be unique!
  */
-data class Item(val id: ItemId, val displayName: String, val volume: Double)
+@com.jme3.network.serializing.Serializable
+data class Item(val id: ItemId, val displayName: String, val volume: Double){
+    constructor() : this(ItemId(), "", 0.0)
+}
 
+@com.jme3.network.serializing.Serializable
 enum class TransactionStatus{
     SUCCESS,
     NOT_ENOUGH_SPACE,
@@ -27,29 +50,59 @@ enum class TransactionStatus{
     INVENTORY_ID_NOT_FOUND
 }
 
-//TODO: Don't store the database reference in the inventory, pass it as a parameter
+/**
+ * Serializer for Inventory since jme serializer did not like how kotlin handles maps
+ */
+class InventorySerializer: Serializer() {
+    @Suppress("UNCHECKED_CAST")
+    override fun <T : Any?> readObject(data: ByteBuffer, c: Class<T>?): T {
+        val id = data.getLong()
+        val maxVolume = data.getDouble()
+        val currentVolume = data.getDouble()
+        val mapSize = data.getInt()
+        val map : MutableMap<ItemId, Long> = HashMap(mapSize)
+        for(i in 1 .. mapSize){
+            val item = ItemId(StringSerializer.readString(data))
+            val qty = data.getLong()
+            map[item] = qty
+        }
+        return Inventory(id, maxVolume, map, currentVolume) as T
+    }
+
+    override fun writeObject(buffer: ByteBuffer, o: Any?) {
+        val inv = o as Inventory
+        buffer.putLong(inv.id)
+        buffer.putDouble(inv.maxVolume)
+        buffer.putDouble(inv.currentVolume)
+        //we are only writing ItemId's and
+        buffer.putInt(inv.items.size)
+        inv.items.forEach {
+            val id = it.key.id
+            StringSerializer.writeString(id, buffer)
+            buffer.putLong(it.value)
+        }
+    }
+}
+
+@com.jme3.network.serializing.Serializable
 data class Inventory(
     val id:Long,
     var maxVolume: Double,
-    val items: MutableMap<ItemId, Long>,
-    private val database: ItemDatabase,
+    var items: MutableMap<ItemId, Long>,
     var currentVolume: Double){
-    //TODO: only update current volume when inventory changes
 
-    init{
-        currentVolume = calculateCurrentVolume()
-    }
+    constructor(id:Long, maxVolume: Double) : this(id, maxVolume, HashMap(), 0.0)
 
-    constructor(id:Long, maxVolume: Double, database: ItemDatabase) : this(id, maxVolume, mutableMapOf(), database, 0.0)
+    constructor() : this(0, 0.0, HashMap(), 0.0)
 
-    private fun calculateCurrentVolume(): Double{
+    private fun calculateCurrentVolume(database: ItemDatabase): Double{
         return items.entries.sumOf{
             val item = database.getItem(it.key) ?: return 0.0
             item.volume * it.value
         }
     }
 
-    fun canAddItem(incomingItem: ItemId, quantity: Long): TransactionStatus{
+    fun canAddItem(incomingItem: ItemId, quantity: Long, database: ItemDatabase): TransactionStatus{
         val item = database.getItem(incomingItem) ?: return TransactionStatus.ITEM_ID_NOT_FOUND
         return if(currentVolume + (item.volume*quantity) > maxVolume){
             TransactionStatus.NOT_ENOUGH_SPACE
@@ -58,7 +111,7 @@ data class Inventory(
         }
     }
 
-    fun canAddItems(incomingItems: Map<ItemId, Long>): TransactionStatus{
+    fun canAddItems(incomingItems: Map<ItemId, Long>, database: ItemDatabase): TransactionStatus{
         //first we need to ensure all the items can fit
         val incomingVolume = incomingItems.entries.sumOf {
             val item = database.getItem(it.key) ?: return TransactionStatus.ITEM_ID_NOT_FOUND
@@ -92,23 +145,23 @@ data class Inventory(
      * Adds the map of Items to this inventory.
      * @param incomingItems A map of ItemId's to the quantity of each to be added
      */
-    fun addItems(incomingItems: Map<ItemId, Long>){
+    fun addItems(incomingItems: Map<ItemId, Long>, database: ItemDatabase){
         incomingItems.forEach { (id, qty) ->
             items[id] = (items.getOrDefault(id, 0) + qty)
         }
-        currentVolume = calculateCurrentVolume()
+        currentVolume = calculateCurrentVolume(database)
     }
 
-    fun addItem(itemId: ItemId, quantity: Long){
+    fun addItem(itemId: ItemId, quantity: Long, database: ItemDatabase){
         items[itemId] = (items.getOrDefault(itemId, 0) + quantity)
-        currentVolume = calculateCurrentVolume()
+        currentVolume = calculateCurrentVolume(database)
     }
 
     /**
      * Removes the map of Items from this inventory
      * @param outgoingItems A map of ItemId's to the quantity of each to be removed
      */
-    fun removeItems(outgoingItems: Map<ItemId, Long>){
+    fun removeItems(outgoingItems: Map<ItemId, Long>, database: ItemDatabase){
         outgoingItems.forEach { (id, qty) ->
             val remainder = items[id]!! - qty
             if(remainder > 0){
@@ -117,17 +170,17 @@ data class Inventory(
                 items.remove(id)
             }
         }
-        currentVolume = calculateCurrentVolume()
+        currentVolume = calculateCurrentVolume(database)
     }
 
-    fun removeItem(outgoingItem: ItemId, quantity: Long){
+    fun removeItem(outgoingItem: ItemId, quantity: Long, database: ItemDatabase){
         val remainder = items[outgoingItem]!! - quantity
         if(remainder > 0){
             items[outgoingItem] = remainder
         } else{
             items.remove(outgoingItem)
         }
-        currentVolume = calculateCurrentVolume()
+        currentVolume = calculateCurrentVolume(database)
     }
 }
 
@@ -169,9 +222,9 @@ class ItemDatabase{
 }
 
 class InventorySystem: AbstractGameSystem(){
+    lateinit var database: ItemDatabase
     private val inventories: MutableMap<Long, Inventory> = mutableMapOf()
     private lateinit var data: EntityData
-    private lateinit var database: ItemDatabase
     private lateinit var cargoHolds: EntitySet
 
     override fun initialize() {
@@ -210,17 +263,21 @@ class InventorySystem: AbstractGameSystem(){
     }
 
     private fun createInventoryForEntity(eid: Long, volume: Double){
-        inventories.getOrPut(eid) { Inventory(eid, volume, database) }
+        inventories.getOrPut(eid) { Inventory(eid, volume) }
         println("$eid has created an inventory")
     }
 
     fun requestAddItem(targetId: Long, item: ItemId, quantity: Long): TransactionStatus{
         val inventory = inventories[targetId] ?: return TransactionStatus.INVENTORY_ID_NOT_FOUND
-        val canAdd = inventory.canAddItem(item, quantity)
+        val canAdd = inventory.canAddItem(item, quantity, database)
         if(canAdd != TransactionStatus.SUCCESS) return canAdd
-        inventory.addItem(item, quantity)
+        inventory.addItem(item, quantity, database)
         //This is probably the best way to ensure anyone watching an entity will see inventory changes, I think...
         data.setComponent(EntityId(targetId), Cargo(inventory.currentVolume))
         return TransactionStatus.SUCCESS
+    }
+
+    fun getInventoryFromId(targetId: Long): Inventory?{
+        return inventories[targetId]
     }
 }

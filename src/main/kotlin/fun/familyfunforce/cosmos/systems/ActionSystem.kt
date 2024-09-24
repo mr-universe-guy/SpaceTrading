@@ -20,6 +20,8 @@ interface ActionRMI{
     fun setAction(id:EntityId, action: Action)
     fun setThrottle(id:EntityId, throttle:Double)
     fun setEquipmentPower(id:EntityId, powered:Boolean)
+
+    fun getInventoryFromId(id:EntityId): Inventory
 }
 
 /**
@@ -46,6 +48,10 @@ class ActionSystem: AbstractGameSystem() {
             override fun setEquipmentPower(id: EntityId, powered: Boolean) {
                 println("Server is setting equipment for $id to power:$powered")
                 data.setComponent(id, EquipmentPower(powered))
+            }
+
+            override fun getInventoryFromId(id: EntityId): Inventory {
+                return manager.enqueue { getSystem(InventorySystem::class.java).getInventoryFromId(id.id) }.get()!!
             }
 
         }
@@ -100,15 +106,13 @@ class ClientActionEventResponder: BaseAppState(){
         rmiHandler = client.services.getService(RmiClientService::class.java).getRemoteObject(ActionRMI::class.java)
     }
 
-    fun orbitTarget(orb: OrbitOrderEvent){rmiHandler.setAction(orb.shipId, OrbitAction(orb.targetId, orb.range))}
+    fun orbitTarget(orb: OrbitOrderEvent){ rmiHandler.setAction(orb.shipId, OrbitAction(orb.targetId, orb.range)) }
 
-    fun setThrottle(evt: ThrottleOrderEvent){rmiHandler.setThrottle(evt.shipId, evt.throttle)}
+    fun setThrottle(evt: ThrottleOrderEvent){ rmiHandler.setThrottle(evt.shipId, evt.throttle) }
 
-    fun approachTarget(evt: ApproachOrderEvent){rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))}
+    fun approachTarget(evt: ApproachOrderEvent){ rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range)) }
 
-    fun setEquipmentPower(evt: EquipmentToggleEvent){
-        rmiHandler.setEquipmentPower(evt.equipId, evt.powered)
-    }
+    fun setEquipmentPower(evt: EquipmentToggleEvent){ rmiHandler.setEquipmentPower(evt.equipId, evt.powered) }
 
     override fun cleanup(app: Application?) {}
 

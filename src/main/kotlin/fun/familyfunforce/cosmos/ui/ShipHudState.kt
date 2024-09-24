@@ -6,6 +6,7 @@ import com.jme3.input.MouseInput
 import com.jme3.input.event.MouseButtonEvent
 import com.jme3.math.ColorRGBA
 import com.jme3.math.Vector3f
+import com.jme3.network.service.rmi.RmiClientService
 import com.jme3.renderer.Camera
 import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort
@@ -35,6 +36,7 @@ import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
+import `fun`.familyfunforce.cosmos.systems.ActionRMI
 import `fun`.familyfunforce.cosmos.systems.ClientDataState
 import `fun`.familyfunforce.cosmos.systems.SensorSystem
 import kotlin.math.max
@@ -79,6 +81,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
     //Window Panes
     private lateinit var localObjectsListContainer: Container
+    private lateinit var cargoContainer: Container
 
     init{
         dashboard.addChild(equipmentPanel, BorderLayout.Position.Center)
@@ -127,7 +130,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         visuals = getState(VisualState::class.java)
         shipEquipment = EquipmentContainer(data)
         shipEquipment.start()
-
+        //rmi
+        val client = getState(ClientState::class.java).client
+        val rmiHandler = client.services.getService(RmiClientService::class.java).getRemoteObject(ActionRMI::class.java)
         //events
         EventBus.addListener(this, EntityFocusEvent.entityFocusChanged, TargetingEvent.targetChanged)
         //prep lemur
@@ -139,6 +144,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         //build lemur hud
         val screenHeight = app.camera.height
         val screenWidth = app.camera.width
+        val screenHalfHeight = screenHeight/2f
+        val screenHalfWidth = screenWidth/2f
         val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
         readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
         readoutContainer.localTranslation = Vector3f(0f, 100f, 0f)
@@ -162,21 +169,43 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         mapContainer.preferredSize = mapSize
         mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
         //top toolbar
-        val toolbarContainer = Container(BoxLayout(Axis.X, FillMode.Even))
+        val toolbarContainer = Container(BoxLayout(Axis.X, FillMode.None))
         toolbarContainer.preferredSize = Vector3f(600f, 30f, 0f)
         toolbarContainer.localTranslation = Vector3f(0f,screenHeight.toFloat(),0f)
         //local objects
         val localObjectsToggle = Button("Local Objects")
         localObjectsListContainer = Container(BoxLayout(Axis.Y, FillMode.None))
         val localObjectsWindow = WindowPane("Local Objects", localObjectsListContainer)
-        localObjectsWindow.localTranslation = Vector3f(screenWidth/2f, screenHeight/2f, 0f)
+        localObjectsWindow.localTranslation = Vector3f(screenHalfWidth, screenHalfHeight, 0f)
         localObjectsToggle.addClickCommands {
             hudNode.attachChild(localObjectsWindow)
         }
         localObjectEntityContainer = LocalObjectContainer(data, localObjectsListContainer)
         localObjectEntityContainer.start()
-
         toolbarContainer.addChild(localObjectsToggle)
+        //inventories
+        val inventorySystem = app.serverManager.get(InventorySystem::class.java)
+        val database = inventorySystem.database
+        //cargo
+        //TODO: Cargo hold display should update when cargo changes, not when button is pressed
+        val cargoToggle = Button("Cargo")
+        cargoContainer = Container(BoxLayout(Axis.Y, FillMode.None))
+        val cargoWindow = WindowPane("Cargo", cargoContainer)
+        cargoWindow.localTranslation = Vector3f(screenHalfWidth, screenHalfHeight, 0f)
+        cargoToggle.addClickCommands {
+            app.enqueue {
+                val inventory = rmiHandler.getInventoryFromId(playerShip!!.id)
+//                println("Received inventory response via rmi: $inventory")
+                cargoContainer.clearChildren()
+                inventory.items.forEach {
+                    val item = database.getItem(it.key)
+                    cargoContainer.addChild(Label("${item!!.displayName} : ${it.value}"))
+                }
+                hudNode.attachChild(cargoWindow)
+            }
+        }
+        toolbarContainer.addChild(cargoToggle)
+
         //system objects
         //end toolbar
         hudNode.attachChild(toolbarContainer)
@@ -297,10 +326,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         heatBar.message = "$heat/$heatLimit"
         heatBar.progressPercent = heat.toDouble()/heatLimit.toDouble()
 
-        val cargo = playerShip.get(Cargo::class.java).volume
+        val cargoVolume = playerShip.get(Cargo::class.java).volume
         val cargoLimit = playerShip.get(CargoHold::class.java).maxVolume
-        cargoBar.message = "$cargo/$cargoLimit"
-        cargoBar.progressPercent = cargo/cargoLimit
+        cargoBar.message = "$cargoVolume/$cargoLimit"
+        cargoBar.progressPercent = cargoVolume/cargoLimit
+
     }
 
     private fun watchPlayer(id: EntityId){
