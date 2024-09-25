@@ -13,26 +13,26 @@ shipId: id of the ship who will perform the order
 targetId: id of an entity who will be the target of a given order
  */
 
-class OrbitOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Double){
+data class OrbitOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Double){
     companion object{
         val orbitTarget:EventType<OrbitOrderEvent> = EventType.create("orbitTarget", OrbitOrderEvent::class.java)
     }
 }
 
-class ThrottleOrderEvent(val shipId: EntityId, val throttle:Double){
+data class ThrottleOrderEvent(val shipId: EntityId, val throttle:Double){
     companion object{
         val setThrottle:EventType<ThrottleOrderEvent> = EventType.create("setThrottle", ThrottleOrderEvent::class.java)
     }
 }
 
-class ApproachOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Double){
+data class ApproachOrderEvent(val shipId: EntityId, val targetId: EntityId, val range:Double){
     companion object {
         val approachTarget: EventType<ApproachOrderEvent> = EventType.create("approachTarget", ApproachOrderEvent::class.java)
     }
 }
 
-class EquipmentToggleEvent(val equipId: EntityId, val active:Boolean){
+data class EquipmentToggleEvent(val equipId: EntityId, val powered:Boolean){
     companion object{
-        val setActive: EventType<EquipmentToggleEvent> = EventType.create("setEquipmentActive", EquipmentToggleEvent::class.java)
+        val setEquipmentPower: EventType<EquipmentToggleEvent> = EventType.create("setEquipmentPower", EquipmentToggleEvent::class.java)
     }
 }

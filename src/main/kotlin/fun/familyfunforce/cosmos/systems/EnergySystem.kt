@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
@@ -6,6 +6,8 @@ import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.Energy
+import `fun`.familyfunforce.cosmos.EnergyGridInfo
 
 class EnergySystem: AbstractGameSystem() {
     private lateinit var data: EntityData
@@ -53,7 +55,7 @@ class EnergySystem: AbstractGameSystem() {
             return true
         }
 
-        private fun evaluateState(): GridState{
+        private fun evaluateState(): GridState {
             val max = grid.maxEnergy
             state = when{
                     curEnergy == max -> {

@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
@@ -7,6 +7,9 @@ import com.simsilica.es.EntityId
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.Mass
+import `fun`.familyfunforce.cosmos.Position
+import `fun`.familyfunforce.cosmos.Velocity
 
 /**
  * A "close to zero" number to use for physics calculations.

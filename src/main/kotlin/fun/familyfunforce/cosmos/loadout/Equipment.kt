@@ -23,13 +23,13 @@ fun getEquipmentFromId(id: String): Equipment?{
 /**
  * Adds this piece of equipment to the cache
  */
-fun cacheEquipment(Equipment: Equipment){
-    EQUIPMENT_CACHE[Equipment.equipmentId] = Equipment
+fun cacheEquipment(equipment: Equipment){
+    EQUIPMENT_CACHE[equipment.equipmentId] = equipment
 }
 
 @Serializable
 enum class EquipmentType{
-    WEAPON, ENGINE, CARGO, ENERGY, SENSOR
+    WEAPON, MINING, ENGINE, CARGO, ENERGY, SENSOR
 }
 
 /**
@@ -63,9 +63,10 @@ abstract class PassiveEquipment: Equipment(){
 /**
  * Active equipment need to be activated to function. These will create entities when spawned and can be turned on/off
  */
-abstract class ActiveEquipment: Equipment(){
+abstract class PoweredEquipment: Equipment(){
     abstract val duration: Double
     abstract val requireTarget: Boolean
+    abstract val heat: Int
 }
 
 /**
@@ -149,8 +150,13 @@ data class EnergyGridEquip(override val equipmentId: String, override val name: 
 }
 
 @Serializable
-data class SensorEquip(override val equipmentId: String, override val name: String, override val size:Int, override val power: Int,
-                       val range:Double): PassiveEquipment(){
+data class SensorEquip(
+    override val equipmentId: String,
+    override val name: String,
+    override val size:Int,
+    override val power: Int,
+    val range:Double
+): PassiveEquipment(){
     override val equipmentType = EquipmentType.SENSOR
     override fun getModifiedStats(inStats: MutableMap<String, Any>, loadout: Loadout){
         val senMax = inStats[SEN_RANGE_MAX] as Double? ?: 0.0
@@ -159,11 +165,34 @@ data class SensorEquip(override val equipmentId: String, override val name: Stri
 }
 
 @Serializable
-data class WeaponEquip(override val equipmentId: String, override val name:String, override val size:Int, override val power:Int,
-                       val cycleTimeMillis:Long, val maxRange:Double, override val duration: Double,
-                       override val components: List<EntityComponent>):
-        ActiveEquipment(), ComponentEquipment{
+data class WeaponEquip(
+    override val equipmentId: String,
+    override val name:String,
+    override val size:Int,
+    override val power:Int,
+    val cycleTimeMillis:Long,
+    val maxRange:Double,
+    override val duration: Double,
+    override val heat: Int,
+    override val components: List<EntityComponent>
+):
+        PoweredEquipment(), ComponentEquipment{
     override val equipmentType: EquipmentType = EquipmentType.WEAPON
     override val requireTarget: Boolean = true
 }
 
+@Serializable
+data class MiningEquip(
+    override val equipmentId: String,
+    override val name:String,
+    override val size:Int,
+    override val power:Int,
+    val cycleTimeMillis:Long,
+    val maxRange:Double,
+    override val duration: Double,
+    override val heat: Int,
+    override val components: List<EntityComponent>
+): PoweredEquipment(), ComponentEquipment{
+    override val equipmentType: EquipmentType = EquipmentType.MINING
+    override val requireTarget: Boolean = true
+}

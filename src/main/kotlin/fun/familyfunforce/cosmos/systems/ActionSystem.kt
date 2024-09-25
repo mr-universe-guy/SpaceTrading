@@ -1,4 +1,4 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.jme3.app.Application
 import com.jme3.app.state.BaseAppState
@@ -10,15 +10,18 @@ import com.simsilica.es.EntityId
 import com.simsilica.event.EventBus
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
 
 interface ActionRMI{
-    fun setAction(id:EntityId, action:Action)
+    fun setAction(id:EntityId, action: Action)
     fun setThrottle(id:EntityId, throttle:Double)
-    fun setEquipmentActive(id:EntityId, active:Boolean)
+    fun setEquipmentPower(id:EntityId, powered:Boolean)
+
+    fun getInventoryFromId(id:EntityId): Inventory
 }
 
 /**
@@ -42,8 +45,13 @@ class ActionSystem: AbstractGameSystem() {
                 manager.enqueue { unitActions[id]!!.setThrottle(throttle) }
             }
 
-            override fun setEquipmentActive(id: EntityId, active: Boolean) {
-                data.setComponent(id, EquipmentPower(active))
+            override fun setEquipmentPower(id: EntityId, powered: Boolean) {
+                println("Server is setting equipment for $id to power:$powered")
+                data.setComponent(id, EquipmentPower(powered))
+            }
+
+            override fun getInventoryFromId(id: EntityId): Inventory {
+                return manager.enqueue { getSystem(InventorySystem::class.java).getInventoryFromId(id.id) }.get()!!
             }
 
         }
@@ -98,19 +106,19 @@ class ClientActionEventResponder: BaseAppState(){
         rmiHandler = client.services.getService(RmiClientService::class.java).getRemoteObject(ActionRMI::class.java)
     }
 
-    fun orbitTarget(orb: OrbitOrderEvent){rmiHandler.setAction(orb.shipId, OrbitAction(orb.targetId, orb.range))}
+    fun orbitTarget(orb: OrbitOrderEvent){ rmiHandler.setAction(orb.shipId, OrbitAction(orb.targetId, orb.range)) }
 
-    fun setThrottle(evt: ThrottleOrderEvent){rmiHandler.setThrottle(evt.shipId, evt.throttle)}
+    fun setThrottle(evt: ThrottleOrderEvent){ rmiHandler.setThrottle(evt.shipId, evt.throttle) }
 
-    fun approachTarget(evt: ApproachOrderEvent){rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range))}
+    fun approachTarget(evt: ApproachOrderEvent){ rmiHandler.setAction(evt.shipId, ApproachAction(evt.targetId, evt.range)) }
 
-    fun setEquipmentActive(evt: EquipmentToggleEvent){rmiHandler.setEquipmentActive(evt.equipId, evt.active)}
+    fun setEquipmentPower(evt: EquipmentToggleEvent){ rmiHandler.setEquipmentPower(evt.equipId, evt.powered) }
 
     override fun cleanup(app: Application?) {}
 
     override fun onEnable() {
         EventBus.addListener(this, OrbitOrderEvent.orbitTarget, ThrottleOrderEvent.setThrottle,
-            ApproachOrderEvent.approachTarget, EquipmentToggleEvent.setActive)
+            ApproachOrderEvent.approachTarget, EquipmentToggleEvent.setEquipmentPower)
     }
 
     override fun onDisable() {}

@@ -8,7 +8,7 @@ import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
 import com.simsilica.event.EventType
 import com.simsilica.lemur.core.VersionedReference
-import `fun`.familyfunforce.cosmos.ClientDataState
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
 import `fun`.familyfunforce.cosmos.PlayerIdState
 import `fun`.familyfunforce.cosmos.TargetId
 

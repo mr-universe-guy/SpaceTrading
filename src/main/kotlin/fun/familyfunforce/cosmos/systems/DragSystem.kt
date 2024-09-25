@@ -1,8 +1,11 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.EntitySet
+import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.Drag
+import `fun`.familyfunforce.cosmos.Velocity
 
 class DragSystem: AbstractGameSystem() {
     private lateinit var dragEntities: EntitySet
@@ -20,10 +23,13 @@ class DragSystem: AbstractGameSystem() {
             val vel = it.get(Velocity::class.java).velocity
             val lenSqr = vel.lengthSq()
             //if velocity is near 0 skip
-            if(lenSqr <= EPSILON) return
-            val dc = it.get(Drag::class.java).dragCoefficient
-            //force(drag) = (v^2)/2*dc
-            val force = vel.normalize().mult(-lenSqr*0.5*dc)
+            val force: Vec3d = if(lenSqr <= EPSILON) {
+                vel.mult(-1.0)
+            } else{
+                //force(drag) = (v^2)/2*dc
+                val dc = it.get(Drag::class.java).dragCoefficient
+                vel.normalize().mult(-lenSqr*0.5*dc)
+            }
             physSystem.getPhysicsBody(it.id)?.applyForce(force)
         }
     }

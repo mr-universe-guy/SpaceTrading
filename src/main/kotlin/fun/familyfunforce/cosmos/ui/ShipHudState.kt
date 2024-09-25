@@ -6,6 +6,7 @@ import com.jme3.input.MouseInput
 import com.jme3.input.event.MouseButtonEvent
 import com.jme3.math.ColorRGBA
 import com.jme3.math.Vector3f
+import com.jme3.network.service.rmi.RmiClientService
 import com.jme3.renderer.Camera
 import com.jme3.renderer.RenderManager
 import com.jme3.renderer.ViewPort
@@ -35,6 +36,9 @@ import `fun`.familyfunforce.cosmos.event.ApproachOrderEvent
 import `fun`.familyfunforce.cosmos.event.EquipmentToggleEvent
 import `fun`.familyfunforce.cosmos.event.OrbitOrderEvent
 import `fun`.familyfunforce.cosmos.event.ThrottleOrderEvent
+import `fun`.familyfunforce.cosmos.systems.ActionRMI
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
+import `fun`.familyfunforce.cosmos.systems.SensorSystem
 import kotlin.math.max
 
 /**
@@ -59,6 +63,11 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     private val dashboard = Container(BorderLayout())
     //interaction panel
     private val equipmentPanel = Container(BoxLayout(Axis.X, FillMode.None))
+    //status panel
+    private val statusPanel = Container(BoxLayout(Axis.X, FillMode.None))
+    private val healthBar = ProgressBar()
+    private val heatBar = ProgressBar()
+    private val cargoBar = ProgressBar()
     //mini map container
     private val mapContainer = Container(BorderLayout())
     private val mapInfoContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
@@ -72,11 +81,13 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
     }
     //Window Panes
     private lateinit var localObjectsListContainer: Container
+    private lateinit var cargoContainer: Container
 
     init{
         dashboard.addChild(equipmentPanel, BorderLayout.Position.Center)
         dashboard.addChild(mapContainer, BorderLayout.Position.East)
         dashboard.addChild(navContainer, BorderLayout.Position.West)
+        dashboard.addChild(statusPanel, BorderLayout.Position.North)
     }
     private lateinit var throttle : VersionedReference<Double>
     //
@@ -119,7 +130,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         visuals = getState(VisualState::class.java)
         shipEquipment = EquipmentContainer(data)
         shipEquipment.start()
-
+        //rmi
+        val client = getState(ClientState::class.java).client
+        val rmiHandler = client.services.getService(RmiClientService::class.java).getRemoteObject(ActionRMI::class.java)
         //events
         EventBus.addListener(this, EntityFocusEvent.entityFocusChanged, TargetingEvent.targetChanged)
         //prep lemur
@@ -131,6 +144,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         //build lemur hud
         val screenHeight = app.camera.height
         val screenWidth = app.camera.width
+        val screenHalfHeight = screenHeight/2f
+        val screenHalfWidth = screenWidth/2f
         val readoutContainer = Container(BoxLayout(Axis.Y, FillMode.Even))
         readoutContainer.preferredSize = Vector3f(screenWidth.toFloat(), 100f, 0f)
         readoutContainer.localTranslation = Vector3f(0f, 100f, 0f)
@@ -154,24 +169,51 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         mapContainer.preferredSize = mapSize
         mapContainer.localTranslation = Vector3f(screenWidth-mapSize.x, mapSize.y, 0f)
         //top toolbar
-        val toolbarContainer = Container(BoxLayout(Axis.X, FillMode.Even))
+        val toolbarContainer = Container(BoxLayout(Axis.X, FillMode.None))
         toolbarContainer.preferredSize = Vector3f(600f, 30f, 0f)
         toolbarContainer.localTranslation = Vector3f(0f,screenHeight.toFloat(),0f)
         //local objects
         val localObjectsToggle = Button("Local Objects")
         localObjectsListContainer = Container(BoxLayout(Axis.Y, FillMode.None))
         val localObjectsWindow = WindowPane("Local Objects", localObjectsListContainer)
-        localObjectsWindow.localTranslation = Vector3f(screenWidth/2f, screenHeight/2f, 0f)
+        localObjectsWindow.localTranslation = Vector3f(screenHalfWidth, screenHalfHeight, 0f)
         localObjectsToggle.addClickCommands {
             hudNode.attachChild(localObjectsWindow)
         }
         localObjectEntityContainer = LocalObjectContainer(data, localObjectsListContainer)
         localObjectEntityContainer.start()
-
         toolbarContainer.addChild(localObjectsToggle)
+        //inventories
+        val inventorySystem = app.serverManager.get(InventorySystem::class.java)
+        val database = inventorySystem.database
+        //cargo
+        //TODO: Cargo hold display should update when cargo changes, not when button is pressed
+        val cargoToggle = Button("Cargo")
+        cargoContainer = Container(BoxLayout(Axis.Y, FillMode.None))
+        val cargoWindow = WindowPane("Cargo", cargoContainer)
+        cargoWindow.localTranslation = Vector3f(screenHalfWidth, screenHalfHeight, 0f)
+        cargoToggle.addClickCommands {
+            app.enqueue {
+                val inventory = rmiHandler.getInventoryFromId(playerShip!!.id)
+//                println("Received inventory response via rmi: $inventory")
+                cargoContainer.clearChildren()
+                inventory.items.forEach {
+                    val item = database.getItem(it.key)
+                    cargoContainer.addChild(Label("${item!!.displayName} : ${it.value}"))
+                }
+                hudNode.attachChild(cargoWindow)
+            }
+        }
+        toolbarContainer.addChild(cargoToggle)
+
         //system objects
         //end toolbar
         hudNode.attachChild(toolbarContainer)
+        //Status Panel
+        statusPanel.addChild(heatBar)
+        statusPanel.addChild(healthBar)
+        statusPanel.addChild(cargoBar)
+        //end status
         //nav panel
         val throttleModel = DefaultRangedValueModel(0.0, 1.0, 1.0)
         throttle = throttleModel.createReference()
@@ -263,6 +305,9 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         playerShip?.let {EventBus.publish(ApproachOrderEvent.approachTarget, ApproachOrderEvent(it.id, targetId, 0.0))}
     }
 
+    /**
+     * TODO: Only update relevant changes, but how?
+     */
     private fun updatePlayerGui(playerShip: WatchedEntity){
         val velocity = playerShip.get(Velocity::class.java)?.velocity ?: Vec3d(0.0,0.0,0.0)
         val floatFormat = "%.1f"
@@ -271,12 +316,41 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         energyGauge.text = "$energy% Energy"
         //val targetName = target?.get(Name::class.java)?.name ?: ""
         //(equipmentPanel.getChild(HUD_SELECTION_NAME) as Label).text = targetName
+        val hp = playerShip.get(HealthPoints::class.java)
+        val dmg = playerShip.get(Damage::class.java)
+        healthBar.message = "${hp.armor-dmg.armorDamage}/${hp.armor}"
+        healthBar.progressPercent = (hp.armor-dmg.armorDamage).toDouble()/hp.armor.toDouble()
+
+        val heat = playerShip.get(Heat::class.java).heat
+        val heatLimit = playerShip.get(HeatLimit::class.java).limit
+        heatBar.message = "$heat/$heatLimit"
+        heatBar.progressPercent = heat.toDouble()/heatLimit.toDouble()
+
+        val cargoVolume = playerShip.get(Cargo::class.java).volume
+        val cargoLimit = playerShip.get(CargoHold::class.java).maxVolume
+        cargoBar.message = "$cargoVolume/$cargoLimit"
+        cargoBar.progressPercent = cargoVolume/cargoLimit
+
     }
 
     private fun watchPlayer(id: EntityId){
         playerShip?.release()
-        playerShip = data.watchEntity(id, Position::class.java, Energy::class.java, Velocity::class.java,
-            TargetId::class.java, TargetTrack::class.java)
+        //todo: clear hud related things
+        playerShip = data.watchEntity(
+            id,
+            Position::class.java,
+            Energy::class.java,
+            Velocity::class.java,
+            TargetId::class.java,
+            TargetTrack::class.java,
+            HealthPoints::class.java,
+            Damage::class.java,
+            Heat::class.java,
+            HeatLimit::class.java,
+            CargoHold::class.java,
+            Cargo::class.java,
+            Children::class.java
+        )
         shipEquipment.resetFilter(ParentFilter(id))
         println("Watching player $id")
     }
@@ -308,7 +382,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
      * Set the active target to the given id
      */
     private fun selectTarget(targetId: EntityId?){
-        if(!sensorSys.acquireLock(playerShip?.id!!, targetId!!)) return
+        if(!sensorSys.acquireLock(playerShip!!.id, targetId!!)) return
     }
 
     fun targetChanged(evt: TargetingEvent){
@@ -331,7 +405,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         application.enqueue {
             focusedEntity = id
             //we should wait for update to do this :/
-            val name: String = if (id == null) "" else data.getComponent(id, Name::class.java).name
+            val name: String = if (id == null) "" else data.getComponent(id, Name::class.java)?.name ?: ""
             (mapInfoContainer.getChild("NAME") as Label).text = name
             //set actions that require a selection to enabled/disabled
             val enabled = (id != null)
@@ -354,6 +428,10 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
                     selectTarget(focusedEntity)
                 }
             }
+            INVENTORY_OPEN -> {
+                if(InputState.Positive != value) return
+
+            }
         }
     }
 
@@ -365,8 +443,8 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
             val eqpCont = Container(BorderLayout())
             eqpCont.addChild(Label(e.get(Name::class.java)!!.name), BorderLayout.Position.North)
             val eqpButton = Checkbox("")
-            eqpButton.isChecked = e.get(EquipmentPower::class.java)!!.active
-            eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setActive, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
+            eqpButton.isChecked = e.get(EquipmentPower::class.java)?.powered ?: false
+            eqpButton.addClickCommands {EventBus.publish(EquipmentToggleEvent.setEquipmentPower, EquipmentToggleEvent(e.id, eqpButton.isChecked))}
             eqpCont.addChild(eqpButton, BorderLayout.Position.Center)
             equipmentPanel.addChild(eqpCont)
             val cycleTimer = e.get(CycleTimer::class.java)!!
@@ -377,7 +455,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
 
         override fun updateObject(eqp: EquipmentUIElement, e: Entity) {
             //update checkbox and progress slider
-            eqp.activeButton.isChecked=e.get(EquipmentPower::class.java).active
+            eqp.activeButton.isChecked=e.get(EquipmentPower::class.java).powered
             eqp.cycleEnd=e.get(CycleTimer::class.java).nextCycle
             //eqp.cycleProg.setUserData("CycleEnd", e.get(CycleTimer::class.java).nextCycle)
         }
@@ -446,7 +524,7 @@ class ShipHudState: BaseAppState(), StateFunctionListener{
         override fun update(): Boolean {
             val updatesAvailable = super.update()
             if(playerShip != null){
-                val playerPos = playerShip?.get(Position::class.java)?.position
+                val playerPos = playerShip?.get(Position::class.java)?.position ?: Vec3d(0.0,0.0,0.0)
                 for(obj in array){
                     val dist = "%.0f".format(obj.pos.distance(playerPos))
                     obj.uiRow.setColumn(1, dist)
@@ -544,7 +622,7 @@ class HudRow(val id: EntityId, private val dataColumns:Array<HudColumn<Any>>): P
 
     companion object{
         val ELEMENT_ID = ElementId("hudrow")
-        val CELL_ID = ELEMENT_ID.child("cell")
+        val CELL_ID: ElementId = ELEMENT_ID.child("cell")
     }
     init {
         val gui = getControl(GuiControl::class.java)
@@ -634,7 +712,3 @@ interface UIFlaggable{
     fun setFlags(vararg flags:Int)
     fun unsetFlags(vararg flags:Int)
 }
-
-/**
- * A menu that updates in real time and displays all the ways in which you may interact with the given entity
- */

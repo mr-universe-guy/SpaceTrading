@@ -26,7 +26,13 @@ object Serializers{
         Energy::class.java,
         Attack::class.java,
         Damage::class.java,
-        HealthPoints::class.java
+        HealthPoints::class.java,
+        Heat::class.java,
+        HeatLimit::class.java,
+        Overheated::class.java,
+        CargoHold::class.java,
+        Cargo::class.java,
+        Children::class.java
     )
 
     fun serializeComponents(){
@@ -80,21 +86,17 @@ data class StellarObject(var radius:Double): EntityComponent
 /**
  * Size of an entities inventory in cubic meters
  */
-data class CargoHold(var volume:Double): EntityComponent
+@com.jme3.network.serializing.Serializable
+data class CargoHold(var maxVolume:Double): EntityComponent{
+    constructor(): this(0.0)
+}
 
-data class Cargo(var items: Array<ItemStack>): EntityComponent {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as Cargo
-
-        return items.contentEquals(other.items)
-    }
-
-    override fun hashCode(): Int {
-        return items.contentHashCode()
-    }
+/**
+ * The volume of a cargo hold currently occupied
+ */
+@com.jme3.network.serializing.Serializable
+data class Cargo(var volume: Double): EntityComponent{
+    constructor(): this(0.0)
 }
 
 /**
@@ -187,12 +189,18 @@ data class CycleTimer(var nextCycle: Long, var duration:Double): EntityComponent
     constructor() : this(0,0.0)
 }
 
+data class ActivationConsumed(val consumed:Boolean): EntityComponent
+
 /**
  * Simple active/not active component
  */
 @com.jme3.network.serializing.Serializable
-data class EquipmentPower(var active:Boolean): EntityComponent{
+data class EquipmentPower(var powered:Boolean): EntityComponent{
     constructor() : this(false)
+}
+
+data class RequireTarget(var required: Boolean): EntityComponent{
+    constructor():this(false)
 }
 
 /**
@@ -221,26 +229,33 @@ data class Damage(var armorDamage:Int, var shieldDamage:Int, var miningDamage:In
     constructor():this(0,0,0)
 }
 
+@com.jme3.network.serializing.Serializable
+data class Destroyed(var isDestroyed:Boolean): EntityComponent{
+    constructor():this(true)
+}
+
+class DestroyedFilter(private val isDestroyed: Boolean): ComponentFilter<Destroyed>{
+    override fun getComponentType(): Class<Destroyed> {
+        return Destroyed::class.java
+    }
+
+    override fun evaluate(c: EntityComponent?): Boolean {
+        return when (c) {
+            null -> false
+            is Destroyed -> {
+                isDestroyed == c.isDestroyed
+            }
+            else -> {
+                false
+            }
+        }
+    }
+}
+
 /**
  * Component holding the EquipmentId of a given piece of equipment
  */
 data class EquipmentAsset(var equipmentId:String): EntityComponent
-
-data class IsActiveEquipment(var active:Boolean): EntityComponent
-
-class ActiveEquipmentFilter(private var isActive:Boolean): ComponentFilter<IsActiveEquipment>{
-    constructor() : this(false)
-
-    override fun getComponentType(): Class<IsActiveEquipment> {
-        return IsActiveEquipment::class.java
-    }
-
-    override fun evaluate(c: EntityComponent?): Boolean {
-        c ?: return false
-        if(c !is IsActiveEquipment) return false
-        return c.active == isActive
-    }
-}
 
 /**
  * Identifies an entity ID that acts as the parent to this entity
@@ -253,6 +268,7 @@ data class Parent(var parentId:EntityId): EntityComponent{
 /**
  * Store all known child entities in a simple array for much more efficient access
  */
+@com.jme3.network.serializing.Serializable
 data class Children(var childrenIds:Array<EntityId>): EntityComponent{
     constructor() : this(emptyArray())
 
@@ -315,4 +331,42 @@ data class DecayTicks(var endTick:Long, var durationTicks:Int): EntityComponent{
 @com.jme3.network.serializing.Serializable
 data class Decay(var end:Long, var duration:Double): EntityComponent{
     constructor(): this(0, 0.0)
+}
+
+/**
+ * The amount of heat an entity currently has
+ */
+@com.jme3.network.serializing.Serializable
+data class Heat(var heat: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+/**
+ * The amount of heat an entity can accrue before it will overheat
+ */
+@com.jme3.network.serializing.Serializable
+data class HeatLimit(var limit: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+data class HeatChange(var heat: Int): EntityComponent{
+    constructor(): this(0)
+}
+
+@com.jme3.network.serializing.Serializable
+data class Overheated(var overheat: Boolean): EntityComponent{
+    constructor(): this(false)
+}
+
+/**
+ * The mineral that makes up a deposit
+ * Bauxite(Aluminum) Hematite(Iron) Quartz(Silica) Gold?
+ */
+@com.jme3.network.serializing.Serializable
+data class Mineral(var type:ItemId): EntityComponent{
+    constructor(): this(ItemId(""))
+}
+
+data class MiningPower(var power: Int): EntityComponent{
+    constructor(): this(0)
 }

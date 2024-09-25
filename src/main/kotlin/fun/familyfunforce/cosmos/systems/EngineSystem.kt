@@ -1,9 +1,10 @@
-package `fun`.familyfunforce.cosmos
+package `fun`.familyfunforce.cosmos.systems
 
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntitySet
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
+import `fun`.familyfunforce.cosmos.*
 import kotlin.math.sqrt
 
 /**
@@ -16,7 +17,14 @@ class EngineSystem: AbstractGameSystem() {
 
     override fun initialize() {
         data = getSystem(DataSystem::class.java).entityData
-        engines = data.getEntities(Velocity::class.java, Engine::class.java, EngineDriver::class.java)
+        engines = data.getEntities(
+            //TODO: have a system that handles entity death and correctly removes components based on entity type
+            DestroyedFilter(false),
+            Destroyed::class.java,
+            Velocity::class.java,
+            Engine::class.java,
+            EngineDriver::class.java
+        )
         physicsSystem = getSystem(LocalPhysicsSystem::class.java)
     }
 

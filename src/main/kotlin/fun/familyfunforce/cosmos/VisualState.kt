@@ -5,6 +5,7 @@ import com.jme3.app.state.BaseAppState
 import com.jme3.asset.AssetManager
 import com.jme3.asset.ModelKey
 import com.jme3.material.Material
+import com.jme3.math.ColorRGBA
 import com.jme3.math.FastMath
 import com.jme3.math.Vector3f
 import com.jme3.renderer.RenderManager
@@ -13,12 +14,18 @@ import com.jme3.scene.Geometry
 import com.jme3.scene.Node
 import com.jme3.scene.Spatial
 import com.jme3.scene.control.AbstractControl
+import com.jme3.scene.shape.Cylinder
 import com.jme3.scene.shape.Sphere
 import com.simsilica.es.Entity
 import com.simsilica.es.EntityContainer
 import com.simsilica.es.EntityData
 import com.simsilica.es.EntityId
+import com.simsilica.es.EntitySet
+import com.simsilica.lemur.anim.AnimationState
+import com.simsilica.lemur.anim.Tweens
 import com.simsilica.mathd.Vec3d
+import `fun`.familyfunforce.cosmos.systems.ClientDataState
+import `fun`.familyfunforce.cosmos.systems.EPSILON
 import java.lang.System
 
 const val ID_KEY = "EID"
@@ -28,18 +35,28 @@ const val ID_KEY = "EID"
  */
 class VisualState: BaseAppState() {
     private val sceneNode = Node("Visual Scene")
+    private lateinit var animationState: AnimationState
     lateinit var am: AssetManager
     lateinit var debugMat: Material
     private lateinit var visContainer: VisualContainer
+    private lateinit var weaponAttacks: EntitySet
     var debug = true
     private var lastUpdateTime = Long.MIN_VALUE
     private var deltaTime=1f
 
     override fun initialize(_app: Application) {
         val app = _app as SpaceTraderApp
+        animationState = getState(AnimationState::class.java)
         am = app.assetManager
+        val data = getState(ClientDataState::class.java).entityData
         debugMat = Material(am, "Common/MatDefs/Misc/Unshaded.j3md")
-        visContainer = VisualContainer(getState(ClientDataState::class.java)!!.entityData)
+        visContainer = VisualContainer(data)
+        weaponAttacks = data.getEntities(
+            VisualAsset::class.java,
+            Attack::class.java,
+            Parent::class.java,
+            TargetId::class.java
+        )
         app.rootNode.attachChild(sceneNode)
     }
 
@@ -56,20 +73,59 @@ class VisualState: BaseAppState() {
     }
 
     override fun update(tpf: Float) {
-        if(!visContainer.update()) return
-        val frameTime = System.nanoTime()
-        //get the delta from the last received frame to now in seconds
-        deltaTime = ((frameTime-lastUpdateTime)*NANOS_TO_SECONDS).toFloat()
-        //use the delta time to interpolate from the previous position to their new positions
-        lastUpdateTime = frameTime
+        if(visContainer.update()) {
+            val frameTime = System.nanoTime()
+            //get the delta from the last received frame to now in seconds
+            deltaTime = ((frameTime - lastUpdateTime) * NANOS_TO_SECONDS).toFloat()
+            //use the delta time to interpolate from the previous position to their new positions
+            lastUpdateTime = frameTime
+        }
+        if(weaponAttacks.applyChanges()){
+            weaponAttacks.addedEntities.forEach {
+                //TODO spawn effect from parent to target
+                val asset = it.get(VisualAsset::class.java).asset
+                val parentId = it.get(Parent::class.java).parentId
+                val targetId = it.get(TargetId::class.java).targetId
+                //get locations
+                val parentSpatial = getSpatialFromId(parentId)
+                val targetSpatial = getSpatialFromId(targetId)
+                if(parentSpatial == null || targetSpatial == null){
+                    return@forEach
+                }
+                val parentPos = parentSpatial.localTranslation
+                val targetPos = targetSpatial.localTranslation
+                //get weapon type to draw
+                if("Laser" == asset){
+                    val laserDuration = 0.5
+                    //draw a cylinder from parent to target for now
+                    val length = targetPos.distance(parentPos).coerceAtLeast(0.1f)
+                    val mesh = Cylinder(8,8,1f,length)
+                    val geo = Geometry("Attack@${it.id.id}", mesh)
+                    val mat = debugMat.clone()
+                    //tween to change colors and erase spatial
+                    val color = ColorRGBA()
+                    val colorTween = ColorTweener(ColorRGBA.White, ColorRGBA.Red, color, laserDuration)
+                    mat.setColor("Color", color)
+                    geo.material = mat
+                    geo.addControl(HalfwayBetweenControl(parentSpatial, targetSpatial))
+                    val removeTween = Tweens.callMethod(geo, "removeFromParent")
+                    animationState.add(colorTween, removeTween)
+                    sceneNode.attachChild(geo)
+                }
+            }
+        }
     }
 
     fun getSpatialFromId(id:EntityId): Spatial?{
         return visContainer.getObject(id)?.vis
     }
 
-    private inner class VisualContainer(data: EntityData): EntityContainer<VisObject>(data, Position::class.java,
-        VisualAsset::class.java, Velocity::class.java) {
+    private inner class VisualContainer(data: EntityData): EntityContainer<VisObject>(
+        data,
+        Position::class.java,
+        VisualAsset::class.java,
+        Velocity::class.java
+    ) {
 
         override fun addObject(e: Entity): VisObject {
             val obj = VisObject(e.id, e.get(VisualAsset::class.java).asset, e.get(Position::class.java).position,
@@ -152,5 +208,14 @@ class VisualState: BaseAppState() {
             visualizer.nextPos=nextPos.toVector3f()
             setVelocity(velocity)
         }
+    }
+
+    private inner class HalfwayBetweenControl(val a:Spatial, val b:Spatial): AbstractControl(){
+        override fun controlUpdate(tpf: Float) {
+            spatial.localTranslation = a.localTranslation.add(b.localTranslation).multLocal(0.5f)
+            spatial.lookAt(b.localTranslation, Vector3f.UNIT_Y)
+        }
+
+        override fun controlRender(rm: RenderManager?, vp: ViewPort?) {}
     }
 }
