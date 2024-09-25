@@ -6,15 +6,12 @@ import com.jme3.system.AppSettings
 import com.simsilica.es.EntityId
 import com.simsilica.es.WatchedEntity
 import com.simsilica.event.EventBus
-import com.simsilica.lemur.GuiGlobals
-import com.simsilica.lemur.anim.AnimationState
 import com.simsilica.mathd.Vec3d
 import com.simsilica.sim.AbstractGameSystem
 import com.simsilica.sim.SimTime
 import `fun`.familyfunforce.cosmos.*
 import `fun`.familyfunforce.cosmos.event.PlayerIdChangeEvent
 import `fun`.familyfunforce.cosmos.systems.*
-import `fun`.familyfunforce.cosmos.ui.*
 
 /*
  * A simple demo for interacting with a randomly generated asteroid field
@@ -27,49 +24,18 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         println("Starting Asteroid Demo")
         super.simpleInitApp()
         //************************  SERVER  ************************
-        val server = ServerSystem()
-        serverManager.register(ServerSystem::class.java, server)
-        //data
-        val dataSystem = HostDataSystem(server.server)
-        dataSystem.itemData.fromCSV("/TestItemDB.csv")
-        serverManager.register(DataSystem::class.java, dataSystem)
-        serverManager.addSystem(DecaySystem())
-        serverManager.register(InventorySystem::class.java, InventorySystem())
-        serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
-        serverManager.addSystem(DragSystem())
-        serverManager.addSystem(EngineSystem())
-        serverManager.register(EnergySystem::class.java, EnergySystem())
-        serverManager.register(SensorSystem::class.java, SensorSystem())
-        serverManager.addSystem(PoweredEquipmentSystem())
-        serverManager.register(ActionSystem::class.java, ActionSystem())
-        serverManager.addSystem(WeaponSystem())
-        serverManager.addSystem(CombatSystem())
-        serverManager.addSystem(MiningSystem())
-        serverManager.addSystem(HeatSystem())
-//        serverManager.addSystem(DestructionSystem())
+        val server = attachServerSystems()
+        //test systems go here
+
 
         //***********************   CLIENT  *************************
-        //focus
-        //serverManager.register(EntityFocusManager::class.java, EntityFocusManager())
-
-        //
         val client = ClientState()
         client.client.addClientStateListener(object:ClientStateListener{
             override fun clientConnected(c: Client?) {
-                //connect all states here
                 stateManager.attach(ClientDataState(client.client))
-                stateManager.attach(PlayerIdState())
-                stateManager.attach(PlayerFocusState())
-                stateManager.attach(AnimationState())
-                stateManager.attach(VisualState())
-                val cameraManagerState = CameraManagerState(cam)
-                cameraManagerState.activeController = OrbitController(5f,100f, 10f)
-                stateManager.attach(cameraManagerState)
-                stateManager.attach(LocalMapState())
-                stateManager.attach(ShipHudState())
-                stateManager.attach(UIAudioState())
-                stateManager.attach(ClientActionEventResponder())
-                stateManager.attach(InteractionMenuState())
+
+                attachVisualSystems()
+
                 println("Client initialized")
                 //register player to systems that care
                 val initListener =object: UpdateListener(){
@@ -85,7 +51,6 @@ class LocalSpaceDemo: SpaceTraderApp(false){
         })
         stateManager.attach(client)
         //
-        registerDefaults(GuiGlobals.getInstance().inputMapper)
         //***********************   DEMO    *************************
         //spawn a player ship and a couple of asteroids
         val data = serverManager.get(DataSystem::class.java).entityData

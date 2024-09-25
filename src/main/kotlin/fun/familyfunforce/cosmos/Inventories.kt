@@ -187,11 +187,22 @@ data class Inventory(
 // Serializable transaction data, should only be logged when a transaction is completed successfully
 data class Transaction(val id:Long, val timeStamp: Long, val originId:Long, val destinationId:Long, val items: Map<ItemId, Long>)
 
+fun createTestItemDatabase(): ItemDatabase{
+    val items = listOf(
+        Item(ItemId("ORE"), "Ore", 1.0)
+    )
+    return ItemDatabase(items)
+}
+
 /**
  * Item Database stores references to all individual items found in the current game session.
  */
-class ItemDatabase{
+class ItemDatabase(){
     private val itemData = HashMap<ItemId, Item>()
+
+    constructor(items: List<Item>): this(){
+        append(items)
+    }
 
     fun getItem(id:ItemId):Item?{
         return itemData[id]

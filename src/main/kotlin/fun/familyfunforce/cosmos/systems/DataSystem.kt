@@ -36,9 +36,9 @@ class LocalDataSystem: AbstractGameSystem(), DataSystem {
     }
 }
 
-class HostDataSystem(private val server:Server): AbstractGameSystem(), DataSystem {
+class HostDataSystem(private val server:Server, override val itemData: ItemDatabase): AbstractGameSystem(), DataSystem {
     override val entityData = DefaultEntityData()
-    override val itemData = ItemDatabase()
+//    override val itemData = ItemDatabase()
     //we want to do all of this immediately and not as a part of the game loop
     private val service = EntityDataHostedService(MessageConnection.CHANNEL_DEFAULT_RELIABLE, entityData)
     init{

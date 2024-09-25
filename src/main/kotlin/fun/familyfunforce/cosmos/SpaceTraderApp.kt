@@ -11,15 +11,13 @@ import com.jme3.system.JmeContext
 import com.simsilica.es.net.EntitySerializers
 import com.simsilica.lemur.GuiGlobals
 import com.simsilica.lemur.OptionPanelState
+import com.simsilica.lemur.anim.AnimationState
 import com.simsilica.lemur.style.BaseStyles
 import com.simsilica.sim.GameLoop
 import com.simsilica.sim.GameSystemManager
 import `fun`.familyfunforce.cosmos.loadout.VehicleLoader
 import `fun`.familyfunforce.cosmos.systems.*
-import `fun`.familyfunforce.cosmos.ui.CameraManagerState
-import `fun`.familyfunforce.cosmos.ui.OrbitController
-import `fun`.familyfunforce.cosmos.ui.UIAudioState
-import `fun`.familyfunforce.cosmos.ui.registerDefaults
+import `fun`.familyfunforce.cosmos.ui.*
 import java.util.*
 
 /**
@@ -57,17 +55,12 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     }
 
     override fun simpleInitApp() {
-        //jfx initialization
-        //JavaFxUI.initialize(this)
         //lemur
         GuiGlobals.initialize(this)
         //BaseStyles.loadGlassStyle()
         //GuiGlobals.getInstance().styles.defaultStyle = BaseStyles.GLASS
         BaseStyles.loadStyleResources("UI/Space.groovy")
         GuiGlobals.getInstance().styles.defaultStyle = "space"
-        stateManager.attach(OptionPanelState())//prep for ui option panes
-        //Controls
-        registerDefaults(GuiGlobals.getInstance().inputMapper)
         //I/O
         //serializer stuff
         EntitySerializers.initialize()
@@ -79,18 +72,7 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         serverManager = GameSystemManager()
         serverLoop = GameLoop(serverManager, SERVER_RATE)
         serverManager.register(GameLoop::class.java, serverLoop)
-        //manager.register(SimpleApplication::class.java, this)
-        //manager.register(InputMapper::class.java, GuiGlobals.getInstance().inputMapper)
-
-        /*
-        if(initSystems){
-            //Turn this off to test individual systems
-            attachDataSystems()
-            attachPhysicsSystems()
-            attachVisualSystems()
-            attachAiSystems()
-        }
-         */
+        serverManager.addSystem(DecaySystem())
     }
 
     //Cleanly destroy multi threading
@@ -102,11 +84,25 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
         super.destroy()
     }
 
-    fun attachDataSystems(){
-        val dataSystem = LocalDataSystem()
-        //TODO: Change this database to the release database
-        dataSystem.itemData.fromCSV("/TestItemDB.csv")
+    fun attachServerSystems(): ServerSystem{
+        val server = ServerSystem()
+        serverManager.register(ServerSystem::class.java, server)
+        val dataSystem = HostDataSystem(server.server, createTestItemDatabase())
         serverManager.register(DataSystem::class.java, dataSystem)
+        serverManager.register(InventorySystem::class.java, InventorySystem())
+        serverManager.register(LocalPhysicsSystem::class.java, LocalPhysicsSystem())
+        serverManager.addSystem(DragSystem())
+        serverManager.addSystem(EngineSystem())
+        serverManager.register(EnergySystem::class.java, EnergySystem())
+        serverManager.register(SensorSystem::class.java, SensorSystem())
+        serverManager.addSystem(PoweredEquipmentSystem())
+        serverManager.register(ActionSystem::class.java, ActionSystem())
+        serverManager.addSystem(WeaponSystem())
+        serverManager.addSystem(CombatSystem())
+        serverManager.addSystem(MiningSystem())
+        serverManager.addSystem(HeatSystem())
+//        serverManager.addSystem(DestructionSystem())
+        return server
     }
 
     fun attachPhysicsSystems(){
@@ -115,12 +111,22 @@ open class SpaceTraderApp(private val initSystems:Boolean): SimpleApplication(nu
     }
 
     fun attachVisualSystems(){
+        //Controls
+        registerDefaults(GuiGlobals.getInstance().inputMapper)
+        //states
+        stateManager.attach(OptionPanelState())
+        stateManager.attach(PlayerIdState())
+        stateManager.attach(PlayerFocusState())
+        stateManager.attach(AnimationState())
         stateManager.attach(VisualState())
-        //stateManager.attach(CameraState())
-        val camManager = CameraManagerState(cam)
-        camManager.activeController = OrbitController(5f,50f, 10f)
-        stateManager.attach(camManager)
+        val cameraManagerState = CameraManagerState(cam)
+        cameraManagerState.activeController = OrbitController(5f,100f, 10f)
+        stateManager.attach(cameraManagerState)
+        stateManager.attach(LocalMapState())
+        stateManager.attach(ShipHudState())
         stateManager.attach(UIAudioState())
+        stateManager.attach(ClientActionEventResponder())
+        stateManager.attach(InteractionMenuState())
     }
 
     fun attachAiSystems(){
